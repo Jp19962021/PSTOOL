@@ -1,5 +1,6 @@
 {
-     "completed_at": "2026-04-15T00:00:00+0000",
-     "mode": "seed",
-     "invoices_processed": 0
-   }
+  "completed_at": "2026-04-16T18:58:05+0000",
+  "mode": "incremental",
+  "invoices_processed": 178,
+  "window_start": "2026-04-14T23:00:00+0000"
+}
