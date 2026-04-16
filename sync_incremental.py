@@ -109,11 +109,7 @@ def main() -> int:
         time.sleep(REQUEST_DELAY)
     print(f"  ✓ {len(invoices_full)} invoices detailed", flush=True)
 
-    # We need contacts for KA updates — but only for clinics that were
-    # affected by this sync. Fetching all contacts is fastest + simplest.
-    contacts = fetch_all_contacts(client)
-
-    # Load existing state
+    # Load existing state FIRST so we know which clinics are already known
     print("Loading existing data.js...", flush=True)
     state = parse_existing_data_js()
     print(
@@ -121,6 +117,27 @@ def main() -> int:
         f"{sum(len(v) for v in state['D'].values())} transactions",
         flush=True,
     )
+
+    # Figure out which clinics in this batch are brand new (not in existing C)
+    existing_clinics = set(state["C"])
+    new_clinics_in_batch = set()
+    for inv in invoices_full:
+        name = (inv.get("customer_name") or "").strip()
+        if name and name not in existing_clinics:
+            new_clinics_in_batch.add(name)
+
+    # Only fetch contacts if we have new clinics. For known clinics, existing
+    # KA data in data.js stays (fresh contact info is refreshed by the
+    # monthly full rebuild). This saves 5-10 minutes per nightly run.
+    if new_clinics_in_batch:
+        print(
+            f"Found {len(new_clinics_in_batch)} new clinics — fetching contacts...",
+            flush=True,
+        )
+        contacts = fetch_all_contacts(client)
+    else:
+        print("No new clinics — skipping contact fetch.", flush=True)
+        contacts = {}
 
     # Merge: replace_clinic=True means we drop existing transactions for
     # each affected clinic and re-add from the full invoice list. This is
