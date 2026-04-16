@@ -71,13 +71,18 @@ class ZohoClient:
             print("  ↻ Refreshing access token (age > 50m)", flush=True)
             self.refresh()
 
-    def get(self, path: str, params: dict | None = None) -> dict:
+    def get(self, path: str, params: dict | None = None, extra_headers: dict | None = None) -> dict:
         self._ensure_fresh()
         url = f"https://{API_DOMAIN}/invoice/v3{path}"
         qp = {"organization_id": ORG_ID, **(params or {})}
         for attempt in range(MAX_RETRIES):
             headers = {"Authorization": f"Zoho-oauthtoken {self._token}"}
+            if extra_headers:
+                headers.update(extra_headers)
             resp = requests.get(url, headers=headers, params=qp, timeout=60)
+            # 304 Not Modified = If-Modified-Since header worked, nothing changed
+            if resp.status_code == 304:
+                return {"invoices": [], "page_context": {"has_more_page": False}}
             if resp.status_code == 200:
                 return resp.json()
             if resp.status_code == 401:
@@ -100,40 +105,82 @@ def fetch_invoice_list(
     client: ZohoClient,
     *,
     date_start: str | None = None,
-    last_modified_after: str | None = None,
+    created_after: str | None = None,
+    max_results: int | None = None,
 ) -> list[dict]:
     """
     Paginate the /invoices list endpoint.
 
-    date_start: "YYYY-MM-DD" — filter by invoice date >= this
-    last_modified_after: ISO timestamp "YYYY-MM-DDTHH:MM:SS-0000" — filter by
-        last_modified_time >= this (for incremental sync)
-
-    If both provided, Zoho applies both.
+    date_start: "YYYY-MM-DD" — filter by invoice date >= this (passed to Zoho)
+    created_after: ISO timestamp — keep only invoices CREATED after this.
+        Filters client-side on created_time since Zoho's list API parameter
+        support for this is inconsistent.
+    max_results: bail out early if we accumulate more than this many invoices.
+        Safety net against pulling the entire DB when filters don't work.
     """
     invoices: list[dict] = []
     page = 1
     per_page = 200
     base_params = {
         "per_page": per_page,
-        "sort_column": "last_modified_time",
-        "sort_order": "A",
+        "sort_column": "created_time",
+        "sort_order": "D",  # descending — newest first, so we can early-exit
     }
     if date_start:
         base_params["date_start"] = date_start
-    if last_modified_after:
-        # Zoho uses the header "If-Modified-Since" for this OR a query param
-        # on some endpoints. We use the filter_by / custom param approach:
-        base_params["last_modified_time_start"] = last_modified_after
 
+    cutoff_dt = None
+    if created_after:
+        try:
+            cutoff_dt = parse_iso(created_after)
+        except ValueError:
+            cutoff_dt = None
+
+    stopped_early = False
     while True:
         params = {**base_params, "page": page}
         data = client.get("/invoices", params=params)
         batch = data.get("invoices", [])
-        invoices.extend(batch)
+
+        # Client-side filter on created_time
+        kept = []
+        if cutoff_dt is not None:
+            for inv in batch:
+                ct = inv.get("created_time")
+                if not ct:
+                    continue
+                try:
+                    ct_dt = parse_iso(ct)
+                except ValueError:
+                    continue
+                if ct_dt >= cutoff_dt:
+                    kept.append(inv)
+                else:
+                    # Descending sort: this invoice is older than cutoff,
+                    # so every subsequent one will also be older. Stop.
+                    stopped_early = True
+                    break
+        else:
+            kept = batch
+
+        invoices.extend(kept)
         ctx = data.get("page_context", {})
         has_more = ctx.get("has_more_page", False)
-        print(f"  page {page}: +{len(batch)} (total {len(invoices)})", flush=True)
+        print(
+            f"  page {page}: +{len(kept)} kept / {len(batch)} returned (total {len(invoices)})",
+            flush=True,
+        )
+
+        if stopped_early:
+            print(f"  ✓ Reached cutoff — stopping early at page {page}", flush=True)
+            break
+
+        # Safety cap
+        if max_results is not None and len(invoices) > max_results:
+            raise RuntimeError(
+                f"Exceeded max_results={max_results} — aborting."
+            )
+
         if not has_more or not batch:
             break
         page += 1
