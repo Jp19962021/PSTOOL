@@ -4,118 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Clinic Intelligence</title>
-<script src="data.js">
-// HUBSPOT SYNC
-var WORKER='https://fragrant-cloud-6ef2.jp-d4e.workers.dev';
-
-function syncHubspot(action, email, note){
-  if(!email||!ME)return;
-  var statusEl=document.getElementById('hs-status');
-  if(statusEl){statusEl.style.color='#888';statusEl.textContent='Syncing to HubSpot...';}
-  fetch(WORKER,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      action:action,
-      email:email,
-      note:note||'',
-      rep_name:ME.name,
-      clinic_name:CUR||''
-    })
-  })
-  .then(function(r){return r.json();})
-  .then(function(d){
-    if(statusEl){
-      if(d.success){
-        statusEl.style.color='#16a34a';
-        statusEl.textContent=action==='checkin'?'✓ Checked in to HubSpot!':'✓ Note synced to HubSpot!';
-        logAction(action==='checkin'?'checkin':'note_hs',CUR);
-      } else {
-        statusEl.style.color='#dc2626';
-        statusEl.textContent='HubSpot: '+(d.error||'Contact not found');
-      }
-      setTimeout(function(){if(statusEl)statusEl.textContent='';},4000);
-    }
-  })
-  .catch(function(){
-    if(statusEl){statusEl.style.color='#dc2626';statusEl.textContent='HubSpot sync failed';
-    setTimeout(function(){if(statusEl)statusEl.textContent='';},3000);}
-  });
-}
-
-document.getElementById('pcheckin').addEventListener('click',function(){
-  if(!CUR||!ME)return;
-  var idx=C.indexOf(CUR);
-  if(idx<0)return;
-  var k=KA[idx]||[];
-  var email=k[1]||'';
-  if(!email){
-    var s=document.getElementById('hs-status');
-    s.style.color='#dc2626';s.textContent='No email on file for this clinic';
-    setTimeout(function(){s.textContent='';},3000);
-    return;
-  }
-  syncHubspot('checkin',email,'');
-});
-</script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-// HUBSPOT SYNC
-var WORKER='https://fragrant-cloud-6ef2.jp-d4e.workers.dev';
-
-function syncHubspot(action, email, note){
-  if(!email||!ME)return;
-  var statusEl=document.getElementById('hs-status');
-  if(statusEl){statusEl.style.color='#888';statusEl.textContent='Syncing to HubSpot...';}
-  fetch(WORKER,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      action:action,
-      email:email,
-      note:note||'',
-      rep_name:ME.name,
-      clinic_name:CUR||''
-    })
-  })
-  .then(function(r){return r.json();})
-  .then(function(d){
-    if(statusEl){
-      if(d.success){
-        statusEl.style.color='#16a34a';
-        statusEl.textContent=action==='checkin'?'✓ Checked in to HubSpot!':'✓ Note synced to HubSpot!';
-        logAction(action==='checkin'?'checkin':'note_hs',CUR);
-      } else {
-        statusEl.style.color='#dc2626';
-        statusEl.textContent='HubSpot: '+(d.error||'Contact not found');
-      }
-      setTimeout(function(){if(statusEl)statusEl.textContent='';},4000);
-    }
-  })
-  .catch(function(){
-    if(statusEl){statusEl.style.color='#dc2626';statusEl.textContent='HubSpot sync failed';
-    setTimeout(function(){if(statusEl)statusEl.textContent='';},3000);}
-  });
-}
-
-document.getElementById('pcheckin').addEventListener('click',function(){
-  if(!CUR||!ME)return;
-  var idx=C.indexOf(CUR);
-  if(idx<0)return;
-  var k=KA[idx]||[];
-  var email=k[1]||'';
-  if(!email){
-    var s=document.getElementById('hs-status');
-    s.style.color='#dc2626';s.textContent='No email on file for this clinic';
-    setTimeout(function(){s.textContent='';},3000);
-    return;
-  }
-  syncHubspot('checkin',email,'');
-});
-</script>
+<script src="data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f7f8fa;color:#111;min-height:100vh;overflow-x:hidden}
-/* LOGIN */
 #login-screen{position:fixed;inset:0;background:#1a2035;display:flex;align-items:center;justify-content:center;z-index:1000}
 .lbox{background:#fff;border-radius:16px;padding:40px;width:360px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
 .llogo{font-size:22px;font-weight:800;color:#1a2035;text-align:center;margin-bottom:6px}
@@ -128,7 +21,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .lbtn{width:100%;padding:12px;background:#1a2035;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px}
 .lbtn:hover{background:#2a3550}
 .lerr{color:#dc2626;font-size:12px;text-align:center;margin-top:10px;min-height:18px}
-/* APP */
 #app{display:none}
 .topbar{background:#1a2035;padding:0 28px;display:flex;align-items:center;position:sticky;top:0;z-index:200}
 .logo{font-size:15px;font-weight:700;color:#fff;padding:16px 24px 16px 0;margin-right:12px;border-right:1px solid rgba(255,255,255,.15);white-space:nowrap;flex-shrink:0}
@@ -142,7 +34,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .lout:hover{color:#fff}
 .container{max-width:1100px;margin:0 auto;padding:28px 24px}
 .page{display:none}.page.active{display:block}
-/* PANEL */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;opacity:0;pointer-events:none;transition:opacity .25s}
 .overlay.open{opacity:1;pointer-events:all}
 .panel{position:fixed;top:0;right:0;bottom:0;width:min(740px,95vw);background:#fff;z-index:301;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);overflow-y:auto;display:flex;flex-direction:column}
@@ -170,7 +61,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .up{color:#16a34a;font-weight:600}.dn2{color:#dc2626;font-weight:600}
 .sechd{font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.07em;margin:18px 0 8px;padding-bottom:6px;border-bottom:1px solid #edf0f5;display:flex;align-items:center;gap:8px}
 .shc{background:#e8eaed;color:#666;border-radius:20px;padding:1px 8px;font-size:11px}
-/* NOTES */
 .notes-box{background:#f9fafc;border-radius:12px;border:1px solid #e8eaed;overflow:hidden;margin-bottom:4px}
 .nhdr{padding:12px 16px;background:#f0f2f7;border-bottom:1px solid #e8eaed;font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.07em;display:flex;align-items:center;gap:8px}
 .nlist{padding:12px 16px;max-height:240px;overflow-y:auto}
@@ -187,7 +77,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .nsub{padding:9px 16px;background:#1a2035;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
 .nsub:hover{background:#2a3550}
 .nsub:disabled{background:#ccc;cursor:not-allowed}
-/* PRODUCT TABLE */
 .pwrap{overflow-x:auto}
 table.ptbl{width:100%;border-collapse:collapse;font-size:12px}
 table.ptbl th{text-align:left;font-size:10px;font-weight:600;color:#888;padding:7px 10px;border-bottom:1px solid #edf0f5;white-space:nowrap;text-transform:uppercase;background:#fafbfc}
@@ -200,7 +89,6 @@ table.ptbl tr:last-child td{border-bottom:none}
 .ba{background:#dcfce7;color:#16a34a}.bs{background:#fee2e2;color:#dc2626}.bp{background:#fef9c3;color:#854d0e}
 .dgap{font-size:10px;color:#aaa;margin-left:4px}
 .rl{font-size:10px;color:#dc2626;font-weight:500;margin-top:2px}
-/* MAIN */
 .search-card{background:#fff;border-radius:12px;padding:24px 28px;margin-bottom:24px;box-shadow:0 1px 4px rgba(0,0,0,.07);border:1px solid #e8eaed}
 .lbl{font-size:12px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
 .hint{font-size:11px;color:#aaa;margin-bottom:10px}
@@ -237,7 +125,6 @@ table.ptbl tr:last-child td{border-bottom:none}
 .estate{text-align:center;padding:60px 20px;color:#aaa}
 .estate .ei{font-size:40px;margin-bottom:12px}
 .fnote{font-size:11px;color:#aaa;margin-top:8px;padding:0 4px}
-/* ADMIN */
 .admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
 @media(max-width:800px){.admin-grid{grid-template-columns:1fr}}
 .acard{background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,.07);border:1px solid #e8eaed}
@@ -257,7 +144,6 @@ table.ptbl tr:last-child td{border-bottom:none}
 .drep:hover{color:#dc2626}
 .smsg2{font-size:12px;margin-top:8px;min-height:18px}
 .ok{color:#16a34a}.er{color:#dc2626}
-/* ACTIVITY LOG */
 .act-filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
 .act-filters select,.act-filters input{padding:8px 12px;border:1.5px solid #d8dce3;border-radius:8px;font-size:12px;outline:none;background:#fff;color:#111}
 .act-filters input:focus,.act-filters select:focus{border-color:#1a2035}
@@ -272,7 +158,6 @@ table.ptbl tr:last-child td{border-bottom:none}
 .act-main{font-size:13px;color:#111;font-weight:500}
 .act-main span{color:#1a2035;font-weight:700}
 .act-sub{font-size:11px;color:#aaa;margin-top:2px}
-/* REP SCORECARD */
 .scorecard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:20px}
 .scard{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.07);border:1px solid #e8eaed}
 .scard-name{font-size:15px;font-weight:700;color:#1a2035;margin-bottom:4px}
@@ -285,8 +170,64 @@ table.ptbl tr:last-child td{border-bottom:none}
 .time-filter{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
 .tft{padding:6px 14px;border:1.5px solid #d8dce3;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;color:#666;background:#fff}
 .tft.active{background:#1a2035;color:#fff;border-color:#1a2035}
-@media print{.topbar,.filter-bar,.prtbtn,.tab,#sw,.search-card,.spills,.overlay,.panel,#login-screen,.ninpw{display:none!important}.page{display:block!important}body{background:#fff}}
+@media print{.topbar,.filter-bar,.prtbtn,.tab,#sw,.search-card,.spills,.overlay,.panel,#login-screen,.ninpw,#ai-fab,#ai-chat{display:none!important}.page{display:block!important}body{background:#fff}}
 @media(max-width:700px){.psg{grid-template-columns:1fr}.container{padding:16px}.tab{padding:14px 8px;font-size:11px}}
+/* AI CHAT — shared */
+.ai-msg{max-width:85%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.5;word-wrap:break-word}
+.ai-msg.user{align-self:flex-end;background:#1a2035;color:#fff;border-bottom-right-radius:4px}
+.ai-msg.bot{align-self:flex-start;background:#fff;color:#111;border:1px solid #e8eaed;border-bottom-left-radius:4px}
+.ai-msg.err{align-self:flex-start;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-bottom-left-radius:4px}
+.ai-msg.bot table{border-collapse:collapse;margin:8px 0;font-size:12px;width:100%}
+.ai-msg.bot table th,.ai-msg.bot table td{border:1px solid #e8eaed;padding:5px 8px;text-align:left}
+.ai-msg.bot table th{background:#f7f8fa;font-weight:600}
+.ai-msg.bot code{background:#f0f2f7;padding:1px 5px;border-radius:3px;font-size:11px}
+.ai-msg.bot blockquote{border-left:3px solid #4ade9a;padding-left:10px;margin:6px 0;color:#555;font-style:italic}
+.ai-msg.bot ul,.ai-msg.bot ol{margin:6px 0 6px 18px}
+.ai-msg.bot strong{font-weight:700}
+.ai-typing{align-self:flex-start;background:#fff;border:1px solid #e8eaed;border-radius:14px;padding:10px 14px;display:flex;gap:4px}
+.ai-typing span{width:6px;height:6px;background:#bbb;border-radius:50%;animation:aidot 1.2s infinite}
+.ai-typing span:nth-child(2){animation-delay:.15s}.ai-typing span:nth-child(3){animation-delay:.3s}
+@keyframes aidot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+.ai-starters{display:flex;flex-direction:column;gap:6px;padding:4px 0}
+.ai-starter{background:#fff;border:1px solid #e0e3ea;color:#1a2035;padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer;text-align:left;font-family:inherit}
+.ai-starter:hover{background:#f0f2f7;border-color:#1a2035}
+.ai-ctx{font-size:10px;color:#888;padding:6px 12px;background:#f7f8fa;border-bottom:1px solid #e8eaed;display:none}
+.ai-ctx.show{display:block}
+.ai-ctx strong{color:#1a2035}
+/* AI CHAT — bubble */
+#ai-fab{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:#1a2035;color:#fff;border:none;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.25);z-index:400;display:flex;align-items:center;justify-content:center;font-size:22px;transition:transform .15s}
+#ai-fab:hover{transform:scale(1.08);background:#2a3550}
+#ai-fab.hidden{display:none}
+#ai-chat{position:fixed;bottom:24px;right:24px;width:min(440px,calc(100vw - 32px));height:min(620px,calc(100vh - 80px));background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);z-index:401;display:none;flex-direction:column;overflow:hidden;border:1px solid #e8eaed}
+#ai-chat.open{display:flex}
+.aichdr{background:#1a2035;color:#fff;padding:14px 18px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.aichdr-title{font-size:14px;font-weight:700;flex:1}
+.aichdr-title span{color:#4ade9a}
+.aichdr-sub{font-size:11px;color:rgba(255,255,255,.6);font-weight:400;margin-top:1px}
+.aichdr-btn{background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:18px;padding:4px 8px;border-radius:4px}
+.aichdr-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+#ai-msgs{flex:1;overflow-y:auto;padding:16px;background:#f7f8fa;display:flex;flex-direction:column;gap:12px}
+#ai-inp-wrap{padding:12px;border-top:1px solid #e8eaed;background:#fff;display:flex;gap:8px;flex-shrink:0}
+#ai-inp{flex:1;padding:10px 14px;border:1.5px solid #e0e3ea;border-radius:10px;font-size:13px;outline:none;font-family:inherit;resize:none;max-height:120px}
+#ai-inp:focus{border-color:#1a2035}
+#ai-send{padding:0 18px;background:#1a2035;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+#ai-send:hover{background:#2a3550}
+#ai-send:disabled{background:#ccc;cursor:not-allowed}
+@media(max-width:500px){#ai-chat{bottom:0;right:0;left:0;width:100%;height:100%;border-radius:0}#ai-fab{bottom:16px;right:16px}}
+/* AI CHAT — full page (admin tab) */
+.ai-page-wrap{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.07);border:1px solid #e8eaed;overflow:hidden;display:flex;flex-direction:column;height:calc(100vh - 140px);min-height:500px}
+.ai-page-hdr{padding:16px 20px;border-bottom:1px solid #edf0f5;background:#fafbfc;display:flex;align-items:center;gap:12px}
+.ai-page-title{font-size:15px;font-weight:700;color:#1a2035;flex:1;display:flex;align-items:center;gap:8px}
+.ai-page-title .dot{width:8px;height:8px;background:#4ade9a;border-radius:50%;display:inline-block}
+.ai-page-sub{font-size:11px;color:#888;font-weight:400}
+#ai-page-msgs{flex:1;overflow-y:auto;padding:20px;background:#f7f8fa;display:flex;flex-direction:column;gap:12px}
+#ai-page-msgs .ai-msg{max-width:78%}
+#ai-page-inp-wrap{padding:14px 16px;border-top:1px solid #e8eaed;background:#fff;display:flex;gap:10px;flex-shrink:0}
+#ai-page-inp{flex:1;padding:11px 14px;border:1.5px solid #e0e3ea;border-radius:10px;font-size:14px;outline:none;font-family:inherit;resize:none;max-height:140px}
+#ai-page-inp:focus{border-color:#1a2035}
+#ai-page-send{padding:0 22px;background:#1a2035;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+#ai-page-send:hover{background:#2a3550}
+#ai-page-send:disabled{background:#ccc;cursor:not-allowed}
 </style>
 </head>
 <body>
@@ -344,13 +285,13 @@ table.ptbl tr:last-child td{border-bottom:none}
   <div class="tab" data-page="winback">&#128257; Win-Back</div>
   <div class="tab" data-page="atrisk">&#9888; At-Risk</div>
   <div class="tab admin-tab" data-page="admin" id="atab" style="display:none">&#9881; Admin</div>
+  <div class="tab admin-tab" data-page="chatbot" id="cbtab" style="display:none">&#129302; Chat Bot</div>
   <div class="tbr">
     <span class="rbadge" id="rbadge"></span>
     <button class="lout" id="lout">Sign out</button>
   </div>
 </div>
 
-<!-- SEARCH -->
 <div id="page-search" class="page active"><div class="container">
   <div class="search-card">
     <div class="lbl">Search Clinic</div>
@@ -361,7 +302,6 @@ table.ptbl tr:last-child td{border-bottom:none}
   <div class="esearch" id="se"><div class="ei">&#128300;</div><p style="font-size:14px">Search for a clinic above</p></div>
 </div></div>
 
-<!-- TERRITORY -->
 <div id="page-territory" class="page"><div class="container">
   <div class="filter-bar"><div><div class="lbl" style="margin-bottom:6px">Sales Rep</div><select id="rsel"><option value="">— Select a rep —</option></select></div></div>
   <div class="spills" id="tst" style="display:none">
@@ -377,7 +317,6 @@ table.ptbl tr:last-child td{border-bottom:none}
   <div class="estate" id="te"><div class="ei">&#128205;</div><p>Select a rep above</p></div>
 </div></div>
 
-<!-- WIN-BACK -->
 <div id="page-winback" class="page"><div class="container">
   <div class="spills">
     <div class="sp"><div class="spv" id="wbcv">0</div><div class="spl">Lapsed Clinics</div></div>
@@ -389,7 +328,6 @@ table.ptbl tr:last-child td{border-bottom:none}
   </div>
 </div></div>
 
-<!-- AT-RISK -->
 <div id="page-atrisk" class="page"><div class="container">
   <div class="spills">
     <div class="sp"><div class="spv" id="arcv">0</div><div class="spl">At-Risk Clinics</div></div>
@@ -402,10 +340,7 @@ table.ptbl tr:last-child td{border-bottom:none}
   <p class="fnote">&#9432; Annualized 2026 = YTD &times; 4. Compared against full year 2025.</p>
 </div></div>
 
-<!-- ADMIN -->
 <div id="page-admin" class="page"><div class="container">
-
-  <!-- Rep scorecards -->
   <div class="section-card" style="margin-bottom:20px">
     <div class="sh">&#128202; Rep Activity Scorecards
       <div class="time-filter" style="margin:0 0 0 auto">
@@ -416,9 +351,7 @@ table.ptbl tr:last-child td{border-bottom:none}
     </div>
     <div style="padding:16px"><div class="scorecard-grid" id="scorecard-grid">Loading...</div></div>
   </div>
-
   <div class="admin-grid">
-    <!-- Manage Reps -->
     <div class="acard">
       <h3>&#128100; Manage Reps</h3>
       <div class="frow">
@@ -430,8 +363,6 @@ table.ptbl tr:last-child td{border-bottom:none}
       <div id="amsg" class="smsg2"></div>
       <div id="rl2" style="margin-top:12px">Loading...</div>
     </div>
-
-    <!-- Activity Log -->
     <div class="acard">
       <h3>&#128203; Live Activity Log</h3>
       <div class="act-filters">
@@ -442,14 +373,46 @@ table.ptbl tr:last-child td{border-bottom:none}
           <option value="view">Clinic views</option>
           <option value="search">Searches</option>
           <option value="note">Notes</option>
+          <option value="ai_chat">AI Chats</option>
         </select>
         <button class="abtn" id="act-refresh">&#8635; Refresh</button>
       </div>
       <div id="act-list" style="max-height:420px;overflow-y:auto">Loading...</div>
     </div>
   </div>
-
 </div></div>
+
+<!-- CHAT BOT — admin tab -->
+<div id="page-chatbot" class="page"><div class="container">
+  <div class="ai-page-wrap">
+    <div class="ai-page-hdr">
+      <div class="ai-page-title"><span class="dot"></span>AI Assistant <span class="ai-page-sub">&middot; Full-territory access</span></div>
+      <button class="abtn" id="ai-page-reset" style="background:#e8eaed;color:#1a2035">&#8635; New conversation</button>
+    </div>
+    <div id="ai-page-msgs"></div>
+    <div id="ai-page-inp-wrap">
+      <textarea id="ai-page-inp" rows="2" placeholder="Ask anything about clinics, products, reps, or territory..."></textarea>
+      <button id="ai-page-send">Send</button>
+    </div>
+  </div>
+</div></div>
+
+<!-- BUBBLE -->
+<button id="ai-fab" title="Ask AI Assistant">&#128172;</button>
+<div id="ai-chat">
+  <div class="aichdr">
+    <div class="aichdr-title">AI <span>Assistant</span><div class="aichdr-sub" id="ai-sub">Ask anything about your clinics</div></div>
+    <button class="aichdr-btn" id="ai-reset" title="Start new conversation">&#8635;</button>
+    <button class="aichdr-btn" id="ai-close" title="Close">&#10005;</button>
+  </div>
+  <div class="ai-ctx" id="ai-ctx"></div>
+  <div id="ai-msgs"></div>
+  <div id="ai-inp-wrap">
+    <textarea id="ai-inp" rows="1" placeholder="Ask a question..."></textarea>
+    <button id="ai-send">Send</button>
+  </div>
+</div>
+
 </div>
 
 <script>
@@ -457,6 +420,8 @@ var SB=supabase.createClient('https://kijoonuxbkpzejnqxnwl.supabase.co','eyJhbGc
 var ME=null,CUR=null,ALLREPS=[];
 var EP0=new Date(Date.UTC(2024,0,1)).getTime();
 var SI=[],WBL=[],ARL=[];
+var WORKER='https://fragrant-cloud-6ef2.jp-d4e.workers.dev';
+var aiBubbleChat=null,aiPageChat=null;
 
 function epDate(e){var d=new Date(EP0+e*86400000);return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
 function fmt(n){return n?'$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'\u2014';}
@@ -468,7 +433,6 @@ async function logAction(action,detail){
   try{await SB.from('activity_log').insert({rep_username:ME.username,rep_name:ME.name,action:action,detail:detail||''});}catch(e){}
 }
 
-// LOGIN
 document.getElementById('lp').addEventListener('keydown',function(e){if(e.key==='Enter')login();});
 document.getElementById('lbtn').addEventListener('click',login);
 async function login(){
@@ -483,32 +447,37 @@ async function login(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='block';
   document.getElementById('rbadge').textContent=data.name+(data.role==='admin'?' (Admin)':'');
-  if(data.role==='admin')document.getElementById('atab').style.display='';
+  if(data.role==='admin'){
+    document.getElementById('atab').style.display='';
+    document.getElementById('cbtab').style.display='';
+  }
   await logAction('login','Signed in');
   init();
 }
 document.getElementById('lout').addEventListener('click',function(){
-  ME=null;document.getElementById('atab').style.display='none';document.getElementById('login-screen').style.display='flex';
+  ME=null;
+  document.getElementById('atab').style.display='none';
+  document.getElementById('cbtab').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
   document.getElementById('app').style.display='none';
   document.getElementById('lu').value='';document.getElementById('lp').value='';
   SI=[];WBL=[];ARL=[];
 });
 
-// TABS
 document.querySelectorAll('.tab').forEach(function(t){
   t.addEventListener('click',function(){
+    if((t.dataset.page==='admin'||t.dataset.page==='chatbot')&&(!ME||ME.role!=='admin'))return;
     document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
     document.querySelectorAll('.page').forEach(function(x){x.classList.remove('active');});
     t.classList.add('active');
-    if(t.dataset.page==='admin'&&(!ME||ME.role!=='admin')){t.classList.remove('active');return;}
     document.getElementById('page-'+t.dataset.page).classList.add('active');
     if(t.dataset.page==='admin'){loadReps();loadActivity();loadScorecards(7);}
+    if(t.dataset.page==='chatbot'&&aiPageChat&&aiPageChat.msgs.length===0)aiPageChat.renderStarters();
   });
 });
 
-// PANEL
 function openPanel(i){fillPanel(i);document.getElementById('overlay').classList.add('open');document.getElementById('panel').classList.add('open');document.body.style.overflow='hidden';}
-function closePanel(){document.getElementById('overlay').classList.remove('open');document.getElementById('panel').classList.remove('open');document.body.style.overflow='';CUR=null;}
+function closePanel(){document.getElementById('overlay').classList.remove('open');document.getElementById('panel').classList.remove('open');document.body.style.overflow='';CUR=null;if(aiBubbleChat)aiBubbleChat.updateContext();}
 document.getElementById('overlay').addEventListener('click',closePanel);
 document.getElementById('pcl').addEventListener('click',closePanel);
 document.getElementById('pprt').addEventListener('click',function(){window.print();});
@@ -577,9 +546,9 @@ function fillPanel(idx){
   }
   document.getElementById('pxc').textContent=(rk-1)+' products';
   document.getElementById('panel').scrollTop=0;
+  if(aiBubbleChat)aiBubbleChat.updateContext();
 }
 
-// NOTES
 async function loadNotes(cn){
   document.getElementById('nl').innerHTML='<div class="nempty">Loading...</div>';
   var {data}=await SB.from('clinic_notes').select('*').eq('clinic_name',cn).order('created_at',{ascending:false});
@@ -603,7 +572,6 @@ document.getElementById('ns').addEventListener('click',async function(){
   if(!note||!CUR||!ME)return;
   var btn=document.getElementById('ns');btn.disabled=true;btn.textContent='Posting...';
   await SB.from('clinic_notes').insert({clinic_name:CUR,note:note,rep_name:ME.name,rep_username:ME.username});
-  // Sync to HubSpot if clinic has email
   var clinicIdx=C.indexOf(CUR);
   if(clinicIdx>=0){var ck=KA[clinicIdx]||[];if(ck[1])syncHubspot('note',ck[1],note);}
   await logAction('note',CUR+': '+note.substring(0,60));
@@ -612,7 +580,6 @@ document.getElementById('ns').addEventListener('click',async function(){
 });
 document.getElementById('ni').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.getElementById('ns').click();}});
 
-// ADMIN — MANAGE REPS
 async function loadReps(){
   var rl=document.getElementById('rl2');rl.innerHTML='';
   var {data}=await SB.from('reps').select('*').order('created_at');
@@ -646,7 +613,6 @@ document.getElementById('arb2').addEventListener('click',async function(){
   loadReps();setTimeout(function(){msg.textContent='';},3000);
 });
 
-// ADMIN — ACTIVITY LOG
 async function loadActivity(){
   var repF=document.getElementById('act-rep-filter').value;
   var typeF=document.getElementById('act-type-filter').value;
@@ -658,8 +624,8 @@ async function loadActivity(){
   var items=data||[];
   if(!items.length){list.innerHTML='<div style="padding:12px;color:#aaa;font-size:13px">No activity yet</div>';return;}
   list.innerHTML='';
-  var icons={login:'&#128275;',view:'&#128300;',search:'&#128269;',note:'&#128203;'};
-  var classes={login:'act-login',view:'act-view',search:'act-search',note:'act-note'};
+  var icons={login:'&#128275;',view:'&#128300;',search:'&#128269;',note:'&#128203;',ai_chat:'&#129302;'};
+  var classes={login:'act-login',view:'act-view',search:'act-search',note:'act-note',ai_chat:'act-search'};
   items.forEach(function(item){
     var d=document.createElement('div');d.className='act-item';
     var icon=icons[item.action]||'&#9679;';
@@ -669,6 +635,7 @@ async function loadActivity(){
     else if(item.action==='view')mainText='<span>'+item.rep_name+'</span> viewed <span>'+item.detail+'</span>';
     else if(item.action==='search')mainText='<span>'+item.rep_name+'</span> searched for <span>"'+item.detail+'"</span>';
     else if(item.action==='note')mainText='<span>'+item.rep_name+'</span> added note on <span>'+item.detail+'</span>';
+    else if(item.action==='ai_chat')mainText='<span>'+item.rep_name+'</span> asked AI: <span>"'+item.detail+'"</span>';
     else mainText='<span>'+item.rep_name+'</span> '+item.action;
     d.innerHTML='<div class="act-icon '+cls+'">'+icon+'</div>'+
       '<div class="act-body"><div class="act-main">'+mainText+'</div>'+
@@ -680,7 +647,6 @@ document.getElementById('act-refresh').addEventListener('click',loadActivity);
 document.getElementById('act-rep-filter').addEventListener('change',loadActivity);
 document.getElementById('act-type-filter').addEventListener('change',loadActivity);
 
-// ADMIN — SCORECARDS
 async function loadScorecards(days){
   var grid=document.getElementById('scorecard-grid');grid.innerHTML='Loading...';
   var since=new Date(Date.now()-days*86400000).toISOString();
@@ -692,7 +658,6 @@ async function loadScorecards(days){
   grid.innerHTML='';
   reps.forEach(function(r){
     var mine=acts.filter(function(a){return a.rep_username===r.username;});
-    var logins=mine.filter(function(a){return a.action==='login';}).length;
     var views=mine.filter(function(a){return a.action==='view';}).length;
     var notes=mine.filter(function(a){return a.action==='note';}).length;
     var searches=mine.filter(function(a){return a.action==='search';}).length;
@@ -717,7 +682,6 @@ document.querySelectorAll('.tft').forEach(function(btn){
   });
 });
 
-// INIT
 function init(){
   for(var i=0;i<C.length;i++){var k=KA[i]||[];var r=k[0]>=0?REPS[k[0]]:'';SI.push([C[i],r,k[1]||'',k[2]||'',k[3]||'',k[4]||'',k[5]||'',k[6]||''].join(' ').toLowerCase());}
   document.getElementById('smsg').textContent=C.length.toLocaleString()+' clinics loaded.';
@@ -739,9 +703,9 @@ function init(){
   document.getElementById('arrv').textContent='$'+Math.round(ar).toLocaleString();
   document.getElementById('arc').textContent=ARL.length.toLocaleString();
   buildWB();buildAR();setupSearch();
+  initAiChats();
 }
 
-// SEARCH
 var inp=document.getElementById('si'),dd=document.getElementById('dd');
 function posDD(){var r=inp.getBoundingClientRect();dd.style.top=(r.bottom+window.scrollY+4)+'px';dd.style.left=(r.left+window.scrollX)+'px';dd.style.width=r.width+'px';}
 function setupSearch(){
@@ -768,7 +732,6 @@ function setupSearch(){
   });
 }
 
-// TERRITORY
 document.getElementById('rsel').addEventListener('change',function(){
   var rep=document.getElementById('rsel').value,ri=REPS.indexOf(rep);
   document.getElementById('te').style.display=rep?'none':'block';
@@ -800,7 +763,6 @@ document.getElementById('rsel').addEventListener('change',function(){
 });
 document.getElementById('tb').addEventListener('click',function(e){var b=e.target.closest('.vbtn');if(b)openPanel(parseInt(b.dataset.idx));});
 
-// WIN-BACK
 function buildWB(){
   var tb=document.getElementById('wbb');tb.innerHTML='';
   WBL.slice(0,300).forEach(function(w){
@@ -816,7 +778,6 @@ function buildWB(){
 }
 document.getElementById('wbb').addEventListener('click',function(e){var b=e.target.closest('.vbtn');if(b)openPanel(parseInt(b.dataset.idx));});
 
-// AT-RISK
 function buildAR(){
   var tb=document.getElementById('arb');tb.innerHTML='';
   ARL.slice(0,300).forEach(function(a){
@@ -833,14 +794,11 @@ function buildAR(){
 }
 document.getElementById('arb').addEventListener('click',function(e){var b=e.target.closest('.vbtn');if(b)openPanel(parseInt(b.dataset.idx));});
 
-// HUBSPOT SYNC
-var WORKER='https://fragrant-cloud-6ef2.jp-d4e.workers.dev';
-
 function syncHubspot(action, email, note){
   if(!email||!ME)return;
   var statusEl=document.getElementById('hs-status');
   if(statusEl){statusEl.style.color='#888';statusEl.textContent='Syncing to HubSpot...';}
-  fetch(WORKER,{
+  fetch(WORKER+'/hubspot',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
@@ -885,6 +843,183 @@ document.getElementById('pcheckin').addEventListener('click',function(){
   }
   syncHubspot('checkin',email,'');
 });
+
+// ============================================================
+// AI CHAT — reusable factory
+// ============================================================
+function mdToHtml(md){
+  var html=md.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  html=html.replace(/(\|[^\n]+\|\n\|[-: |]+\|\n(?:\|[^\n]+\|\n?)+)/g,function(block){
+    var lines=block.trim().split('\n');
+    var headers=lines[0].split('|').slice(1,-1).map(function(s){return s.trim();});
+    var rows=lines.slice(2).map(function(l){return l.split('|').slice(1,-1).map(function(s){return s.trim();});});
+    var out='<table><thead><tr>';
+    headers.forEach(function(h){out+='<th>'+h+'</th>';});
+    out+='</tr></thead><tbody>';
+    rows.forEach(function(r){out+='<tr>';r.forEach(function(c){out+='<td>'+c+'</td>';});out+='</tr>';});
+    out+='</tbody></table>';
+    return out;
+  });
+  html=html.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  html=html.replace(/`([^`]+)`/g,'<code>$1</code>');
+  html=html.replace(/^&gt; (.+)$/gm,'<blockquote>$1</blockquote>');
+  html=html.replace(/(?:^- .+(?:\n|$))+/gm,function(m){
+    var items=m.trim().split('\n').map(function(l){return '<li>'+l.replace(/^- /,'')+'</li>';}).join('');
+    return '<ul>'+items+'</ul>';
+  });
+  html=html.replace(/(?:^\d+\. .+(?:\n|$))+/gm,function(m){
+    var items=m.trim().split('\n').map(function(l){return '<li>'+l.replace(/^\d+\. /,'')+'</li>';}).join('');
+    return '<ol>'+items+'</ol>';
+  });
+  html=html.split(/\n{2,}/).map(function(p){
+    if(/^<(table|ul|ol|blockquote)/.test(p.trim()))return p;
+    return '<p>'+p.replace(/\n/g,'<br>')+'</p>';
+  }).join('');
+  return html;
+}
+
+function makeChat(opts){
+  var msgsEl=document.getElementById(opts.msgsId);
+  var inpEl=document.getElementById(opts.inpId);
+  var sendEl=document.getElementById(opts.sendId);
+  var ctxEl=opts.ctxId?document.getElementById(opts.ctxId):null;
+  var state={msgs:[],busy:false,surface:opts.surface};
+
+  function appendMsg(role,content,isError){
+    var starters=msgsEl.querySelector('.ai-starters');if(starters)starters.remove();
+    var div=document.createElement('div');
+    div.className='ai-msg '+(role==='user'?'user':(isError?'err':'bot'));
+    if(role==='user')div.textContent=content;else div.innerHTML=mdToHtml(content);
+    msgsEl.appendChild(div);msgsEl.scrollTop=msgsEl.scrollHeight;
+  }
+  function appendTyping(){
+    var t=document.createElement('div');t.className='ai-typing';t.dataset.typing='1';
+    t.innerHTML='<span></span><span></span><span></span>';
+    msgsEl.appendChild(t);msgsEl.scrollTop=msgsEl.scrollHeight;
+  }
+  function removeTyping(){
+    var t=msgsEl.querySelector('[data-typing]');if(t)t.remove();
+  }
+  function renderStarters(){
+    msgsEl.innerHTML='';
+    var firstName=ME?ME.name.split(' ')[0]:'there';
+    var intro=opts.surface==='page'
+      ?'Hi '+firstName+'. This is the admin chat — you have full-territory visibility. Ask about any rep, clinic, product, or aggregate. A few ideas:'
+      :'Hi '+firstName+'! Ask me anything about your clinics, products, or territory. A few ideas:';
+    var wrap=document.createElement('div');wrap.className='ai-msg bot';wrap.innerHTML=intro;
+    msgsEl.appendChild(wrap);
+    var s=document.createElement('div');s.className='ai-starters';
+    opts.starters.forEach(function(q){
+      var b=document.createElement('button');b.className='ai-starter';b.textContent=q;
+      b.addEventListener('click',function(){inpEl.value=q;send();});
+      s.appendChild(b);
+    });
+    msgsEl.appendChild(s);
+  }
+  function updateContext(){
+    if(!ctxEl)return;
+    if(CUR&&opts.surface==='bubble'){
+      ctxEl.innerHTML='Viewing: <strong>'+CUR+'</strong>';
+      ctxEl.classList.add('show');
+    }else{
+      ctxEl.classList.remove('show');
+    }
+  }
+  function reset(){
+    if(state.msgs.length&&!confirm('Start a new conversation? Current chat will be cleared.'))return;
+    state.msgs=[];renderStarters();
+  }
+  async function send(){
+    if(state.busy)return;
+    var text=inpEl.value.trim();if(!text)return;
+    inpEl.value='';inpEl.style.height='auto';
+    appendMsg('user',text);
+    state.msgs.push({role:'user',content:text});
+    state.busy=true;sendEl.disabled=true;appendTyping();
+    try{
+      var res=await fetch(WORKER+'/ai-chat',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          messages:state.msgs,
+          rep_username:ME?ME.name:null,
+          viewing_clinic:(opts.surface==='bubble'?CUR:null)||null,
+          admin_mode:opts.surface==='page'
+        })
+      });
+      var data=await res.json();
+      removeTyping();
+      if(data.success&&data.reply){
+        appendMsg('bot',data.reply);
+        state.msgs.push({role:'assistant',content:data.reply});
+        logAction('ai_chat','['+opts.surface+'] '+text.substring(0,80));
+      }else{
+        appendMsg('bot','Sorry, something went wrong: '+(data.error||'unknown error'),true);
+      }
+    }catch(e){
+      removeTyping();
+      appendMsg('bot','Network error reaching the AI service. Check your connection and try again.',true);
+    }
+    state.busy=false;sendEl.disabled=false;inpEl.focus();
+  }
+
+  sendEl.addEventListener('click',send);
+  inpEl.addEventListener('keydown',function(e){
+    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}
+  });
+  inpEl.addEventListener('input',function(){
+    inpEl.style.height='auto';
+    inpEl.style.height=Math.min(opts.surface==='page'?140:120,inpEl.scrollHeight)+'px';
+  });
+
+  return {state:state,msgs:state.msgs,renderStarters:renderStarters,updateContext:updateContext,reset:reset,send:send};
+}
+
+function initAiChats(){
+  aiBubbleChat=makeChat({
+    surface:'bubble',
+    msgsId:'ai-msgs',
+    inpId:'ai-inp',
+    sendId:'ai-send',
+    ctxId:'ai-ctx',
+    starters:[
+      'How many of my clinics ordered Pimobendan?',
+      'Show me my top 10 clinics by 2026 revenue',
+      'Which of my clinics haven\'t ordered in 60+ days?',
+      'How much Pimobendan did I use last year?'
+    ]
+  });
+  aiBubbleChat.renderStarters();
+  aiBubbleChat.updateContext();
+  document.getElementById('ai-fab').addEventListener('click',function(){
+    document.getElementById('ai-chat').classList.add('open');
+    document.getElementById('ai-fab').classList.add('hidden');
+    aiBubbleChat.updateContext();
+    setTimeout(function(){document.getElementById('ai-inp').focus();},150);
+  });
+  document.getElementById('ai-close').addEventListener('click',function(){
+    document.getElementById('ai-chat').classList.remove('open');
+    document.getElementById('ai-fab').classList.remove('hidden');
+  });
+  document.getElementById('ai-reset').addEventListener('click',aiBubbleChat.reset);
+
+  if(ME&&ME.role==='admin'){
+    aiPageChat=makeChat({
+      surface:'page',
+      msgsId:'ai-page-msgs',
+      inpId:'ai-page-inp',
+      sendId:'ai-page-send',
+      starters:[
+        'Top 10 reps by 2026 revenue',
+        'Show me the biggest at-risk clinics across all territories',
+        'Which reps sell the most Pimobendan?',
+        'How much Doxycycline did we ship in 2025 company-wide?',
+        'Top 10 lost-revenue clinics we haven\'t recovered in 2026'
+      ]
+    });
+    document.getElementById('ai-page-reset').addEventListener('click',aiPageChat.reset);
+  }
+}
 </script>
 </body>
 </html>
