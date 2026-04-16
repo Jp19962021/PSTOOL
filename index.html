@@ -22,13 +22,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .lbtn:hover{background:#2a3550}
 .lerr{color:#dc2626;font-size:12px;text-align:center;margin-top:10px;min-height:18px}
 #app{display:none}
-.topbar{background:#1a2035;padding:0 28px;display:flex;align-items:center;position:sticky;top:0;z-index:200}
+.topbar{background:#1a2035;padding:0 28px;display:flex;align-items:center;position:sticky;top:0;z-index:200;overflow-x:auto}
 .logo{font-size:15px;font-weight:700;color:#fff;padding:16px 24px 16px 0;margin-right:12px;border-right:1px solid rgba(255,255,255,.15);white-space:nowrap;flex-shrink:0}
 .logo span{color:#4ade9a}
-.tab{padding:16px 16px;font-size:12px;font-weight:600;cursor:pointer;color:rgba(255,255,255,.5);border-bottom:3px solid transparent;white-space:nowrap;user-select:none}
+.tab{padding:16px 14px;font-size:12px;font-weight:600;cursor:pointer;color:rgba(255,255,255,.5);border-bottom:3px solid transparent;white-space:nowrap;user-select:none;flex-shrink:0}
 .tab:hover{color:rgba(255,255,255,.85)}
 .tab.active{color:#fff;border-bottom-color:#4ade9a}
-.tbr{margin-left:auto;display:flex;align-items:center;gap:12px}
+.tbr{margin-left:auto;display:flex;align-items:center;gap:12px;flex-shrink:0}
 .rbadge{font-size:12px;color:rgba(255,255,255,.7);background:rgba(255,255,255,.1);padding:5px 12px;border-radius:20px;white-space:nowrap}
 .lout{font-size:12px;color:rgba(255,255,255,.5);background:none;border:none;cursor:pointer;padding:5px}
 .lout:hover{color:#fff}
@@ -61,9 +61,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .up{color:#16a34a;font-weight:600}.dn2{color:#dc2626;font-weight:600}
 .sechd{font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.07em;margin:18px 0 8px;padding-bottom:6px;border-bottom:1px solid #edf0f5;display:flex;align-items:center;gap:8px}
 .shc{background:#e8eaed;color:#666;border-radius:20px;padding:1px 8px;font-size:11px}
+/* clinic profile sub-tabs */
+.cltabs{display:flex;gap:0;border-bottom:1px solid #edf0f5;margin-bottom:16px;flex-wrap:wrap}
+.cltab{padding:10px 14px;font-size:11px;font-weight:600;color:#888;cursor:pointer;border-bottom:2px solid transparent;text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.cltab:hover{color:#1a2035}
+.cltab.active{color:#1a2035;border-bottom-color:#4ade9a}
+.cltab .badge{background:#e8eaed;color:#666;border-radius:20px;padding:1px 7px;font-size:10px}
+.clpane{display:none}.clpane.active{display:block}
 .notes-box{background:#f9fafc;border-radius:12px;border:1px solid #e8eaed;overflow:hidden;margin-bottom:4px}
-.nhdr{padding:12px 16px;background:#f0f2f7;border-bottom:1px solid #e8eaed;font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.07em;display:flex;align-items:center;gap:8px}
-.nlist{padding:12px 16px;max-height:240px;overflow-y:auto}
+.nlist{padding:12px 16px;max-height:300px;overflow-y:auto}
 .nitem{padding:10px 12px;background:#fff;border-radius:8px;border:1px solid #e8eaed;margin-bottom:8px;font-size:13px;line-height:1.5}
 .nitem:last-child{margin-bottom:0}
 .nmeta{font-size:11px;color:#aaa;margin-top:5px;display:flex;align-items:center;gap:6px}
@@ -77,6 +83,37 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .nsub{padding:9px 16px;background:#1a2035;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
 .nsub:hover{background:#2a3550}
 .nsub:disabled{background:#ccc;cursor:not-allowed}
+/* tasks */
+.tkbox{background:#f9fafc;border-radius:12px;border:1px solid #e8eaed;overflow:hidden}
+.tklist{padding:12px 16px;max-height:320px;overflow-y:auto}
+.tkitem{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:#fff;border-radius:8px;border:1px solid #e8eaed;margin-bottom:8px}
+.tkitem:last-child{margin-bottom:0}
+.tkitem.done{opacity:.55;background:#f7f8fa}
+.tkitem.done .tktext{text-decoration:line-through}
+.tkitem.overdue{border-left:3px solid #dc2626}
+.tkitem.today{border-left:3px solid #f59e0b}
+.tkcheck{margin-top:3px;width:16px;height:16px;cursor:pointer;flex-shrink:0}
+.tkmid{flex:1;min-width:0}
+.tktext{font-size:13px;color:#111;line-height:1.4;word-wrap:break-word}
+.tkmeta{font-size:11px;color:#888;margin-top:4px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tkmeta .pri{padding:1px 7px;border-radius:20px;font-weight:600;font-size:10px;text-transform:uppercase}
+.pri.high{background:#fee2e2;color:#dc2626}.pri.medium{background:#fef3d0;color:#854d0e}.pri.low{background:#dcfce7;color:#16a34a}
+.tkdue{font-weight:500}
+.tkdue.od{color:#dc2626}.tkdue.td{color:#d97706}
+.tkcln{color:#1a2035;font-weight:500}
+.tkdel{background:none;border:none;color:#ddd;cursor:pointer;font-size:14px;padding:2px}
+.tkdel:hover{color:#dc2626}
+.tkform{padding:12px 16px;border-top:1px solid #e8eaed;background:#f7f8fa;display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center}
+.tkform input[type=text],.tkform input[type=date],.tkform select{padding:8px 10px;border:1.5px solid #e0e3ea;border-radius:8px;font-size:12px;outline:none;background:#fff}
+.tkform input[type=text]{grid-column:1/-1;width:100%}
+.tkform input:focus,.tkform select:focus{border-color:#1a2035}
+.tkform .tksub{padding:8px 14px;background:#1a2035;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.tkform .tksub:hover{background:#2a3550}
+.tkform-cln-wrap{position:relative}
+.tkform-cln-dd{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #d0d4dc;border-radius:8px;max-height:220px;overflow-y:auto;z-index:20;display:none;box-shadow:0 6px 20px rgba(0,0,0,.15)}
+.tkform-cln-dd .di{padding:8px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid #f2f2f2}
+.tkform-cln-dd .di:hover{background:#f5f7ff}
+/* product table */
 .pwrap{overflow-x:auto}
 table.ptbl{width:100%;border-collapse:collapse;font-size:12px}
 table.ptbl th{text-align:left;font-size:10px;font-weight:600;color:#888;padding:7px 10px;border-bottom:1px solid #edf0f5;white-space:nowrap;text-transform:uppercase;background:#fafbfc}
@@ -117,7 +154,7 @@ table.ptbl tr:last-child td{border-bottom:none}
 .pn{font-weight:500;color:#1a2035}.sn{color:#dc2626}.nn{color:#b45309}
 .vbtn{background:none;border:none;color:#1a2035;font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline;padding:0;white-space:nowrap}
 .filter-bar{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:20px}
-.filter-bar select{padding:9px 14px;border:1.5px solid #d8dce3;border-radius:8px;background:#fff;color:#111;font-size:13px;outline:none;min-width:200px}
+.filter-bar select,.filter-bar input{padding:9px 14px;border:1.5px solid #d8dce3;border-radius:8px;background:#fff;color:#111;font-size:13px;outline:none;min-width:200px}
 .spills{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
 .sp{background:#fff;border:1px solid #e8eaed;border-radius:10px;padding:14px 20px;flex:1;min-width:130px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
 .spv{font-size:22px;font-weight:700;color:#1a2035}
@@ -162,17 +199,17 @@ table.ptbl tr:last-child td{border-bottom:none}
 .scard{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.07);border:1px solid #e8eaed}
 .scard-name{font-size:15px;font-weight:700;color:#1a2035;margin-bottom:4px}
 .scard-role{font-size:11px;color:#aaa;margin-bottom:14px;text-transform:uppercase;letter-spacing:.05em}
-.scard-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.sstat{text-align:center;background:#f7f8fa;border-radius:8px;padding:10px 6px}
-.sstat-v{font-size:18px;font-weight:700;color:#1a2035}
-.sstat-l{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+.scard-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.sstat{text-align:center;background:#f7f8fa;border-radius:8px;padding:10px 4px}
+.sstat-v{font-size:17px;font-weight:700;color:#1a2035}
+.sstat-l{font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
 .scard-last{font-size:11px;color:#aaa;margin-top:12px;padding-top:10px;border-top:1px solid #f3f4f6}
 .time-filter{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
 .tft{padding:6px 14px;border:1.5px solid #d8dce3;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;color:#666;background:#fff}
 .tft.active{background:#1a2035;color:#fff;border-color:#1a2035}
-@media print{.topbar,.filter-bar,.prtbtn,.tab,#sw,.search-card,.spills,.overlay,.panel,#login-screen,.ninpw,#ai-fab,#ai-chat{display:none!important}.page{display:block!important}body{background:#fff}}
-@media(max-width:700px){.psg{grid-template-columns:1fr}.container{padding:16px}.tab{padding:14px 8px;font-size:11px}}
-/* AI CHAT — shared */
+@media print{.topbar,.filter-bar,.prtbtn,.tab,#sw,.search-card,.spills,.overlay,.panel,#login-screen,.ninpw,#ai-fab,#ai-chat,.tkform,.cltabs{display:none!important}.page{display:block!important}.clpane{display:block!important}body{background:#fff}}
+@media(max-width:700px){.psg{grid-template-columns:1fr}.container{padding:16px}.tab{padding:14px 8px;font-size:11px}.tkform{grid-template-columns:1fr 1fr}}
+/* AI CHAT */
 .ai-msg{max-width:85%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.5;word-wrap:break-word}
 .ai-msg.user{align-self:flex-end;background:#1a2035;color:#fff;border-bottom-right-radius:4px}
 .ai-msg.bot{align-self:flex-start;background:#fff;color:#111;border:1px solid #e8eaed;border-bottom-left-radius:4px}
@@ -184,6 +221,8 @@ table.ptbl tr:last-child td{border-bottom:none}
 .ai-msg.bot blockquote{border-left:3px solid #4ade9a;padding-left:10px;margin:6px 0;color:#555;font-style:italic}
 .ai-msg.bot ul,.ai-msg.bot ol{margin:6px 0 6px 18px}
 .ai-msg.bot strong{font-weight:700}
+.ai-msg.bot a{color:#1a2035;font-weight:600;text-decoration:underline}
+.ai-msg.bot a:hover{color:#4ade9a}
 .ai-typing{align-self:flex-start;background:#fff;border:1px solid #e8eaed;border-radius:14px;padding:10px 14px;display:flex;gap:4px}
 .ai-typing span{width:6px;height:6px;background:#bbb;border-radius:50%;animation:aidot 1.2s infinite}
 .ai-typing span:nth-child(2){animation-delay:.15s}.ai-typing span:nth-child(3){animation-delay:.3s}
@@ -204,7 +243,7 @@ table.ptbl tr:last-child td{border-bottom:none}
 .aichdr-title{font-size:14px;font-weight:700;flex:1}
 .aichdr-title span{color:#4ade9a}
 .aichdr-sub{font-size:11px;color:rgba(255,255,255,.6);font-weight:400;margin-top:1px}
-.aichdr-btn{background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:18px;padding:4px 8px;border-radius:4px}
+.aichdr-btn{background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:16px;padding:4px 8px;border-radius:4px}
 .aichdr-btn:hover{background:rgba(255,255,255,.1);color:#fff}
 #ai-msgs{flex:1;overflow-y:auto;padding:16px;background:#f7f8fa;display:flex;flex-direction:column;gap:12px}
 #ai-inp-wrap{padding:12px;border-top:1px solid #e8eaed;background:#fff;display:flex;gap:8px;flex-shrink:0}
@@ -213,10 +252,28 @@ table.ptbl tr:last-child td{border-bottom:none}
 #ai-send{padding:0 18px;background:#1a2035;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 #ai-send:hover{background:#2a3550}
 #ai-send:disabled{background:#ccc;cursor:not-allowed}
-@media(max-width:500px){#ai-chat{bottom:0;right:0;left:0;width:100%;height:100%;border-radius:0}#ai-fab{bottom:16px;right:16px}}
-/* AI CHAT — full page (admin tab) */
-.ai-page-wrap{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.07);border:1px solid #e8eaed;overflow:hidden;display:flex;flex-direction:column;height:calc(100vh - 140px);min-height:500px}
-.ai-page-hdr{padding:16px 20px;border-bottom:1px solid #edf0f5;background:#fafbfc;display:flex;align-items:center;gap:12px}
+/* chat history overlay */
+.ch-hist{position:absolute;top:50px;right:8px;width:280px;max-height:360px;background:#fff;border:1px solid #d0d4dc;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);z-index:410;display:none;overflow:hidden;flex-direction:column}
+.ch-hist.open{display:flex}
+.ch-hist-hdr{padding:10px 14px;background:#f7f8fa;border-bottom:1px solid #e8eaed;font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.06em}
+.ch-hist-list{flex:1;overflow-y:auto;padding:6px}
+.ch-item{padding:9px 10px;border-radius:6px;cursor:pointer;font-size:12px;color:#1a2035;border:1px solid transparent;margin-bottom:2px;display:flex;gap:6px;align-items:flex-start}
+.ch-item:hover{background:#f0f2f7;border-color:#e0e3ea}
+.ch-item .ct{flex:1;min-width:0}
+.ch-item .ct-title{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ch-item .ct-time{font-size:10px;color:#aaa;margin-top:2px}
+.ch-item .ch-del{background:none;border:none;color:#ddd;cursor:pointer;font-size:12px;padding:0;flex-shrink:0}
+.ch-item .ch-del:hover{color:#dc2626}
+.ch-hist-empty{padding:18px 12px;text-align:center;color:#aaa;font-size:12px}
+@media(max-width:500px){#ai-chat{bottom:0;right:0;left:0;width:100%;height:100%;border-radius:0}#ai-fab{bottom:16px;right:16px}.ch-hist{right:0;left:0;width:auto;top:52px;border-radius:0}}
+/* AI CHAT — full page */
+.ai-page-wrap{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.07);border:1px solid #e8eaed;overflow:hidden;display:flex;flex-direction:row;height:calc(100vh - 140px);min-height:520px;position:relative}
+.ai-page-side{width:240px;border-right:1px solid #edf0f5;background:#fafbfc;display:flex;flex-direction:column;flex-shrink:0}
+.ai-page-side-hdr{padding:14px 16px;border-bottom:1px solid #edf0f5;display:flex;gap:8px;align-items:center}
+.ai-page-side-hdr .abtn{flex:1;font-size:12px}
+.ai-page-side-list{flex:1;overflow-y:auto;padding:6px}
+.ai-page-main{flex:1;display:flex;flex-direction:column;min-width:0}
+.ai-page-hdr{padding:14px 20px;border-bottom:1px solid #edf0f5;background:#fafbfc;display:flex;align-items:center;gap:12px}
 .ai-page-title{font-size:15px;font-weight:700;color:#1a2035;flex:1;display:flex;align-items:center;gap:8px}
 .ai-page-title .dot{width:8px;height:8px;background:#4ade9a;border-radius:50%;display:inline-block}
 .ai-page-sub{font-size:11px;color:#888;font-weight:400}
@@ -228,6 +285,8 @@ table.ptbl tr:last-child td{border-bottom:none}
 #ai-page-send{padding:0 22px;background:#1a2035;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
 #ai-page-send:hover{background:#2a3550}
 #ai-page-send:disabled{background:#ccc;cursor:not-allowed}
+@media(max-width:800px){.ai-page-side{width:200px}}
+@media(max-width:650px){.ai-page-wrap{flex-direction:column;height:auto}.ai-page-side{width:100%;max-height:180px;border-right:none;border-bottom:1px solid #edf0f5}}
 </style>
 </head>
 <body>
@@ -260,21 +319,83 @@ table.ptbl tr:last-child td{border-bottom:none}
   </div>
   <div class="pbody">
     <div class="psg" id="psg"></div>
-    <div class="sechd">&#128203; Rep Notes <span class="shc" id="nc">0</span></div>
-    <div class="notes-box">
-      <div class="nlist" id="nl"><div class="nempty">Loading...</div></div>
-      <div class="ninpw">
-        <textarea class="ninp" id="ni" rows="2" placeholder="Add a note visible to all reps... (Enter to post)"></textarea>
-        <button class="nsub" id="ns">Post</button>
+
+    <!-- Sub-tabs inside clinic profile -->
+    <div class="cltabs">
+      <div class="cltab active" data-pane="overview">&#128202; Overview</div>
+      <div class="cltab" data-pane="mynotes">&#128221; My Notes <span class="badge" id="mnc">0</span></div>
+      <div class="cltab" data-pane="mytasks">&#9989; My Tasks <span class="badge" id="mtc">0</span></div>
+      <div class="cltab" data-pane="shared">&#128172; Shared Notes <span class="badge" id="nc">0</span></div>
+      <div class="cltab" data-pane="orders">&#128230; Orders</div>
+      <div class="cltab" data-pane="pitch">&#11088; Pitch</div>
+    </div>
+
+    <!-- Overview pane = stats + recent activity -->
+    <div class="clpane active" data-pane="overview">
+      <div class="sechd">&#128293; At a Glance</div>
+      <div id="cl-glance" style="font-size:13px;color:#555;line-height:1.7"></div>
+    </div>
+
+    <!-- My Private Notes pane -->
+    <div class="clpane" data-pane="mynotes">
+      <div class="sechd">&#128273; My Private Notes for this Clinic <span class="shc" id="mnc2">0</span></div>
+      <p class="fnote" style="margin-bottom:10px">Only you can see these. Admin can see all reps' private notes in the Admin dashboard.</p>
+      <div class="notes-box">
+        <div class="nlist" id="mnl"><div class="nempty">Loading...</div></div>
+        <div class="ninpw">
+          <textarea class="ninp" id="mni" rows="2" placeholder="Add a private note... (Enter to save)"></textarea>
+          <button class="nsub" id="mns">Save</button>
+        </div>
       </div>
     </div>
-    <div class="sechd" style="margin-top:18px">Products &amp; Order History <span class="shc" id="ppc"></span></div>
-    <div class="pwrap"><table class="ptbl">
-      <thead><tr><th style="width:36%">Product</th><th>Status</th><th style="text-align:right">Order Date</th><th style="text-align:right">Amount</th><th style="text-align:right">Days Since Prev</th></tr></thead>
-      <tbody id="ppb"></tbody>
-    </table></div>
-    <div class="sechd">&#11088; Pitch Opportunities <span class="shc" id="pxc"></span></div>
-    <table class="ptbl"><thead><tr><th>Product</th><th style="text-align:right">Our Revenue</th><th style="text-align:right">Rank</th></tr></thead><tbody id="pxb"></tbody></table>
+
+    <!-- My Private Tasks pane -->
+    <div class="clpane" data-pane="mytasks">
+      <div class="sechd">&#9989; My Tasks for this Clinic <span class="shc" id="mtc2">0</span></div>
+      <p class="fnote" style="margin-bottom:10px">Tasks default to follow-up in 2 days. Only you can see these.</p>
+      <div class="tkbox">
+        <div class="tklist" id="mtl"><div class="nempty">Loading...</div></div>
+        <div class="tkform">
+          <input type="text" id="mti" placeholder="Task description...">
+          <input type="date" id="mtd" title="Due date">
+          <select id="mtp">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+          <button class="tksub" id="mts">Add Task</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shared team notes (syncs to HubSpot) -->
+    <div class="clpane" data-pane="shared">
+      <div class="sechd">&#128172; Shared Team Notes <span class="shc" id="nc2">0</span></div>
+      <p class="fnote" style="margin-bottom:10px">Visible to all reps. Automatically synced to HubSpot.</p>
+      <div class="notes-box">
+        <div class="nlist" id="nl"><div class="nempty">Loading...</div></div>
+        <div class="ninpw">
+          <textarea class="ninp" id="ni" rows="2" placeholder="Add a note visible to all reps... (Enter to post)"></textarea>
+          <button class="nsub" id="ns">Post</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Orders -->
+    <div class="clpane" data-pane="orders">
+      <div class="sechd">Products &amp; Order History <span class="shc" id="ppc"></span></div>
+      <div class="pwrap"><table class="ptbl">
+        <thead><tr><th style="width:36%">Product</th><th>Status</th><th style="text-align:right">Order Date</th><th style="text-align:right">Amount</th><th style="text-align:right">Days Since Prev</th></tr></thead>
+        <tbody id="ppb"></tbody>
+      </table></div>
+    </div>
+
+    <!-- Pitch -->
+    <div class="clpane" data-pane="pitch">
+      <div class="sechd">&#11088; Pitch Opportunities <span class="shc" id="pxc"></span></div>
+      <table class="ptbl"><thead><tr><th>Product</th><th style="text-align:right">Our Revenue</th><th style="text-align:right">Rank</th></tr></thead><tbody id="pxb"></tbody></table>
+    </div>
+
   </div>
 </div>
 
@@ -284,6 +405,7 @@ table.ptbl tr:last-child td{border-bottom:none}
   <div class="tab" data-page="territory">&#128205; Territory</div>
   <div class="tab" data-page="winback">&#128257; Win-Back</div>
   <div class="tab" data-page="atrisk">&#9888; At-Risk</div>
+  <div class="tab" data-page="notestasks">&#128221; My Notes &amp; Tasks</div>
   <div class="tab admin-tab" data-page="admin" id="atab" style="display:none">&#9881; Admin</div>
   <div class="tab admin-tab" data-page="chatbot" id="cbtab" style="display:none">&#129302; Chat Bot</div>
   <div class="tbr">
@@ -340,6 +462,65 @@ table.ptbl tr:last-child td{border-bottom:none}
   <p class="fnote">&#9432; Annualized 2026 = YTD &times; 4. Compared against full year 2025.</p>
 </div></div>
 
+<!-- MY NOTES & TASKS -->
+<div id="page-notestasks" class="page"><div class="container">
+  <div class="spills">
+    <div class="sp"><div class="spv" id="nt-task-due">0</div><div class="spl">Tasks Due Today</div></div>
+    <div class="sp"><div class="spv" id="nt-task-overdue">0</div><div class="spl">Overdue</div></div>
+    <div class="sp"><div class="spv" id="nt-task-open">0</div><div class="spl">All Open Tasks</div></div>
+    <div class="sp"><div class="spv" id="nt-notes-total">0</div><div class="spl">Total Notes</div></div>
+  </div>
+
+  <!-- Tasks card -->
+  <div class="section-card">
+    <div class="sh">&#9989; My Tasks
+      <div style="margin-left:auto;display:flex;gap:6px;align-items:center">
+        <select id="nt-task-filter" style="padding:6px 10px;border:1.5px solid #d8dce3;border-radius:8px;font-size:11px;outline:none;background:#fff">
+          <option value="open">Open</option>
+          <option value="overdue">Overdue</option>
+          <option value="today">Due today</option>
+          <option value="week">This week</option>
+          <option value="all">All (incl. done)</option>
+        </select>
+      </div>
+    </div>
+    <div class="tkbox" style="border:none;border-radius:0">
+      <div class="tklist" id="nt-tk-list" style="max-height:none"><div class="nempty">Loading...</div></div>
+      <div class="tkform">
+        <input type="text" id="nt-tk-txt" placeholder="Task description...">
+        <div class="tkform-cln-wrap">
+          <input type="text" id="nt-tk-cln" placeholder="Link to clinic (optional)" autocomplete="off">
+          <div class="tkform-cln-dd" id="nt-tk-cln-dd"></div>
+        </div>
+        <input type="date" id="nt-tk-due">
+        <select id="nt-tk-pri">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+        </select>
+        <button class="tksub" id="nt-tk-add">Add Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notes card -->
+  <div class="section-card">
+    <div class="sh">&#128221; My Private Notes
+      <div style="margin-left:auto">
+        <input type="text" id="nt-nt-search" placeholder="Search notes..." style="padding:6px 10px;border:1.5px solid #d8dce3;border-radius:8px;font-size:11px;outline:none;background:#fff;min-width:200px">
+      </div>
+    </div>
+    <div class="notes-box" style="border:none;border-radius:0">
+      <div class="nlist" id="nt-nt-list" style="max-height:none"><div class="nempty">Loading...</div></div>
+      <div class="ninpw">
+        <textarea class="ninp" id="nt-nt-txt" rows="2" placeholder="Quick note... (not linked to any clinic)"></textarea>
+        <button class="nsub" id="nt-nt-add">Save Note</button>
+      </div>
+    </div>
+  </div>
+</div></div>
+
+<!-- ADMIN -->
 <div id="page-admin" class="page"><div class="container">
   <div class="section-card" style="margin-bottom:20px">
     <div class="sh">&#128202; Rep Activity Scorecards
@@ -380,19 +561,41 @@ table.ptbl tr:last-child td{border-bottom:none}
       <div id="act-list" style="max-height:420px;overflow-y:auto">Loading...</div>
     </div>
   </div>
+
+  <!-- Admin: all reps' private notes & tasks -->
+  <div class="section-card" style="margin-top:20px">
+    <div class="sh">&#128221; All Reps' Private Notes &amp; Tasks
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <select id="adm-np-rep" style="padding:6px 10px;border:1.5px solid #d8dce3;border-radius:8px;font-size:11px;outline:none;background:#fff"><option value="">All reps</option></select>
+        <select id="adm-np-type" style="padding:6px 10px;border:1.5px solid #d8dce3;border-radius:8px;font-size:11px;outline:none;background:#fff">
+          <option value="notes">Private notes</option>
+          <option value="tasks">Tasks</option>
+        </select>
+        <button class="abtn" id="adm-np-refresh">&#8635;</button>
+      </div>
+    </div>
+    <div style="padding:12px 16px"><div id="adm-np-list" style="max-height:500px;overflow-y:auto">Loading...</div></div>
+  </div>
 </div></div>
 
-<!-- CHAT BOT — admin tab -->
+<!-- CHAT BOT admin tab -->
 <div id="page-chatbot" class="page"><div class="container">
   <div class="ai-page-wrap">
-    <div class="ai-page-hdr">
-      <div class="ai-page-title"><span class="dot"></span>AI Assistant <span class="ai-page-sub">&middot; Full-territory access</span></div>
-      <button class="abtn" id="ai-page-reset" style="background:#e8eaed;color:#1a2035">&#8635; New conversation</button>
+    <div class="ai-page-side">
+      <div class="ai-page-side-hdr">
+        <button class="abtn" id="ai-page-new">&#43; New Chat</button>
+      </div>
+      <div class="ai-page-side-list" id="ai-page-hist">Loading...</div>
     </div>
-    <div id="ai-page-msgs"></div>
-    <div id="ai-page-inp-wrap">
-      <textarea id="ai-page-inp" rows="2" placeholder="Ask anything about clinics, products, reps, or territory..."></textarea>
-      <button id="ai-page-send">Send</button>
+    <div class="ai-page-main">
+      <div class="ai-page-hdr">
+        <div class="ai-page-title"><span class="dot"></span>AI Assistant <span class="ai-page-sub">&middot; Full-territory access &middot; Exports available</span></div>
+      </div>
+      <div id="ai-page-msgs"></div>
+      <div id="ai-page-inp-wrap">
+        <textarea id="ai-page-inp" rows="2" placeholder="Ask anything, or say 'export top 20 clinics as a CSV'..."></textarea>
+        <button id="ai-page-send">Send</button>
+      </div>
     </div>
   </div>
 </div></div>
@@ -402,7 +605,8 @@ table.ptbl tr:last-child td{border-bottom:none}
 <div id="ai-chat">
   <div class="aichdr">
     <div class="aichdr-title">AI <span>Assistant</span><div class="aichdr-sub" id="ai-sub">Ask anything about your clinics</div></div>
-    <button class="aichdr-btn" id="ai-reset" title="Start new conversation">&#8635;</button>
+    <button class="aichdr-btn" id="ai-hist-btn" title="Chat history">&#128196;</button>
+    <button class="aichdr-btn" id="ai-new" title="New conversation">&#43;</button>
     <button class="aichdr-btn" id="ai-close" title="Close">&#10005;</button>
   </div>
   <div class="ai-ctx" id="ai-ctx"></div>
@@ -410,6 +614,10 @@ table.ptbl tr:last-child td{border-bottom:none}
   <div id="ai-inp-wrap">
     <textarea id="ai-inp" rows="1" placeholder="Ask a question..."></textarea>
     <button id="ai-send">Send</button>
+  </div>
+  <div class="ch-hist" id="ai-hist">
+    <div class="ch-hist-hdr">Recent conversations</div>
+    <div class="ch-hist-list" id="ai-hist-list"></div>
   </div>
 </div>
 
@@ -427,6 +635,9 @@ function epDate(e){var d=new Date(EP0+e*86400000);return d.toLocaleDateString('e
 function fmt(n){return n?'$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'\u2014';}
 function yoy(a,b){if(!a)return '\u2014';var p=((b-a)/a*100).toFixed(1);return p>0?'<span class="up">&#9650;'+p+'%</span>':'<span class="dn2">&#9660;'+Math.abs(p)+'%</span>';}
 function ago(s){var d=new Date(s);var x=Math.floor((Date.now()-d)/1000);if(x<60)return 'just now';if(x<3600)return Math.floor(x/60)+'m ago';if(x<86400)return Math.floor(x/3600)+'h ago';if(x<604800)return Math.floor(x/86400)+'d ago';return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+function todayISO(){var d=new Date();return d.toISOString().slice(0,10);}
+function addDaysISO(n){var d=new Date();d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+function daysUntil(iso){if(!iso)return null;var t=Math.floor(Date.now()/86400000);var d=Math.floor(new Date(iso+'T12:00:00Z').getTime()/86400000);return d-t;}
 
 async function logAction(action,detail){
   if(!ME)return;
@@ -471,8 +682,12 @@ document.querySelectorAll('.tab').forEach(function(t){
     document.querySelectorAll('.page').forEach(function(x){x.classList.remove('active');});
     t.classList.add('active');
     document.getElementById('page-'+t.dataset.page).classList.add('active');
-    if(t.dataset.page==='admin'){loadReps();loadActivity();loadScorecards(7);}
-    if(t.dataset.page==='chatbot'&&aiPageChat&&aiPageChat.msgs.length===0)aiPageChat.renderStarters();
+    if(t.dataset.page==='admin'){loadReps();loadActivity();loadScorecards(7);loadAdminNP();}
+    if(t.dataset.page==='chatbot'){
+      if(aiPageChat&&aiPageChat.msgs.length===0)aiPageChat.renderStarters();
+      loadPageChatHistory();
+    }
+    if(t.dataset.page==='notestasks'){loadMyTasks();loadMyNotes();}
   });
 });
 
@@ -481,6 +696,19 @@ function closePanel(){document.getElementById('overlay').classList.remove('open'
 document.getElementById('overlay').addEventListener('click',closePanel);
 document.getElementById('pcl').addEventListener('click',closePanel);
 document.getElementById('pprt').addEventListener('click',function(){window.print();});
+
+// Clinic sub-tabs
+document.querySelectorAll('.cltab').forEach(function(ct){
+  ct.addEventListener('click',function(){
+    document.querySelectorAll('.cltab').forEach(function(x){x.classList.remove('active');});
+    document.querySelectorAll('.clpane').forEach(function(x){x.classList.remove('active');});
+    ct.classList.add('active');
+    document.querySelector('.clpane[data-pane="'+ct.dataset.pane+'"]').classList.add('active');
+    if(ct.dataset.pane==='mynotes')loadPrivateClinicNotes();
+    if(ct.dataset.pane==='mytasks')loadPrivateClinicTasks();
+    if(ct.dataset.pane==='shared')loadNotes(CUR);
+  });
+});
 
 function fillPanel(idx){
   CUR=C[idx];
@@ -506,7 +734,23 @@ function fillPanel(idx){
     '<div class="sc"><div class="sl">2025</div><div class="sv">'+fmt(r25)+'</div><div class="sy">'+yoy(r25,r26)+' vs 2025</div></div>'+
     '<div class="sc"><div class="sl">2024</div><div class="sv">'+fmt(r24)+'</div><div class="sy">'+yoy(r24,r25)+' vs 2024</div></div>'+
     '<div class="sc"><div class="sl">3-Year Total</div><div class="sv">'+fmt(r24+r25+r26)+'</div></div>';
-  loadNotes(name);
+
+  // Overview "at a glance"
+  var numProd=Object.keys(pm).length;
+  var stopped=0;Object.keys(pm).forEach(function(pi){var yrs={};pm[pi].forEach(function(o){yrs[o.yr]=1;});if((yrs[4]||yrs[5])&&!yrs[6])stopped++;});
+  document.getElementById('cl-glance').innerHTML=
+    '<div>&#9679; <strong>'+numProd+'</strong> total products ordered, <strong style="color:#dc2626">'+stopped+'</strong> stopped</div>'+
+    '<div>&#9679; '+(rows.length)+' orders on file across 3 years</div>'+
+    '<div>&#9679; Rep on account: <strong>'+(rep||'none')+'</strong></div>'+
+    '<div style="margin-top:10px;color:#888;font-size:12px">Switch tabs above to see private notes, tasks, shared team notes, orders, and pitch ideas.</div>';
+
+  // Reset to overview tab
+  document.querySelectorAll('.cltab').forEach(function(x){x.classList.remove('active');});
+  document.querySelectorAll('.clpane').forEach(function(x){x.classList.remove('active');});
+  document.querySelector('.cltab[data-pane="overview"]').classList.add('active');
+  document.querySelector('.clpane[data-pane="overview"]').classList.add('active');
+
+  // Orders table
   var pl=Object.keys(pm).map(function(pi){
     var p2=parseInt(pi),ords=pm[pi].slice().sort(function(a,b){return a.ep-b.ep;});
     var hy={};ords.forEach(function(o){hy[o.yr]=1;});
@@ -536,6 +780,8 @@ function fillPanel(idx){
     });
   });
   document.getElementById('ppc').textContent=pl.length+' products';
+
+  // Pitch
   var xb=document.getElementById('pxb');xb.innerHTML='';var rk=1;
   for(var i=0;i<T.length&&rk<=8;i++){var t=T[i];if(t[0]<0||ab[t[0]])continue;
     var tr2=document.createElement('tr');
@@ -546,22 +792,34 @@ function fillPanel(idx){
   }
   document.getElementById('pxc').textContent=(rk-1)+' products';
   document.getElementById('panel').scrollTop=0;
+
+  // Load counts for sub-tabs
+  loadPrivateClinicNotes();
+  loadPrivateClinicTasks();
+  loadNotes(name);
+
   if(aiBubbleChat)aiBubbleChat.updateContext();
 }
 
+// =========================================================
+// SHARED CLINIC NOTES (syncs to HubSpot)
+// =========================================================
 async function loadNotes(cn){
   document.getElementById('nl').innerHTML='<div class="nempty">Loading...</div>';
   var {data}=await SB.from('clinic_notes').select('*').eq('clinic_name',cn).order('created_at',{ascending:false});
-  var notes=data||[];document.getElementById('nc').textContent=notes.length;
-  if(!notes.length){document.getElementById('nl').innerHTML='<div class="nempty">No notes yet \u2014 be the first</div>';return;}
+  var notes=data||[];
+  document.getElementById('nc').textContent=notes.length;
+  document.getElementById('nc2').textContent=notes.length;
+  if(!notes.length){document.getElementById('nl').innerHTML='<div class="nempty">No shared notes yet</div>';return;}
   var nl=document.getElementById('nl');nl.innerHTML='';
   notes.forEach(function(n){
     var d=document.createElement('div');d.className='nitem';
     var canDel=ME&&(ME.role==='admin'||ME.username===n.rep_username);
-    d.innerHTML='<div>'+n.note+'</div><div class="nmeta"><span class="nrep">'+n.rep_name+'</span><span>'+ago(n.created_at)+'</span>'+(canDel?'<button class="ndel" data-id="'+n.id+'">&#128465;</button>':'')+'</div>';
+    d.innerHTML='<div>'+escapeHtml(n.note)+'</div><div class="nmeta"><span class="nrep">'+escapeHtml(n.rep_name)+'</span><span>'+ago(n.created_at)+'</span>'+(canDel?'<button class="ndel" data-id="'+n.id+'">&#128465;</button>':'')+'</div>';
     nl.appendChild(d);
   });
 }
+function escapeHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
 document.getElementById('nl').addEventListener('click',async function(e){
   var b=e.target.closest('.ndel');if(!b)return;
   await SB.from('clinic_notes').delete().eq('id',b.getAttribute('data-id'));
@@ -580,6 +838,207 @@ document.getElementById('ns').addEventListener('click',async function(){
 });
 document.getElementById('ni').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.getElementById('ns').click();}});
 
+// =========================================================
+// PRIVATE NOTES on clinic profile
+// =========================================================
+async function loadPrivateClinicNotes(){
+  if(!CUR||!ME)return;
+  document.getElementById('mnl').innerHTML='<div class="nempty">Loading...</div>';
+  var {data}=await SB.from('rep_notes').select('*').eq('rep_username',ME.username).eq('clinic_name',CUR).order('created_at',{ascending:false});
+  var notes=data||[];
+  document.getElementById('mnc').textContent=notes.length;
+  document.getElementById('mnc2').textContent=notes.length;
+  var mnl=document.getElementById('mnl');
+  if(!notes.length){mnl.innerHTML='<div class="nempty">No private notes yet for this clinic</div>';return;}
+  mnl.innerHTML='';
+  notes.forEach(function(n){
+    var d=document.createElement('div');d.className='nitem';
+    d.innerHTML='<div>'+escapeHtml(n.note)+'</div><div class="nmeta"><span>'+ago(n.created_at)+'</span><button class="ndel" data-id="'+n.id+'">&#128465;</button></div>';
+    mnl.appendChild(d);
+  });
+}
+document.getElementById('mnl').addEventListener('click',async function(e){
+  var b=e.target.closest('.ndel');if(!b)return;
+  await SB.from('rep_notes').delete().eq('id',b.getAttribute('data-id'));
+  loadPrivateClinicNotes();
+});
+document.getElementById('mns').addEventListener('click',async function(){
+  var inp=document.getElementById('mni'),note=inp.value.trim();
+  if(!note||!CUR||!ME)return;
+  var btn=document.getElementById('mns');btn.disabled=true;btn.textContent='...';
+  await SB.from('rep_notes').insert({rep_username:ME.username,rep_name:ME.name,clinic_name:CUR,note:note});
+  inp.value='';btn.disabled=false;btn.textContent='Save';
+  loadPrivateClinicNotes();
+});
+document.getElementById('mni').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.getElementById('mns').click();}});
+
+// =========================================================
+// PRIVATE TASKS on clinic profile
+// =========================================================
+async function loadPrivateClinicTasks(){
+  if(!CUR||!ME)return;
+  document.getElementById('mtl').innerHTML='<div class="nempty">Loading...</div>';
+  var {data}=await SB.from('rep_tasks').select('*').eq('rep_username',ME.username).eq('clinic_name',CUR).order('done').order('due_date',{ascending:true,nullsFirst:false}).order('created_at',{ascending:false});
+  var tasks=data||[];
+  var openCount=tasks.filter(function(t){return !t.done;}).length;
+  document.getElementById('mtc').textContent=openCount;
+  document.getElementById('mtc2').textContent=openCount;
+  renderTaskList(document.getElementById('mtl'),tasks,'mtl');
+  document.getElementById('mtd').value=addDaysISO(2);
+}
+function renderTaskList(container,tasks,origin){
+  if(!tasks.length){container.innerHTML='<div class="nempty">No tasks yet</div>';return;}
+  container.innerHTML='';
+  tasks.forEach(function(t){
+    var row=document.createElement('div');
+    var due=t.due_date?daysUntil(t.due_date):null;
+    var overdue=(due!==null&&due<0&&!t.done);
+    var today=(due===0&&!t.done);
+    row.className='tkitem'+(t.done?' done':'')+(overdue?' overdue':'')+(today?' today':'');
+    var dueLbl='';
+    if(t.due_date){
+      var cls=overdue?'od':(today?'td':'');
+      var lbl=due===0?'Today':(due===1?'Tomorrow':(due<0?Math.abs(due)+'d overdue':'In '+due+'d'));
+      dueLbl='<span class="tkdue '+cls+'">&#128197; '+lbl+' ('+t.due_date+')</span>';
+    }
+    var clnLbl=t.clinic_name?'<span class="tkcln">&#127973; '+escapeHtml(t.clinic_name)+'</span>':'';
+    row.innerHTML='<input type="checkbox" class="tkcheck" data-id="'+t.id+'"'+(t.done?' checked':'')+'>'+
+      '<div class="tkmid"><div class="tktext">'+escapeHtml(t.task)+'</div>'+
+      '<div class="tkmeta"><span class="pri '+t.priority+'">'+t.priority+'</span>'+dueLbl+clnLbl+'</div></div>'+
+      '<button class="tkdel" data-id="'+t.id+'">&#128465;</button>';
+    container.appendChild(row);
+  });
+}
+async function toggleTask(id,checked){
+  await SB.from('rep_tasks').update({done:checked,done_at:checked?new Date().toISOString():null}).eq('id',id);
+}
+async function deleteTask(id){
+  if(!confirm('Delete this task?'))return false;
+  await SB.from('rep_tasks').delete().eq('id',id);
+  return true;
+}
+document.getElementById('mtl').addEventListener('click',async function(e){
+  var del=e.target.closest('.tkdel');
+  if(del){if(await deleteTask(del.getAttribute('data-id')))loadPrivateClinicTasks();return;}
+});
+document.getElementById('mtl').addEventListener('change',async function(e){
+  var cb=e.target.closest('.tkcheck');if(!cb)return;
+  await toggleTask(cb.getAttribute('data-id'),cb.checked);
+  loadPrivateClinicTasks();
+});
+document.getElementById('mts').addEventListener('click',async function(){
+  var txt=document.getElementById('mti').value.trim();
+  if(!txt||!CUR||!ME)return;
+  var due=document.getElementById('mtd').value||addDaysISO(2);
+  var pri=document.getElementById('mtp').value;
+  var btn=document.getElementById('mts');btn.disabled=true;btn.textContent='...';
+  await SB.from('rep_tasks').insert({rep_username:ME.username,rep_name:ME.name,clinic_name:CUR,task:txt,due_date:due,priority:pri});
+  document.getElementById('mti').value='';btn.disabled=false;btn.textContent='Add Task';
+  loadPrivateClinicTasks();
+});
+document.getElementById('mti').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();document.getElementById('mts').click();}});
+
+// =========================================================
+// NOTES & TASKS TAB (top-level, all clinics)
+// =========================================================
+async function loadMyTasks(){
+  if(!ME)return;
+  var list=document.getElementById('nt-tk-list');list.innerHTML='<div class="nempty">Loading...</div>';
+  var {data}=await SB.from('rep_tasks').select('*').eq('rep_username',ME.username).order('done').order('due_date',{ascending:true,nullsFirst:false}).order('created_at',{ascending:false});
+  var all=data||[];
+  var today=0,overdue=0,open=0;
+  all.forEach(function(t){if(t.done)return;open++;var du=t.due_date?daysUntil(t.due_date):null;if(du===0)today++;if(du!==null&&du<0)overdue++;});
+  document.getElementById('nt-task-due').textContent=today;
+  document.getElementById('nt-task-overdue').textContent=overdue;
+  document.getElementById('nt-task-open').textContent=open;
+  var filt=document.getElementById('nt-task-filter').value;
+  var filtered=all.filter(function(t){
+    if(filt==='all')return true;
+    if(t.done)return false;
+    var du=t.due_date?daysUntil(t.due_date):null;
+    if(filt==='open')return true;
+    if(filt==='overdue')return du!==null&&du<0;
+    if(filt==='today')return du===0;
+    if(filt==='week')return du!==null&&du>=0&&du<=7;
+    return true;
+  });
+  renderTaskList(list,filtered,'nt');
+  document.getElementById('nt-tk-due').value=addDaysISO(2);
+}
+document.getElementById('nt-tk-list').addEventListener('click',async function(e){
+  var del=e.target.closest('.tkdel');
+  if(del){if(await deleteTask(del.getAttribute('data-id')))loadMyTasks();return;}
+});
+document.getElementById('nt-tk-list').addEventListener('change',async function(e){
+  var cb=e.target.closest('.tkcheck');if(!cb)return;
+  await toggleTask(cb.getAttribute('data-id'),cb.checked);
+  loadMyTasks();
+});
+document.getElementById('nt-task-filter').addEventListener('change',loadMyTasks);
+document.getElementById('nt-tk-add').addEventListener('click',async function(){
+  var txt=document.getElementById('nt-tk-txt').value.trim();
+  if(!txt||!ME)return;
+  var cln=document.getElementById('nt-tk-cln').value.trim()||null;
+  var due=document.getElementById('nt-tk-due').value||addDaysISO(2);
+  var pri=document.getElementById('nt-tk-pri').value;
+  var btn=document.getElementById('nt-tk-add');btn.disabled=true;
+  await SB.from('rep_tasks').insert({rep_username:ME.username,rep_name:ME.name,clinic_name:cln,task:txt,due_date:due,priority:pri});
+  document.getElementById('nt-tk-txt').value='';
+  document.getElementById('nt-tk-cln').value='';
+  btn.disabled=false;
+  loadMyTasks();
+});
+// Clinic autocomplete for tasks form
+(function(){
+  var inp=document.getElementById('nt-tk-cln'),dd=document.getElementById('nt-tk-cln-dd');
+  if(!inp)return;
+  inp.addEventListener('input',function(){
+    var q=inp.value.trim().toLowerCase();dd.innerHTML='';dd.style.display='none';
+    if(q.length<2||!SI.length)return;
+    var hits=[];for(var i=0;i<SI.length&&hits.length<8;i++)if(SI[i].indexOf(q)>=0)hits.push(i);
+    if(!hits.length)return;
+    hits.forEach(function(idx){var el=document.createElement('div');el.className='di';el.textContent=C[idx];el.addEventListener('mousedown',function(e){e.preventDefault();inp.value=C[idx];dd.style.display='none';});dd.appendChild(el);});
+    dd.style.display='block';
+  });
+  inp.addEventListener('blur',function(){setTimeout(function(){dd.style.display='none';},150);});
+})();
+
+async function loadMyNotes(){
+  if(!ME)return;
+  var list=document.getElementById('nt-nt-list');list.innerHTML='<div class="nempty">Loading...</div>';
+  var q=document.getElementById('nt-nt-search').value.trim().toLowerCase();
+  var {data}=await SB.from('rep_notes').select('*').eq('rep_username',ME.username).order('created_at',{ascending:false}).limit(500);
+  var notes=data||[];
+  document.getElementById('nt-notes-total').textContent=notes.length;
+  if(q)notes=notes.filter(function(n){return n.note.toLowerCase().indexOf(q)>=0||(n.clinic_name||'').toLowerCase().indexOf(q)>=0;});
+  if(!notes.length){list.innerHTML='<div class="nempty">'+(q?'No notes match':'No notes yet \u2014 add one below')+'</div>';return;}
+  list.innerHTML='';
+  notes.forEach(function(n){
+    var d=document.createElement('div');d.className='nitem';
+    var cln=n.clinic_name?'<span class="tkcln">&#127973; '+escapeHtml(n.clinic_name)+'</span> &middot; ':'';
+    d.innerHTML='<div>'+escapeHtml(n.note)+'</div><div class="nmeta">'+cln+'<span>'+ago(n.created_at)+'</span><button class="ndel" data-id="'+n.id+'">&#128465;</button></div>';
+    list.appendChild(d);
+  });
+}
+document.getElementById('nt-nt-list').addEventListener('click',async function(e){
+  var b=e.target.closest('.ndel');if(!b)return;
+  await SB.from('rep_notes').delete().eq('id',b.getAttribute('data-id'));
+  loadMyNotes();
+});
+document.getElementById('nt-nt-add').addEventListener('click',async function(){
+  var txt=document.getElementById('nt-nt-txt').value.trim();
+  if(!txt||!ME)return;
+  var btn=document.getElementById('nt-nt-add');btn.disabled=true;
+  await SB.from('rep_notes').insert({rep_username:ME.username,rep_name:ME.name,note:txt});
+  document.getElementById('nt-nt-txt').value='';
+  btn.disabled=false;
+  loadMyNotes();
+});
+document.getElementById('nt-nt-search').addEventListener('input',function(){loadMyNotes();});
+
+// =========================================================
+// ADMIN
+// =========================================================
 async function loadReps(){
   var rl=document.getElementById('rl2');rl.innerHTML='';
   var {data}=await SB.from('reps').select('*').order('created_at');
@@ -587,6 +1046,9 @@ async function loadReps(){
   var sel=document.getElementById('act-rep-filter');
   sel.innerHTML='<option value="">All reps</option>';
   ALLREPS.forEach(function(r){var o=document.createElement('option');o.value=r.username;o.textContent=r.name;sel.appendChild(o);});
+  var sel2=document.getElementById('adm-np-rep');
+  sel2.innerHTML='<option value="">All reps</option>';
+  ALLREPS.forEach(function(r){var o=document.createElement('option');o.value=r.username;o.textContent=r.name;sel2.appendChild(o);});
   if(!ALLREPS.length){rl.innerHTML='<div style="color:#aaa;font-size:13px;padding:8px 0">No reps yet</div>';return;}
   ALLREPS.forEach(function(r){
     var d=document.createElement('div');d.className='rrow';
@@ -632,10 +1094,10 @@ async function loadActivity(){
     var cls=classes[item.action]||'act-view';
     var mainText='';
     if(item.action==='login')mainText='<span>'+item.rep_name+'</span> signed in';
-    else if(item.action==='view')mainText='<span>'+item.rep_name+'</span> viewed <span>'+item.detail+'</span>';
-    else if(item.action==='search')mainText='<span>'+item.rep_name+'</span> searched for <span>"'+item.detail+'"</span>';
-    else if(item.action==='note')mainText='<span>'+item.rep_name+'</span> added note on <span>'+item.detail+'</span>';
-    else if(item.action==='ai_chat')mainText='<span>'+item.rep_name+'</span> asked AI: <span>"'+item.detail+'"</span>';
+    else if(item.action==='view')mainText='<span>'+item.rep_name+'</span> viewed <span>'+escapeHtml(item.detail)+'</span>';
+    else if(item.action==='search')mainText='<span>'+item.rep_name+'</span> searched for <span>"'+escapeHtml(item.detail)+'"</span>';
+    else if(item.action==='note')mainText='<span>'+item.rep_name+'</span> added note on <span>'+escapeHtml(item.detail)+'</span>';
+    else if(item.action==='ai_chat')mainText='<span>'+item.rep_name+'</span> asked AI: <span>"'+escapeHtml(item.detail)+'"</span>';
     else mainText='<span>'+item.rep_name+'</span> '+item.action;
     d.innerHTML='<div class="act-icon '+cls+'">'+icon+'</div>'+
       '<div class="act-body"><div class="act-main">'+mainText+'</div>'+
@@ -654,6 +1116,9 @@ async function loadScorecards(days){
   var {data}=await q;
   var acts=data||[];
   var {data:reps}=await SB.from('reps').select('*').order('name');
+  // pull task counts in same window
+  var {data:taskData}=await SB.from('rep_tasks').select('rep_username,done,due_date,created_at');
+  var tasks=taskData||[];
   if(!reps||!reps.length){grid.innerHTML='<div style="color:#aaa;font-size:13px">No reps found</div>';return;}
   grid.innerHTML='';
   reps.forEach(function(r){
@@ -661,14 +1126,16 @@ async function loadScorecards(days){
     var views=mine.filter(function(a){return a.action==='view';}).length;
     var notes=mine.filter(function(a){return a.action==='note';}).length;
     var searches=mine.filter(function(a){return a.action==='search';}).length;
+    var myTasks=tasks.filter(function(t){return t.rep_username===r.username&&!t.done;}).length;
     var lastAct=mine.length?mine.sort(function(a,b){return new Date(b.created_at)-new Date(a.created_at);})[0]:null;
     var d=document.createElement('div');d.className='scard';
     d.innerHTML='<div class="scard-name">'+r.name+'</div>'+
       '<div class="scard-role">@'+r.username+' &middot; '+r.role+'</div>'+
       '<div class="scard-stats">'+
-        '<div class="sstat"><div class="sstat-v">'+views+'</div><div class="sstat-l">Clinic Views</div></div>'+
+        '<div class="sstat"><div class="sstat-v">'+views+'</div><div class="sstat-l">Views</div></div>'+
         '<div class="sstat"><div class="sstat-v">'+searches+'</div><div class="sstat-l">Searches</div></div>'+
         '<div class="sstat"><div class="sstat-v">'+notes+'</div><div class="sstat-l">Notes</div></div>'+
+        '<div class="sstat"><div class="sstat-v">'+myTasks+'</div><div class="sstat-l">Open Tasks</div></div>'+
       '</div>'+
       '<div class="scard-last">'+(lastAct?'Last active: '+ago(lastAct.created_at)+' &mdash; '+lastAct.action:'No activity yet')+'</div>';
     grid.appendChild(d);
@@ -682,6 +1149,39 @@ document.querySelectorAll('.tft').forEach(function(btn){
   });
 });
 
+// ADMIN — view all reps' private notes/tasks
+async function loadAdminNP(){
+  var type=document.getElementById('adm-np-type').value;
+  var rep=document.getElementById('adm-np-rep').value;
+  var list=document.getElementById('adm-np-list');list.innerHTML='Loading...';
+  var table=type==='tasks'?'rep_tasks':'rep_notes';
+  var q=SB.from(table).select('*').order('created_at',{ascending:false}).limit(300);
+  if(rep)q=q.eq('rep_username',rep);
+  var {data}=await q;
+  var items=data||[];
+  if(!items.length){list.innerHTML='<div class="nempty">None yet</div>';return;}
+  list.innerHTML='';
+  items.forEach(function(it){
+    var d=document.createElement('div');d.className='nitem';
+    if(type==='tasks'){
+      var done=it.done?'&#9989; ':'';
+      var pri='<span class="pri '+it.priority+'" style="padding:1px 7px;border-radius:20px;font-weight:600;font-size:10px;text-transform:uppercase;background:#fef3d0;color:#854d0e">'+it.priority+'</span>';
+      if(it.priority==='high')pri='<span class="pri high" style="padding:1px 7px;border-radius:20px;font-weight:600;font-size:10px;text-transform:uppercase;background:#fee2e2;color:#dc2626">high</span>';
+      if(it.priority==='low')pri='<span class="pri low" style="padding:1px 7px;border-radius:20px;font-weight:600;font-size:10px;text-transform:uppercase;background:#dcfce7;color:#16a34a">low</span>';
+      d.innerHTML='<div>'+done+escapeHtml(it.task)+'</div><div class="nmeta"><span class="nrep">'+escapeHtml(it.rep_name)+'</span>'+pri+(it.due_date?'<span>Due '+it.due_date+'</span>':'')+(it.clinic_name?'<span>&#127973; '+escapeHtml(it.clinic_name)+'</span>':'')+'<span>'+ago(it.created_at)+'</span></div>';
+    }else{
+      d.innerHTML='<div>'+escapeHtml(it.note)+'</div><div class="nmeta"><span class="nrep">'+escapeHtml(it.rep_name)+'</span>'+(it.clinic_name?'<span>&#127973; '+escapeHtml(it.clinic_name)+'</span>':'')+'<span>'+ago(it.created_at)+'</span></div>';
+    }
+    list.appendChild(d);
+  });
+}
+document.getElementById('adm-np-rep').addEventListener('change',loadAdminNP);
+document.getElementById('adm-np-type').addEventListener('change',loadAdminNP);
+document.getElementById('adm-np-refresh').addEventListener('click',loadAdminNP);
+
+// =========================================================
+// INIT
+// =========================================================
 function init(){
   for(var i=0;i<C.length;i++){var k=KA[i]||[];var r=k[0]>=0?REPS[k[0]]:'';SI.push([C[i],r,k[1]||'',k[2]||'',k[3]||'',k[4]||'',k[5]||'',k[6]||''].join(' ').toLowerCase());}
   document.getElementById('smsg').textContent=C.length.toLocaleString()+' clinics loaded.';
@@ -704,6 +1204,7 @@ function init(){
   document.getElementById('arc').textContent=ARL.length.toLocaleString();
   buildWB();buildAR();setupSearch();
   initAiChats();
+  loadBubbleHistory();
 }
 
 var inp=document.getElementById('si'),dd=document.getElementById('dd');
@@ -801,13 +1302,7 @@ function syncHubspot(action, email, note){
   fetch(WORKER+'/hubspot',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      action:action,
-      email:email,
-      note:note||'',
-      rep_name:ME.name,
-      clinic_name:CUR||''
-    })
+    body:JSON.stringify({action:action,email:email,note:note||'',rep_name:ME.name,clinic_name:CUR||''})
   })
   .then(function(r){return r.json();})
   .then(function(d){
@@ -845,10 +1340,12 @@ document.getElementById('pcheckin').addEventListener('click',function(){
 });
 
 // ============================================================
-// AI CHAT — reusable factory
+// AI CHAT — with history
 // ============================================================
 function mdToHtml(md){
   var html=md.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Links: [text](url) — recognize http(s)
+  html=html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
   html=html.replace(/(\|[^\n]+\|\n\|[-: |]+\|\n(?:\|[^\n]+\|\n?)+)/g,function(block){
     var lines=block.trim().split('\n');
     var headers=lines[0].split('|').slice(1,-1).map(function(s){return s.trim();});
@@ -872,7 +1369,7 @@ function mdToHtml(md){
     return '<ol>'+items+'</ol>';
   });
   html=html.split(/\n{2,}/).map(function(p){
-    if(/^<(table|ul|ol|blockquote)/.test(p.trim()))return p;
+    if(/^<(table|ul|ol|blockquote|a)/.test(p.trim()))return p;
     return '<p>'+p.replace(/\n/g,'<br>')+'</p>';
   }).join('');
   return html;
@@ -883,7 +1380,7 @@ function makeChat(opts){
   var inpEl=document.getElementById(opts.inpId);
   var sendEl=document.getElementById(opts.sendId);
   var ctxEl=opts.ctxId?document.getElementById(opts.ctxId):null;
-  var state={msgs:[],busy:false,surface:opts.surface};
+  var state={msgs:[],busy:false,surface:opts.surface,currentConvId:null};
 
   function appendMsg(role,content,isError){
     var starters=msgsEl.querySelector('.ai-starters');if(starters)starters.remove();
@@ -904,7 +1401,7 @@ function makeChat(opts){
     msgsEl.innerHTML='';
     var firstName=ME?ME.name.split(' ')[0]:'there';
     var intro=opts.surface==='page'
-      ?'Hi '+firstName+'. This is the admin chat — you have full-territory visibility. Ask about any rep, clinic, product, or aggregate. A few ideas:'
+      ?'Hi '+firstName+'. This is the admin chat — full-territory visibility. Say things like "export the top 50 clinics as a CSV" or "put that analysis in a Word doc".'
       :'Hi '+firstName+'! Ask me anything about your clinics, products, or territory. A few ideas:';
     var wrap=document.createElement('div');wrap.className='ai-msg bot';wrap.innerHTML=intro;
     msgsEl.appendChild(wrap);
@@ -918,16 +1415,34 @@ function makeChat(opts){
   }
   function updateContext(){
     if(!ctxEl)return;
-    if(CUR&&opts.surface==='bubble'){
-      ctxEl.innerHTML='Viewing: <strong>'+CUR+'</strong>';
-      ctxEl.classList.add('show');
-    }else{
-      ctxEl.classList.remove('show');
-    }
+    if(CUR&&opts.surface==='bubble'){ctxEl.innerHTML='Viewing: <strong>'+escapeHtml(CUR)+'</strong>';ctxEl.classList.add('show');}
+    else{ctxEl.classList.remove('show');}
   }
-  function reset(){
-    if(state.msgs.length&&!confirm('Start a new conversation? Current chat will be cleared.'))return;
-    state.msgs=[];renderStarters();
+  function renderFromSaved(msgs){
+    msgsEl.innerHTML='';
+    msgs.forEach(function(m){appendMsg(m.role==='user'?'user':'bot',m.content);});
+  }
+  async function saveConversation(){
+    if(!ME||state.msgs.length===0)return;
+    var title=(state.msgs[0]&&state.msgs[0].content||'').substring(0,80);
+    try{
+      if(state.currentConvId){
+        await SB.from('chat_conversations').update({messages:state.msgs,title:title,updated_at:new Date().toISOString()}).eq('id',state.currentConvId);
+      }else{
+        var {data}=await SB.from('chat_conversations').insert({rep_username:ME.username,rep_name:ME.name,surface:opts.surface,title:title,messages:state.msgs}).select().single();
+        if(data)state.currentConvId=data.id;
+      }
+    }catch(e){console.log('chat save fail',e);}
+  }
+  function newConversation(){
+    if(state.msgs.length>0&&!confirm('Start a new conversation? Current chat will be saved and cleared.'))return;
+    state.msgs=[];state.currentConvId=null;renderStarters();
+    if(opts.onHistoryChange)opts.onHistoryChange();
+  }
+  function loadConversation(conv){
+    state.msgs=conv.messages||[];
+    state.currentConvId=conv.id;
+    renderFromSaved(state.msgs);
   }
   async function send(){
     if(state.busy)return;
@@ -944,7 +1459,7 @@ function makeChat(opts){
           messages:state.msgs,
           rep_username:ME?ME.name:null,
           viewing_clinic:(opts.surface==='bubble'?CUR:null)||null,
-          admin_mode:opts.surface==='page'
+          admin_mode:(opts.surface==='page'&&ME&&ME.role==='admin')
         })
       });
       var data=await res.json();
@@ -953,6 +1468,8 @@ function makeChat(opts){
         appendMsg('bot',data.reply);
         state.msgs.push({role:'assistant',content:data.reply});
         logAction('ai_chat','['+opts.surface+'] '+text.substring(0,80));
+        saveConversation();
+        if(opts.onHistoryChange)opts.onHistoryChange();
       }else{
         appendMsg('bot','Sorry, something went wrong: '+(data.error||'unknown error'),true);
       }
@@ -964,30 +1481,69 @@ function makeChat(opts){
   }
 
   sendEl.addEventListener('click',send);
-  inpEl.addEventListener('keydown',function(e){
-    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}
-  });
-  inpEl.addEventListener('input',function(){
-    inpEl.style.height='auto';
-    inpEl.style.height=Math.min(opts.surface==='page'?140:120,inpEl.scrollHeight)+'px';
-  });
+  inpEl.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
+  inpEl.addEventListener('input',function(){inpEl.style.height='auto';inpEl.style.height=Math.min(opts.surface==='page'?140:120,inpEl.scrollHeight)+'px';});
 
-  return {state:state,msgs:state.msgs,renderStarters:renderStarters,updateContext:updateContext,reset:reset,send:send};
+  return {state:state,get msgs(){return state.msgs;},renderStarters:renderStarters,updateContext:updateContext,newConversation:newConversation,loadConversation:loadConversation,send:send};
 }
+
+// Bubble history
+async function loadBubbleHistory(){
+  if(!ME)return;
+  var list=document.getElementById('ai-hist-list');
+  var {data}=await SB.from('chat_conversations').select('id,title,updated_at').eq('rep_username',ME.username).eq('surface','bubble').order('updated_at',{ascending:false}).limit(30);
+  var convs=data||[];
+  if(!convs.length){list.innerHTML='<div class="ch-hist-empty">No saved conversations yet</div>';return;}
+  list.innerHTML='';
+  convs.forEach(function(c){
+    var d=document.createElement('div');d.className='ch-item';d.dataset.id=c.id;
+    d.innerHTML='<div class="ct"><div class="ct-title">'+escapeHtml(c.title||'Untitled')+'</div><div class="ct-time">'+ago(c.updated_at)+'</div></div><button class="ch-del" data-id="'+c.id+'" title="Delete">&#10005;</button>';
+    list.appendChild(d);
+  });
+}
+document.getElementById('ai-hist-list').addEventListener('click',async function(e){
+  var del=e.target.closest('.ch-del');
+  if(del){e.stopPropagation();if(!confirm('Delete this conversation?'))return;await SB.from('chat_conversations').delete().eq('id',del.dataset.id);loadBubbleHistory();return;}
+  var item=e.target.closest('.ch-item');
+  if(!item)return;
+  var {data}=await SB.from('chat_conversations').select('*').eq('id',item.dataset.id).single();
+  if(data&&aiBubbleChat){aiBubbleChat.loadConversation(data);document.getElementById('ai-hist').classList.remove('open');}
+});
+
+// Page history
+async function loadPageChatHistory(){
+  if(!ME)return;
+  var list=document.getElementById('ai-page-hist');
+  var {data}=await SB.from('chat_conversations').select('id,title,updated_at').eq('rep_username',ME.username).eq('surface','page').order('updated_at',{ascending:false}).limit(50);
+  var convs=data||[];
+  if(!convs.length){list.innerHTML='<div class="ch-hist-empty">No saved conversations yet</div>';return;}
+  list.innerHTML='';
+  convs.forEach(function(c){
+    var d=document.createElement('div');d.className='ch-item';d.dataset.id=c.id;
+    d.innerHTML='<div class="ct"><div class="ct-title">'+escapeHtml(c.title||'Untitled')+'</div><div class="ct-time">'+ago(c.updated_at)+'</div></div><button class="ch-del" data-id="'+c.id+'" title="Delete">&#10005;</button>';
+    list.appendChild(d);
+  });
+}
+document.getElementById('ai-page-hist').addEventListener('click',async function(e){
+  var del=e.target.closest('.ch-del');
+  if(del){e.stopPropagation();if(!confirm('Delete this conversation?'))return;await SB.from('chat_conversations').delete().eq('id',del.dataset.id);loadPageChatHistory();return;}
+  var item=e.target.closest('.ch-item');
+  if(!item)return;
+  var {data}=await SB.from('chat_conversations').select('*').eq('id',item.dataset.id).single();
+  if(data&&aiPageChat){aiPageChat.loadConversation(data);}
+});
 
 function initAiChats(){
   aiBubbleChat=makeChat({
     surface:'bubble',
-    msgsId:'ai-msgs',
-    inpId:'ai-inp',
-    sendId:'ai-send',
-    ctxId:'ai-ctx',
+    msgsId:'ai-msgs',inpId:'ai-inp',sendId:'ai-send',ctxId:'ai-ctx',
     starters:[
       'How many of my clinics ordered Pimobendan?',
       'Show me my top 10 clinics by 2026 revenue',
       'Which of my clinics haven\'t ordered in 60+ days?',
       'How much Pimobendan did I use last year?'
-    ]
+    ],
+    onHistoryChange:loadBubbleHistory
   });
   aiBubbleChat.renderStarters();
   aiBubbleChat.updateContext();
@@ -995,29 +1551,35 @@ function initAiChats(){
     document.getElementById('ai-chat').classList.add('open');
     document.getElementById('ai-fab').classList.add('hidden');
     aiBubbleChat.updateContext();
+    loadBubbleHistory();
     setTimeout(function(){document.getElementById('ai-inp').focus();},150);
   });
   document.getElementById('ai-close').addEventListener('click',function(){
     document.getElementById('ai-chat').classList.remove('open');
     document.getElementById('ai-fab').classList.remove('hidden');
+    document.getElementById('ai-hist').classList.remove('open');
   });
-  document.getElementById('ai-reset').addEventListener('click',aiBubbleChat.reset);
+  document.getElementById('ai-new').addEventListener('click',aiBubbleChat.newConversation);
+  document.getElementById('ai-hist-btn').addEventListener('click',function(){
+    var h=document.getElementById('ai-hist');
+    h.classList.toggle('open');
+    if(h.classList.contains('open'))loadBubbleHistory();
+  });
 
   if(ME&&ME.role==='admin'){
     aiPageChat=makeChat({
       surface:'page',
-      msgsId:'ai-page-msgs',
-      inpId:'ai-page-inp',
-      sendId:'ai-page-send',
+      msgsId:'ai-page-msgs',inpId:'ai-page-inp',sendId:'ai-page-send',
       starters:[
         'Top 10 reps by 2026 revenue',
         'Show me the biggest at-risk clinics across all territories',
         'Which reps sell the most Pimobendan?',
-        'How much Doxycycline did we ship in 2025 company-wide?',
-        'Top 10 lost-revenue clinics we haven\'t recovered in 2026'
-      ]
+        'Export the top 50 lost-revenue clinics as a CSV',
+        'Put a 2025 vs 2026 company summary into a Word doc'
+      ],
+      onHistoryChange:loadPageChatHistory
     });
-    document.getElementById('ai-page-reset').addEventListener('click',aiPageChat.reset);
+    document.getElementById('ai-page-new').addEventListener('click',aiPageChat.newConversation);
   }
 }
 </script>
