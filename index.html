@@ -6,6 +6,7 @@
 <title>Clinic Intelligence</title>
 <script src="data.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f7f8fa;color:#111;min-height:100vh;overflow-x:hidden}
@@ -209,6 +210,67 @@ table.ptbl tr:last-child td{border-bottom:none}
 .tft.active{background:#1a2035;color:#fff;border-color:#1a2035}
 @media print{.topbar,.filter-bar,.prtbtn,.tab,#sw,.search-card,.spills,.overlay,.panel,#login-screen,.ninpw,#ai-fab,#ai-chat,.tkform,.cltabs{display:none!important}.page{display:block!important}.clpane{display:block!important}body{background:#fff}}
 @media(max-width:700px){.psg{grid-template-columns:1fr}.container{padding:16px}.tab{padding:14px 8px;font-size:11px}.tkform{grid-template-columns:1fr 1fr}}
+/* CHURN PREDICTOR */
+.ch-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px}
+.ch-hero-card{background:#fff;border-radius:12px;padding:18px 20px;border:1px solid #e8eaed;box-shadow:0 1px 4px rgba(0,0,0,.05);position:relative;overflow:hidden}
+.ch-hero-card.critical{border-top:3px solid #dc2626}
+.ch-hero-card.slipping{border-top:3px solid #f59e0b}
+.ch-hero-card.watch{border-top:3px solid #3b82f6}
+.ch-hero-card.healthy{border-top:3px solid #16a34a}
+.ch-hv{font-size:26px;font-weight:800;color:#1a2035;letter-spacing:-.5px}
+.ch-hv-sub{font-size:12px;color:#666;margin-top:2px}
+.ch-hl{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-top:8px;font-weight:600}
+.ch-hr{font-size:11px;color:#dc2626;font-weight:600;margin-top:3px}
+.ch-filter-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px;background:#fff;padding:14px 18px;border-radius:12px;border:1px solid #e8eaed}
+.ch-filter-row select,.ch-filter-row input{padding:8px 12px;border:1.5px solid #d8dce3;border-radius:8px;font-size:12px;outline:none;background:#fff;color:#111}
+.ch-filter-row label{font-size:11px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-right:6px}
+.ch-chart-row{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:20px}
+@media(max-width:800px){.ch-chart-row{grid-template-columns:1fr}}
+.ch-chart-card{background:#fff;border-radius:12px;padding:18px 20px;border:1px solid #e8eaed;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.ch-chart-title{font-size:13px;font-weight:700;color:#1a2035;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.ch-chart-title .sub{font-size:11px;color:#888;font-weight:400;margin-left:auto}
+.ch-chart-wrap{position:relative;height:220px}
+.ch-tier-bar{display:flex;height:28px;border-radius:6px;overflow:hidden;background:#f3f4f6;margin-bottom:10px}
+.ch-tier-seg{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;min-width:40px}
+.ch-tier-seg.critical{background:#dc2626}
+.ch-tier-seg.slipping{background:#f59e0b}
+.ch-tier-seg.watch{background:#3b82f6}
+.ch-tier-seg.healthy{background:#16a34a}
+.ch-tier-legend{display:flex;gap:14px;font-size:11px;color:#555;flex-wrap:wrap}
+.ch-tier-legend span{display:flex;align-items:center;gap:5px}
+.ch-tier-legend .dot{width:9px;height:9px;border-radius:2px;display:inline-block}
+.ch-tier-legend .dot.critical{background:#dc2626}
+.ch-tier-legend .dot.slipping{background:#f59e0b}
+.ch-tier-legend .dot.watch{background:#3b82f6}
+.ch-tier-legend .dot.healthy{background:#16a34a}
+.ch-table-wrap{background:#fff;border-radius:12px;border:1px solid #e8eaed;box-shadow:0 1px 4px rgba(0,0,0,.05);overflow:hidden}
+.ch-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.ch-tbl th{text-align:left;font-size:10px;font-weight:700;color:#666;padding:12px 16px;border-bottom:1px solid #edf0f5;white-space:nowrap;text-transform:uppercase;background:#fafbfc;letter-spacing:.04em}
+.ch-tbl td{padding:12px 16px;border-bottom:1px solid #f3f4f6;vertical-align:middle}
+.ch-tbl tr:last-child td{border-bottom:none}
+.ch-tbl tr:hover td{background:#fafbff;cursor:pointer}
+.ch-tbl .critical td{background:#fef2f2}
+.ch-tbl .critical:hover td{background:#fee2e2}
+.ch-tbl .slipping td{background:#fffbeb}
+.ch-tbl .slipping:hover td{background:#fef3c7}
+.ch-tbl .watch td{background:#eff6ff}
+.ch-tbl .watch:hover td{background:#dbeafe}
+.ch-tier-badge{display:inline-block;font-size:10px;padding:3px 9px;border-radius:20px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.ch-tier-badge.critical{background:#dc2626;color:#fff}
+.ch-tier-badge.slipping{background:#f59e0b;color:#fff}
+.ch-tier-badge.watch{background:#3b82f6;color:#fff}
+.ch-tier-badge.healthy{background:#16a34a;color:#fff}
+.ch-mult{font-weight:700;font-size:13px}
+.ch-mult.high{color:#dc2626}
+.ch-mult.med{color:#f59e0b}
+.ch-mult.low{color:#3b82f6}
+.ch-score-bar{width:80px;height:8px;background:#f3f4f6;border-radius:4px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:6px}
+.ch-score-fill{height:100%;border-radius:4px;transition:width .3s}
+.ch-spark{width:80px;height:28px;display:inline-block;vertical-align:middle}
+.ch-est-loss{font-weight:600;color:#dc2626}
+.ch-empty{text-align:center;padding:60px 20px;color:#aaa}
+.ch-empty .ei{font-size:48px;margin-bottom:12px}
+.ch-help{font-size:11px;color:#888;padding:12px 18px;background:#f9fafc;border-top:1px solid #edf0f5;display:flex;align-items:center;gap:6px}
 /* AI CHAT */
 .ai-msg{max-width:85%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.5;word-wrap:break-word}
 .ai-msg.user{align-self:flex-end;background:#1a2035;color:#fff;border-bottom-right-radius:4px}
@@ -405,6 +467,7 @@ table.ptbl tr:last-child td{border-bottom:none}
   <div class="tab" data-page="territory">&#128205; Territory</div>
   <div class="tab" data-page="winback">&#128257; Win-Back</div>
   <div class="tab" data-page="atrisk">&#9888; At-Risk</div>
+  <div class="tab" data-page="churn">&#128302; Churn Predictor</div>
   <div class="tab" data-page="notestasks">&#128221; My Notes &amp; Tasks</div>
   <div class="tab admin-tab" data-page="admin" id="atab" style="display:none">&#9881; Admin</div>
   <div class="tab admin-tab" data-page="chatbot" id="cbtab" style="display:none">&#129302; Chat Bot</div>
@@ -460,6 +523,73 @@ table.ptbl tr:last-child td{border-bottom:none}
     <div style="overflow-x:auto"><table class="mt"><thead><tr><th>Clinic</th><th>Doctor</th><th>Rep</th><th>Last Order</th><th style="text-align:right">2025</th><th style="text-align:right">2026 YTD</th><th style="text-align:right">Ann. 2026</th><th style="text-align:right">Decline</th><th></th></tr></thead><tbody id="arb"></tbody></table></div>
   </div>
   <p class="fnote">&#9432; Annualized 2026 = YTD &times; 4. Compared against full year 2025.</p>
+</div></div>
+
+<!-- CHURN PREDICTOR -->
+<div id="page-churn" class="page"><div class="container">
+
+  <div class="ch-filter-row">
+    <div><label>Rep Filter</label>
+      <select id="ch-rep"><option value="__mine">My Territory</option></select>
+    </div>
+    <div><label>Min 2025 Revenue</label>
+      <select id="ch-minrev">
+        <option value="0">Any</option>
+        <option value="250">$250+</option>
+        <option value="500" selected>$500+</option>
+        <option value="1000">$1,000+</option>
+        <option value="2500">$2,500+</option>
+        <option value="5000">$5,000+</option>
+      </select>
+    </div>
+    <div><label>Tier</label>
+      <select id="ch-tier">
+        <option value="all">All at-risk (Critical + Slipping + Watch)</option>
+        <option value="critical">Critical only</option>
+        <option value="slipping">Slipping only</option>
+        <option value="watch">Watch only</option>
+      </select>
+    </div>
+    <div style="margin-left:auto"><button class="abtn" id="ch-refresh">&#8635; Refresh</button></div>
+  </div>
+
+  <div class="ch-hero" id="ch-hero"></div>
+
+  <div class="ch-chart-row">
+    <div class="ch-chart-card">
+      <div class="ch-chart-title">&#128200; Estimated Monthly Revenue at Risk <span class="sub" id="ch-chart-sub"></span></div>
+      <div class="ch-chart-wrap"><canvas id="ch-chart-risk"></canvas></div>
+    </div>
+    <div class="ch-chart-card">
+      <div class="ch-chart-title">&#127942; Risk Distribution</div>
+      <div class="ch-tier-bar" id="ch-tier-bar"></div>
+      <div class="ch-tier-legend" id="ch-tier-legend"></div>
+      <div style="margin-top:14px;font-size:12px;color:#555;line-height:1.6" id="ch-summary-text"></div>
+    </div>
+  </div>
+
+  <div class="ch-table-wrap">
+    <div class="sh">&#128302; At-Risk Clinics, Ranked <span class="shc" id="ch-count"></span>
+      <div style="margin-left:auto;font-size:11px;color:#888;font-weight:400">Sorted by estimated annual loss</div>
+    </div>
+    <div style="overflow-x:auto"><table class="ch-tbl">
+      <thead><tr>
+        <th>Clinic</th>
+        <th>Rep</th>
+        <th>Cadence</th>
+        <th>Overdue</th>
+        <th>Trend (last 12mo)</th>
+        <th style="text-align:right">2025 Rev</th>
+        <th style="text-align:right">Est. Annual Loss</th>
+        <th>Risk</th>
+        <th>Tier</th>
+        <th></th>
+      </tr></thead>
+      <tbody id="ch-tbody"></tbody>
+    </table></div>
+    <div class="ch-help">&#128161; Click any row to open the clinic profile. Add a follow-up task from the "My Tasks" sub-tab.</div>
+  </div>
+
 </div></div>
 
 <!-- MY NOTES & TASKS -->
@@ -688,6 +818,7 @@ document.querySelectorAll('.tab').forEach(function(t){
       loadPageChatHistory();
     }
     if(t.dataset.page==='notestasks'){loadMyTasks();loadMyNotes();}
+    if(t.dataset.page==='churn'){loadChurn();}
   });
 });
 
@@ -1178,6 +1309,335 @@ async function loadAdminNP(){
 document.getElementById('adm-np-rep').addEventListener('change',loadAdminNP);
 document.getElementById('adm-np-type').addEventListener('change',loadAdminNP);
 document.getElementById('adm-np-refresh').addEventListener('click',loadAdminNP);
+
+// =========================================================
+// CHURN PREDICTOR
+// =========================================================
+var CH_CHART_RISK=null;
+var CH_DATA=null;
+
+function churnInit(){
+  // Populate rep dropdown (admin only)
+  var sel=document.getElementById('ch-rep');
+  sel.innerHTML='';
+  if(ME&&ME.role==='admin'){
+    sel.innerHTML='<option value="__all">All Reps (Company-wide)</option>';
+    REPS.forEach(function(r){var o=document.createElement('option');o.value=r;o.textContent=r;sel.appendChild(o);});
+  }else{
+    // Reps: locked to their own territory
+    var myRep=findRepForMe();
+    sel.innerHTML='<option value="'+(myRep||'__mine')+'">My Territory'+(myRep?' ('+myRep+')':'')+'</option>';
+    sel.disabled=true;
+  }
+}
+
+function findRepForMe(){
+  // Best-effort: match ME.name against REPS[] by case-insensitive equality or first-name
+  if(!ME)return null;
+  var mn=ME.name.toLowerCase();
+  for(var i=0;i<REPS.length;i++){
+    if(REPS[i].toLowerCase()===mn)return REPS[i];
+  }
+  // Try first name only
+  var mFirst=mn.split(' ')[0];
+  for(var i=0;i<REPS.length;i++){
+    if(REPS[i].toLowerCase().split(' ')[0]===mFirst)return REPS[i];
+  }
+  return null;
+}
+
+function calcChurnForClinic(idx){
+  var name=C[idx];
+  var rows=D[name]||[];
+  if(rows.length<3)return null; // Not enough signal
+
+  // Extract ordered unique order dates (epoch days)
+  var orderDays={};
+  rows.forEach(function(r){orderDays[r[3]]=true;});
+  var days=Object.keys(orderDays).map(Number).sort(function(a,b){return a-b;});
+  if(days.length<3)return null;
+
+  var today=Math.floor((Date.now()-EP0)/86400000);
+  var lastOrder=days[days.length-1];
+  var daysSince=today-lastOrder;
+
+  // Avg days between orders — weighted toward recent 12 months
+  var recentCutoff=today-365;
+  var recentDays=days.filter(function(d){return d>=recentCutoff;});
+  var workingDays=recentDays.length>=3?recentDays:days.slice(-6); // fallback to last 6 orders
+
+  var gaps=[];
+  for(var i=1;i<workingDays.length;i++)gaps.push(workingDays[i]-workingDays[i-1]);
+  if(!gaps.length)return null;
+  var avgGap=gaps.reduce(function(s,g){return s+g;},0)/gaps.length;
+  if(avgGap<=0)return null;
+
+  // Cadence label
+  var cadence;
+  if(avgGap<=10)cadence='Weekly';
+  else if(avgGap<=20)cadence='Bi-weekly';
+  else if(avgGap<=40)cadence='Monthly';
+  else if(avgGap<=75)cadence='Bi-monthly';
+  else if(avgGap<=110)cadence='Quarterly';
+  else cadence='Infrequent';
+
+  // Overdue multiplier
+  var mult=daysSince/avgGap;
+
+  // Revenue context
+  var r25=0,r26=0,r24=0;
+  rows.forEach(function(r){if(r[0]===4)r24+=r[2];else if(r[0]===5)r25+=r[2];else r26+=r[2];});
+
+  // Annual revenue baseline — strongest of last full year or last 12mo trailing
+  var last12=0,prev12=0;
+  rows.forEach(function(r){
+    var age=today-r[3];
+    if(age<365)last12+=r[2];
+    else if(age<730)prev12+=r[2];
+  });
+  var baselineAnnual=Math.max(r25,last12);
+
+  // Cadence shift detection: last 90d order rate vs prior 90d
+  var last90=days.filter(function(d){return d>=today-90;}).length;
+  var prev90=days.filter(function(d){return d>=today-180&&d<today-90;}).length;
+  var cadenceShift=(prev90>0)?(last90-prev90)/prev90:0;
+
+  // Tier logic
+  var tier='healthy';
+  if(mult>=2.5&&baselineAnnual>=500)tier='critical';
+  else if(mult>=1.5)tier='slipping';
+  else if(cadenceShift<=-0.3&&prev90>=2)tier='watch';
+  // Also watch: no order in 90d even if "infrequent" and baseline > $1000
+  else if(daysSince>=90&&baselineAnnual>=1000&&mult<1.5)tier='watch';
+
+  // Risk score 0-100
+  var score=0;
+  score+=Math.min(50,mult*20); // 0-50 from overdue
+  score+=Math.min(30,Math.log10(Math.max(100,baselineAnnual))*6); // 0-30 from revenue size (log-scale)
+  score+=Math.max(0,Math.min(20,-cadenceShift*40)); // 0-20 from cadence shift
+  score=Math.round(Math.max(0,Math.min(100,score)));
+
+  // Estimated annual loss if trajectory continues
+  // If overdue, their implied annual rate is baselineAnnual × (avgGap / daysSinceOrEquivalentGap)
+  // Simpler: expected annual = (365/avgGap) × avg_order_revenue
+  var avgOrderRev=rows.reduce(function(s,r){return s+r[2];},0)/rows.length;
+  var expectedAnnual=(365/avgGap)*avgOrderRev;
+  // If they've become slower, compute current trailing-12 vs baseline shortfall
+  var estLoss=Math.max(0,expectedAnnual-last12);
+  if(tier==='critical'||tier==='slipping'){
+    // If overdue, assume loss scales with how overdue they are
+    estLoss=Math.max(estLoss,baselineAnnual*Math.min(1,(mult-1)/2));
+  }
+
+  // Trend sparkline: monthly revenue last 12 months
+  var spark=[];
+  for(var m=11;m>=0;m--){
+    var start=today-((m+1)*30);
+    var end=today-(m*30);
+    var sum=0;
+    rows.forEach(function(r){if(r[3]>=start&&r[3]<end)sum+=r[2];});
+    spark.push(sum);
+  }
+
+  return {
+    idx:idx,clinic:name,daysSince:daysSince,avgGap:Math.round(avgGap),cadence:cadence,
+    mult:mult,r24:r24,r25:r25,r26:r26,last12:last12,baselineAnnual:baselineAnnual,
+    cadenceShift:cadenceShift,tier:tier,score:score,estLoss:estLoss,spark:spark,
+    lastOrder:lastOrder
+  };
+}
+
+async function loadChurn(){
+  if(!CH_DATA)churnInit();
+  var sel=document.getElementById('ch-rep');
+  var repFilter=sel.value;
+  var minRev=parseFloat(document.getElementById('ch-minrev').value)||0;
+  var tierFilter=document.getElementById('ch-tier').value;
+
+  // Determine rep index to filter by
+  var repIdx=null;
+  if(ME&&ME.role==='admin'){
+    if(repFilter==='__all')repIdx=null;
+    else repIdx=REPS.indexOf(repFilter);
+  }else{
+    var myRep=findRepForMe();
+    repIdx=myRep?REPS.indexOf(myRep):-999; // -999 = nothing matches
+  }
+
+  // Compute churn for every clinic in scope
+  var all=[];
+  for(var i=0;i<C.length;i++){
+    var ka=KA[i]||[];
+    if(repIdx!==null&&ka[0]!==repIdx)continue;
+    var c=calcChurnForClinic(i);
+    if(!c)continue;
+    if(c.baselineAnnual<minRev)continue;
+    all.push(c);
+  }
+
+  // Hero KPIs
+  var byTier={critical:[],slipping:[],watch:[],healthy:[]};
+  all.forEach(function(c){byTier[c.tier].push(c);});
+
+  var totalAtRisk=byTier.critical.length+byTier.slipping.length+byTier.watch.length;
+  var totalEstLoss=all.reduce(function(s,c){return s+(c.tier!=='healthy'?c.estLoss:0);},0);
+  var critLoss=byTier.critical.reduce(function(s,c){return s+c.estLoss;},0);
+
+  var hero=document.getElementById('ch-hero');
+  hero.innerHTML='';
+  [
+    {cls:'critical',label:'Critical',value:byTier.critical.length,sub:'Overdue 2.5x+',loss:critLoss},
+    {cls:'slipping',label:'Slipping',value:byTier.slipping.length,sub:'Overdue 1.5–2.5x',loss:byTier.slipping.reduce(function(s,c){return s+c.estLoss;},0)},
+    {cls:'watch',label:'Watch',value:byTier.watch.length,sub:'Cadence slowing',loss:byTier.watch.reduce(function(s,c){return s+c.estLoss;},0)},
+    {cls:'healthy',label:'Healthy',value:byTier.healthy.length,sub:'On cadence',loss:0}
+  ].forEach(function(t){
+    var d=document.createElement('div');d.className='ch-hero-card '+t.cls;
+    d.innerHTML='<div class="ch-hv">'+t.value.toLocaleString()+'</div>'+
+      '<div class="ch-hv-sub">'+t.sub+'</div>'+
+      '<div class="ch-hl">'+t.label+'</div>'+
+      (t.loss>0?'<div class="ch-hr">~$'+Math.round(t.loss).toLocaleString()+' at risk/yr</div>':'');
+    hero.appendChild(d);
+  });
+
+  // Tier bar
+  var total=all.length||1;
+  var bar=document.getElementById('ch-tier-bar');bar.innerHTML='';
+  var legend=document.getElementById('ch-tier-legend');legend.innerHTML='';
+  ['critical','slipping','watch','healthy'].forEach(function(t){
+    var n=byTier[t].length;var pct=n/total*100;
+    if(pct>0){var s=document.createElement('div');s.className='ch-tier-seg '+t;s.style.flex=pct;s.textContent=pct>8?n:'';bar.appendChild(s);}
+    var lg=document.createElement('span');lg.innerHTML='<span class="dot '+t+'"></span>'+t.charAt(0).toUpperCase()+t.slice(1)+' ('+n+')';
+    legend.appendChild(lg);
+  });
+
+  // Summary narrative
+  var pctAtRisk=total?Math.round((totalAtRisk/total)*100):0;
+  var whichScope=(ME&&ME.role==='admin'&&repFilter==='__all')?'across all territories':'in this territory';
+  document.getElementById('ch-summary-text').innerHTML=
+    '<strong>'+totalAtRisk.toLocaleString()+'</strong> of <strong>'+total.toLocaleString()+'</strong> clinics '+whichScope+' ('+pctAtRisk+'%) are showing warning signs. '+
+    (critLoss>0?'The <strong style="color:#dc2626">Critical</strong> tier alone represents <strong style="color:#dc2626">~$'+Math.round(critLoss).toLocaleString()+'/year</strong> at risk if not recovered. ':'')+
+    'Prioritize Critical, then Slipping.';
+
+  // Chart: estimated monthly loss by tier
+  renderChurnChart(byTier);
+
+  // Table
+  var shown=all.filter(function(c){
+    if(tierFilter==='all')return c.tier!=='healthy';
+    return c.tier===tierFilter;
+  });
+  shown.sort(function(a,b){return b.estLoss-a.estLoss;});
+  document.getElementById('ch-count').textContent=shown.length.toLocaleString();
+  document.getElementById('ch-chart-sub').textContent=shown.length+' clinics';
+
+  var tb=document.getElementById('ch-tbody');tb.innerHTML='';
+  if(!shown.length){
+    tb.innerHTML='<tr><td colspan="10"><div class="ch-empty"><div class="ei">&#127881;</div><p style="font-size:14px">No at-risk clinics at this filter level.</p></div></td></tr>';
+    return;
+  }
+  shown.slice(0,200).forEach(function(c){
+    var tr=document.createElement('tr');tr.className=c.tier;
+    var k=KA[c.idx]||[];
+    var rep=k[0]>=0?REPS[k[0]]:'';
+    var multCls=c.mult>=2.5?'high':c.mult>=1.5?'med':'low';
+    var scoreColor=c.score>=75?'#dc2626':c.score>=50?'#f59e0b':c.score>=25?'#3b82f6':'#16a34a';
+    tr.dataset.idx=c.idx;
+    tr.innerHTML=
+      '<td><div class="pn">'+c.clinic+'</div><div style="font-size:11px;color:#888">Last: '+epDate(c.lastOrder)+'</div></td>'+
+      '<td style="color:#666">'+rep+'</td>'+
+      '<td><div style="font-weight:600">'+c.cadence+'</div><div style="font-size:11px;color:#888">~'+c.avgGap+' days</div></td>'+
+      '<td><span class="ch-mult '+multCls+'">'+c.mult.toFixed(1)+'x</span><div style="font-size:11px;color:#888">'+c.daysSince+' days</div></td>'+
+      '<td><svg class="ch-spark" data-spark="'+c.spark.join(',')+'"></svg></td>'+
+      '<td style="text-align:right">'+fmt(c.r25)+'</td>'+
+      '<td style="text-align:right"><span class="ch-est-loss">~'+fmt(c.estLoss)+'</span></td>'+
+      '<td><span class="ch-score-bar"><span class="ch-score-fill" style="width:'+c.score+'%;background:'+scoreColor+'"></span></span><strong>'+c.score+'</strong></td>'+
+      '<td><span class="ch-tier-badge '+c.tier+'">'+c.tier+'</span></td>'+
+      '<td><button class="vbtn" data-idx="'+c.idx+'">View &#8594;</button></td>';
+    tb.appendChild(tr);
+  });
+
+  // Render sparklines
+  document.querySelectorAll('.ch-spark').forEach(function(el){
+    var data=el.dataset.spark.split(',').map(parseFloat);
+    el.innerHTML=buildSparkline(data,80,28);
+  });
+
+  CH_DATA=all;
+}
+
+function buildSparkline(data,w,h){
+  if(!data||!data.length)return '';
+  var max=Math.max.apply(null,data);
+  if(max<=0)return '<text x="40" y="18" font-size="10" fill="#bbb" text-anchor="middle">no data</text>';
+  var step=w/(data.length-1||1);
+  var pts=data.map(function(v,i){
+    var y=h-2-((v/max)*(h-4));
+    return (i*step).toFixed(1)+','+y.toFixed(1);
+  }).join(' ');
+  // Last-value trend color
+  var lastVal=data[data.length-1];
+  var prevAvg=data.slice(0,-3).reduce(function(s,v){return s+v;},0)/Math.max(1,data.length-3);
+  var color=lastVal>=prevAvg?'#16a34a':lastVal>prevAvg*0.5?'#f59e0b':'#dc2626';
+  return '<polyline fill="none" stroke="'+color+'" stroke-width="1.5" points="'+pts+'"/>';
+}
+
+function renderChurnChart(byTier){
+  var ctx=document.getElementById('ch-chart-risk');
+  if(!ctx)return;
+  // Build 12-month timeline of WHEN this at-risk revenue was flowing (last 12mo actual revenue from clinics now at risk)
+  var today=Math.floor((Date.now()-EP0)/86400000);
+  var monthly={critical:[],slipping:[],watch:[]};
+  var labels=[];
+  var baseDate=new Date();
+  for(var m=11;m>=0;m--){
+    var start=today-((m+1)*30);
+    var end=today-(m*30);
+    ['critical','slipping','watch'].forEach(function(tier){
+      var sum=0;
+      byTier[tier].forEach(function(c){
+        var rows=D[c.clinic]||[];
+        rows.forEach(function(r){if(r[3]>=start&&r[3]<end)sum+=r[2];});
+      });
+      monthly[tier].push(Math.round(sum));
+    });
+    var d=new Date(baseDate.getTime()-m*30*86400000);
+    labels.push(d.toLocaleDateString('en-US',{month:'short'}));
+  }
+  if(CH_CHART_RISK)CH_CHART_RISK.destroy();
+  CH_CHART_RISK=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:labels,
+      datasets:[
+        {label:'Critical',data:monthly.critical,backgroundColor:'#dc2626',stack:'r'},
+        {label:'Slipping',data:monthly.slipping,backgroundColor:'#f59e0b',stack:'r'},
+        {label:'Watch',data:monthly.watch,backgroundColor:'#3b82f6',stack:'r'}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:true,position:'bottom',labels:{font:{size:11},boxWidth:12}},
+        tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': $'+ctx.parsed.y.toLocaleString();}}}
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{font:{size:11}}},
+        y:{beginAtZero:true,ticks:{font:{size:11},callback:function(v){return '$'+v.toLocaleString();}}}
+      }
+    }
+  });
+}
+
+document.getElementById('ch-rep').addEventListener('change',loadChurn);
+document.getElementById('ch-minrev').addEventListener('change',loadChurn);
+document.getElementById('ch-tier').addEventListener('change',loadChurn);
+document.getElementById('ch-refresh').addEventListener('click',loadChurn);
+document.getElementById('ch-tbody').addEventListener('click',function(e){
+  var btn=e.target.closest('.vbtn');
+  if(btn){openPanel(parseInt(btn.dataset.idx));return;}
+  var tr=e.target.closest('tr');
+  if(tr&&tr.dataset.idx)openPanel(parseInt(tr.dataset.idx));
+});
 
 // =========================================================
 // INIT
