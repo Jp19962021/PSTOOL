@@ -1,0 +1,54 @@
+name: Zoho Incremental Sync (nightly)
+
+on:
+  workflow_dispatch:  # manual trigger from Actions tab
+  schedule:
+    # 07:00 UTC = 02:00 CT (standard time) / 01:00 CT (daylight time)
+    - cron: "0 7 * * *"  # every night
+
+permissions:
+  contents: write
+
+concurrency:
+  group: zoho-sync  # prevent overlap with the full-rebuild workflow
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run incremental sync
+        env:
+          ZOHO_CLIENT_ID: ${{ secrets.ZOHO_CLIENT_ID }}
+          ZOHO_CLIENT_SECRET: ${{ secrets.ZOHO_CLIENT_SECRET }}
+          ZOHO_REFRESH_TOKEN: ${{ secrets.ZOHO_REFRESH_TOKEN }}
+          ZOHO_ORG_ID: ${{ secrets.ZOHO_ORG_ID }}
+        run: python sync_incremental.py
+
+      - name: Commit updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add data.js last_sync.json
+
+          if git diff --cached --quiet; then
+            echo "Nothing changed — skipping commit."
+            exit 0
+          fi
+
+          git commit -m "chore: incremental sync $(date -u +%Y-%m-%d)"
+          git push
