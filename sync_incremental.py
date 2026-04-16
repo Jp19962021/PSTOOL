@@ -66,8 +66,14 @@ def main() -> int:
 
     client = ZohoClient()
 
-    # Get the list of modified invoices
-    invoices_list = fetch_invoice_list(client, last_modified_after=since_iso)
+    # Get the list of newly created invoices since last sync
+    # max_results=MAX_INCREMENTAL protects us from pulling everything if
+    # Zoho silently ignores our filter.
+    invoices_list = fetch_invoice_list(
+        client,
+        created_after=since_iso,
+        max_results=MAX_INCREMENTAL,
+    )
     print(f"  ✓ {len(invoices_list)} invoices to process", flush=True)
 
     if len(invoices_list) > MAX_INCREMENTAL:
