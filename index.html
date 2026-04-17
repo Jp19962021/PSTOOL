@@ -135,6 +135,64 @@ table.ptbl tr:last-child td{border-bottom:none}
 .srbg{background:#fff8f8!important}
 .pgrp-hidden,.psku-hidden,.orow-hidden{display:none}
 .sku-count-pill{display:inline-block;font-size:10px;background:#eef0f5;color:#555;padding:1px 7px;border-radius:10px;margin-left:8px;font-weight:500}
+.partial-pill{display:inline-block;font-size:9px;background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:10px;margin-left:6px;font-weight:600;letter-spacing:0.02em;cursor:help}
+/* TRENDS TAB */
+.tr-target-card{background:linear-gradient(135deg,#1a2035 0%,#2d3754 100%);color:#fff;border-radius:14px;padding:24px 28px;margin-bottom:20px;display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:20px;align-items:center;box-shadow:0 4px 18px rgba(26,32,53,.18);position:relative;overflow:hidden}
+.tr-target-card::before{content:'';position:absolute;top:-30%;right:-10%;width:280px;height:280px;background:radial-gradient(circle,rgba(255,255,255,.06) 0%,transparent 70%);pointer-events:none}
+.tr-target-card .tr-tt{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#a4adc7;font-weight:600;margin-bottom:6px}
+.tr-target-card .tr-tv{font-size:28px;font-weight:700;color:#fff;line-height:1.1;letter-spacing:-.02em}
+.tr-target-card .tr-tv.muted{color:#c4c9da;font-size:22px;font-weight:600}
+.tr-target-card .tr-ts{font-size:11px;color:#a4adc7;margin-top:4px}
+.tr-target-card .tr-edit{position:absolute;top:14px;right:16px;background:rgba(255,255,255,.12);border:none;color:#fff;padding:5px 11px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:500}
+.tr-target-card .tr-edit:hover{background:rgba(255,255,255,.22)}
+.tr-target-card .tr-pace{font-size:13px;font-weight:600;margin-top:2px}
+.tr-target-card .tr-pace.ahead{color:#86efac}.tr-target-card .tr-pace.behind{color:#fca5a5}.tr-target-card .tr-pace.ontrack{color:#fde68a}
+@media(max-width:900px){.tr-target-card{grid-template-columns:1fr 1fr;gap:14px}}
+.tr-section{margin-bottom:24px}
+.tr-section-title{font-size:14px;font-weight:700;color:#1a2035;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.tr-section-title .tr-sub{font-size:11px;color:#888;font-weight:400;margin-left:auto}
+.tr-card{background:#fff;border-radius:12px;padding:18px 20px;border:1px solid #e8eaed;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.tr-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:1100px){.tr-grid-4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.tr-grid-4{grid-template-columns:1fr}}
+.tr-drug-card{background:#fff;border-radius:10px;padding:14px 16px;border:1px solid #e8eaed;box-shadow:0 1px 3px rgba(0,0,0,.04);cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.tr-drug-card:hover{border-color:#1a2035;box-shadow:0 3px 10px rgba(0,0,0,.08)}
+.tr-drug-name{font-size:13px;font-weight:700;color:#1a2035;margin-bottom:4px;line-height:1.2}
+.tr-drug-rev{font-size:18px;font-weight:700;color:#0b1f44;margin-bottom:6px}
+.tr-drug-meta{font-size:10px;color:#888;display:flex;justify-content:space-between;margin-top:8px}
+.tr-drug-spark{height:36px;margin-top:6px}
+.tr-delta{font-size:11px;font-weight:600;padding:1px 7px;border-radius:8px;display:inline-block}
+.tr-delta.up{background:#dcfce7;color:#16a34a}.tr-delta.down{background:#fee2e2;color:#dc2626}.tr-delta.flat{background:#f1f5f9;color:#64748b}
+.tr-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:1000px){.tr-grid-3{grid-template-columns:1fr}}
+.tr-radar-card{background:#fff;border-radius:12px;padding:14px 18px;border:1px solid #e8eaed;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.tr-radar-title{font-size:12px;font-weight:700;color:#1a2035;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em;display:flex;align-items:center;gap:6px}
+.tr-radar-list{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto}
+.tr-radar-item{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#f8fafc;border-radius:8px;font-size:12px;cursor:pointer;transition:background .12s}
+.tr-radar-item:hover{background:#eef2f7}
+.tr-radar-item .tr-rn{font-weight:600;color:#1a2035;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tr-radar-item .tr-rv{font-weight:700;color:#dc2626;font-size:11px;margin-left:8px;white-space:nowrap}
+.tr-radar-item .tr-rv.green{color:#16a34a}
+.tr-radar-item .tr-rv.amber{color:#b45309}
+.tr-rep-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tr-rep-tbl th{text-align:left;font-size:10px;font-weight:600;color:#888;padding:8px 10px;border-bottom:1px solid #edf0f5;background:#fafbfc;text-transform:uppercase}
+.tr-rep-tbl td{padding:9px 10px;border-bottom:1px solid #f3f4f6;vertical-align:middle}
+.tr-rep-tbl tr:hover td{background:#fafbfc}
+.tr-rep-tbl .repname{font-weight:600;color:#1a2035}
+.tr-chart-wrap{position:relative;height:280px}
+.tr-chart-wrap.tall{height:320px}
+.tr-empty{padding:40px 20px;text-align:center;color:#aaa;font-size:13px}
+.tr-modal-bg{position:fixed;inset:0;background:rgba(15,21,38,.55);z-index:9000;display:none;align-items:center;justify-content:center}
+.tr-modal-bg.open{display:flex}
+.tr-modal{background:#fff;border-radius:12px;padding:24px 28px;max-width:440px;width:90%;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.tr-modal h3{margin:0 0 14px;font-size:16px;color:#1a2035}
+.tr-modal label{display:block;font-size:11px;color:#666;font-weight:600;text-transform:uppercase;margin-bottom:4px;margin-top:12px}
+.tr-modal input{width:100%;padding:9px 12px;border:1.5px solid #d8dce3;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box}
+.tr-modal input:focus{border-color:#1a2035}
+.tr-modal-actions{margin-top:18px;display:flex;justify-content:flex-end;gap:8px}
+.tr-modal-actions button{padding:8px 16px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer}
+.tr-modal-actions .cancel{background:#eef0f5;color:#555}
+.tr-modal-actions .save{background:#1a2035;color:#fff}
 .bdg{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600}
 .ba{background:#dcfce7;color:#16a34a}.bs{background:#fee2e2;color:#dc2626}.bp{background:#fef9c3;color:#854d0e}
 .dgap{font-size:10px;color:#aaa;margin-left:4px}
@@ -480,6 +538,7 @@ table.ptbl tr:last-child td{border-bottom:none}
   <div class="tab" data-page="winback">&#128257; Win-Back</div>
   <div class="tab" data-page="atrisk">&#9888; At-Risk</div>
   <div class="tab" data-page="churn">&#128302; Churn Predictor</div>
+  <div class="tab admin-tab" data-page="trends" id="trtab" style="display:none">&#128200; Trends</div>
   <div class="tab" data-page="notestasks">&#128221; My Notes &amp; Tasks</div>
   <div class="tab admin-tab" data-page="admin" id="atab" style="display:none">&#9881; Admin</div>
   <div class="tab admin-tab" data-page="chatbot" id="cbtab" style="display:none">&#129302; Chat Bot</div>
@@ -603,6 +662,100 @@ table.ptbl tr:last-child td{border-bottom:none}
   </div>
 
 </div></div>
+
+<!-- TRENDS (admin only) -->
+<div id="page-trends" class="page"><div class="container">
+
+  <!-- Growth Target Hero -->
+  <div class="tr-target-card" id="tr-target-card">
+    <button class="tr-edit" id="tr-edit-targets">Edit Targets</button>
+    <div>
+      <div class="tr-tt">2026 Goal</div>
+      <div class="tr-tv" id="tr-target-yr">$6.0M</div>
+      <div class="tr-ts" id="tr-target-stretch">2027 stretch: $10M</div>
+    </div>
+    <div>
+      <div class="tr-tt">YTD Actual</div>
+      <div class="tr-tv muted" id="tr-ytd">$0</div>
+      <div class="tr-ts" id="tr-ytd-sub">vs goal</div>
+    </div>
+    <div>
+      <div class="tr-tt">Annualized Pace</div>
+      <div class="tr-tv muted" id="tr-pace-val">$0</div>
+      <div class="tr-pace ontrack" id="tr-pace-status">on pace</div>
+    </div>
+    <div>
+      <div class="tr-tt">Gap to Goal</div>
+      <div class="tr-tv muted" id="tr-gap">$0</div>
+      <div class="tr-ts" id="tr-gap-sub">to hit target</div>
+    </div>
+  </div>
+
+  <!-- Revenue Heartbeat -->
+  <div class="tr-section">
+    <div class="tr-section-title">&#128200; Revenue Heartbeat <span class="tr-sub">Last 12 months · YoY overlay</span></div>
+    <div class="tr-card"><div class="tr-chart-wrap tall"><canvas id="tr-heartbeat"></canvas></div></div>
+  </div>
+
+  <!-- Top Drug Trends -->
+  <div class="tr-section">
+    <div class="tr-section-title">&#128138; Top Drug Trends <span class="tr-sub">Click any drug to see clinic breakdown</span></div>
+    <div class="tr-grid-4" id="tr-drugs"></div>
+  </div>
+
+  <!-- Rep Leaderboard -->
+  <div class="tr-section">
+    <div class="tr-section-title">&#127942; Rep Leaderboard <span class="tr-sub">MTD vs prior month and YoY</span></div>
+    <div class="tr-card" style="padding:0;overflow:hidden">
+      <div style="overflow-x:auto"><table class="tr-rep-tbl">
+        <thead><tr>
+          <th>Rep</th>
+          <th style="text-align:right">MTD</th>
+          <th style="text-align:right">vs Last Month</th>
+          <th style="text-align:right">vs Same Mo Last Year</th>
+          <th style="text-align:right">Active Clinics</th>
+          <th style="text-align:right">At-Risk</th>
+        </tr></thead>
+        <tbody id="tr-rep-tbody"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- Pipeline Radar -->
+  <div class="tr-section">
+    <div class="tr-section-title">&#128300; Pipeline Radar <span class="tr-sub">Where to spend your time this week</span></div>
+    <div class="tr-grid-3">
+      <div class="tr-radar-card">
+        <div class="tr-radar-title" style="color:#dc2626">&#128680; Biggest At-Risk</div>
+        <div class="tr-radar-list" id="tr-radar-risk"></div>
+      </div>
+      <div class="tr-radar-card">
+        <div class="tr-radar-title" style="color:#16a34a">&#127919; Win-Back Targets</div>
+        <div class="tr-radar-list" id="tr-radar-winback"></div>
+      </div>
+      <div class="tr-radar-card">
+        <div class="tr-radar-title" style="color:#b45309">&#128640; Fastest Growers</div>
+        <div class="tr-radar-list" id="tr-radar-growers"></div>
+      </div>
+    </div>
+  </div>
+
+</div></div>
+
+<!-- Edit Targets modal -->
+<div class="tr-modal-bg" id="tr-target-modal-bg">
+  <div class="tr-modal">
+    <h3>Edit Growth Targets</h3>
+    <label>2026 Target ($)</label>
+    <input type="number" id="tr-target-input-26" placeholder="6000000" step="100000">
+    <label>2027 Stretch Target ($)</label>
+    <input type="number" id="tr-target-input-27" placeholder="10000000" step="100000">
+    <div class="tr-modal-actions">
+      <button class="cancel" id="tr-target-cancel">Cancel</button>
+      <button class="save" id="tr-target-save">Save</button>
+    </div>
+  </div>
+</div>
 
 <!-- MY NOTES & TASKS -->
 <div id="page-notestasks" class="page"><div class="container">
@@ -807,6 +960,7 @@ async function login(){
   if(data.role==='admin'){
     document.getElementById('atab').style.display='';
     document.getElementById('cbtab').style.display='';
+    document.getElementById('trtab').style.display='';
   }
   await logAction('login','Signed in');
   init();
@@ -815,6 +969,7 @@ document.getElementById('lout').addEventListener('click',function(){
   ME=null;
   document.getElementById('atab').style.display='none';
   document.getElementById('cbtab').style.display='none';
+  document.getElementById('trtab').style.display='none';
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('app').style.display='none';
   document.getElementById('lu').value='';document.getElementById('lp').value='';
@@ -823,7 +978,7 @@ document.getElementById('lout').addEventListener('click',function(){
 
 document.querySelectorAll('.tab').forEach(function(t){
   t.addEventListener('click',function(){
-    if((t.dataset.page==='admin'||t.dataset.page==='chatbot')&&(!ME||ME.role!=='admin'))return;
+    if((t.dataset.page==='admin'||t.dataset.page==='chatbot'||t.dataset.page==='trends')&&(!ME||ME.role!=='admin'))return;
     document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
     document.querySelectorAll('.page').forEach(function(x){x.classList.remove('active');});
     t.classList.add('active');
@@ -835,6 +990,7 @@ document.querySelectorAll('.tab').forEach(function(t){
     }
     if(t.dataset.page==='notestasks'){loadMyTasks();loadMyNotes();}
     if(t.dataset.page==='churn'){loadChurn();}
+    if(t.dataset.page==='trends'){loadTrends();}
   });
 });
 
@@ -955,6 +1111,8 @@ function fillPanel(idx){
   var pm={};rows.forEach(function(r){var pi=r[1];if(!pm[pi])pm[pi]=[];pm[pi].push({ep:r[3],rev:r[2],yr:r[0]});});
   var r24=0,r25=0,r26=0;rows.forEach(function(r){if(r[0]===4)r24+=r[2];else if(r[0]===5)r25+=r[2];else r26+=r[2];});
   var ab={};Object.keys(pm).forEach(function(p){ab[p]=1;});
+  // Rollup-keyed set: any ingredient+strength+form the clinic has already ordered (any SKU)
+  var abRollup={};Object.keys(pm).forEach(function(p){abRollup[rollupFor(parseInt(p)).key]=1;});
   var lep=rows.length?Math.max.apply(null,rows.map(function(r){return r[3];})):null;
   var tod=Math.floor((Date.now()-EP0)/86400000);
   document.getElementById('pn').textContent=name;
@@ -1023,8 +1181,14 @@ function fillPanel(idx){
   var pb=document.getElementById('ppb');pb.innerHTML='';
   rlist.forEach(function(g,gi){
     var badge,rc='',cls='';
+    // Detect "partial" — rollup is Active overall, but contains some Stopped/Past-Only SKUs (e.g., switched bottle size)
+    var anyStoppedSku=g.skus.some(function(s){return s.stat==='stp'||s.stat==='pst';});
+    var partial=g.in26&&anyStoppedSku;
     if(g.stopped){badge='<span class="bdg bs">Stopped</span>';rc='srbg';cls='sn';}
-    else if(g.in26){badge='<span class="bdg ba">Active</span>';}
+    else if(g.in26){
+      badge='<span class="bdg ba">Active</span>';
+      if(partial)badge+='<span class="partial-pill" title="Active overall, but some SKUs under this product have stopped — usually a bottle-size change">switched</span>';
+    }
     else{badge='<span class="bdg bp">Past only</span>';}
     // Sort SKUs: active first, stopped middle, past only last; then by revenue
     g.skus.sort(function(a,b){
@@ -1064,11 +1228,18 @@ function fillPanel(idx){
   });
   document.getElementById('ppc').textContent=rlist.length+' products';
 
-  // Pitch
+  // Pitch — use rollup keys so we don't suggest the same ingredient+strength+form the clinic already has,
+  // and dedupe pitches by rollup so we don't list multiple bottle counts of the same pitch
   var xb=document.getElementById('pxb');xb.innerHTML='';var rk=1;
-  for(var i=0;i<T.length&&rk<=8;i++){var t=T[i];if(t[0]<0||ab[t[0]])continue;
+  var pitchSeen={};
+  for(var i=0;i<T.length&&rk<=8;i++){
+    var t=T[i];if(t[0]<0)continue;
+    var pRollup=rollupFor(t[0]);
+    if(abRollup[pRollup.key])continue;  // clinic already orders this ingredient+strength+form
+    if(pitchSeen[pRollup.key])continue;  // already added another SKU under this rollup
+    pitchSeen[pRollup.key]=1;
     var tr2=document.createElement('tr');
-    tr2.innerHTML='<td><span class="pn nn">'+t[1]+'</span></td>'+
+    tr2.innerHTML='<td><span class="pn nn">'+pRollup.label+'</span></td>'+
       '<td style="text-align:right;color:#b45309;font-weight:500">'+fmt(t[2])+'</td>'+
       '<td style="text-align:right"><span class="bdg bp">#'+rk+'</span></td>';
     xb.appendChild(tr2);rk++;
@@ -1397,7 +1568,24 @@ async function openEditRep(id){
   document.getElementById('er-cancel').addEventListener('click',function(){modal.remove();});
   document.getElementById('er-save').addEventListener('click',async function(){
     var picked=getRepPickerValues('er-box');
-    await SB.from('reps').update({rep_names:picked}).eq('id',id);
+    var btn=document.getElementById('er-save');
+    btn.disabled=true;btn.textContent='Saving...';
+    var {error}=await SB.from('reps').update({rep_names:picked}).eq('id',id);
+    btn.disabled=false;btn.textContent='Save';
+    if(error){
+      console.error('[edit user] full error:',error);
+      var em=(error.message||'').toLowerCase();
+      var msg='Save failed: ';
+      if(em.indexOf('rep_names')>=0||em.indexOf('column')>=0){
+        msg+='Database is missing the rep_names column. Run the v5 migration in Supabase: ALTER TABLE reps ADD COLUMN rep_names JSONB DEFAULT \'[]\';';
+      } else if(em.indexOf('row-level security')>=0||em.indexOf('rls')>=0||em.indexOf('policy')>=0){
+        msg+='Permission denied by Supabase RLS. Disable RLS on the reps table OR add an UPDATE policy.';
+      } else {
+        msg+=(error.message||JSON.stringify(error));
+      }
+      alert(msg);
+      return;
+    }
     modal.remove();
     loadReps();
   });
@@ -1417,11 +1605,27 @@ document.getElementById('arb2').addEventListener('click',async function(){
   if(!n||!u||!p){msg.className='smsg2 er';msg.textContent='All fields required';return;}
   var picked=getRepPickerValues('nr-box');
   var {error}=await SB.from('reps').insert({name:n,username:u,password:p,role:'rep',rep_names:picked});
-  if(error){msg.className='smsg2 er';msg.textContent='Username already taken';return;}
+  if(error){
+    msg.className='smsg2 er';
+    // Decode the actual error so we don't lie about "username taken"
+    var em=(error.message||'').toLowerCase();
+    var code=error.code||'';
+    if(code==='23505'||em.indexOf('duplicate')>=0||em.indexOf('unique')>=0){
+      msg.textContent='Username "'+u+'" is already taken — pick another.';
+    } else if(em.indexOf('rep_names')>=0||em.indexOf('column')>=0){
+      msg.textContent='Database is missing the rep_names column. Run the v5 migration in Supabase: ALTER TABLE reps ADD COLUMN rep_names JSONB DEFAULT \'[]\';';
+    } else if(em.indexOf('row-level security')>=0||em.indexOf('rls')>=0||em.indexOf('policy')>=0){
+      msg.textContent='Permission denied by Supabase RLS. Disable RLS on the reps table OR add an INSERT policy.';
+    } else {
+      msg.textContent='Insert failed: '+(error.message||JSON.stringify(error));
+    }
+    console.error('[add user] full error:',error);
+    return;
+  }
   msg.className='smsg2 ok';msg.textContent='Rep added successfully'+(picked.length?' with '+picked.length+' assigned territor'+(picked.length===1?'y':'ies'):' \u2014 no territory assigned yet, edit to add')+'!';
   document.getElementById('nn').value='';document.getElementById('nu').value='';document.getElementById('np').value='';
   renderRepPicker('nr-box',[]);
-  loadReps();setTimeout(function(){msg.textContent='';},4000);
+  loadReps();setTimeout(function(){msg.textContent='';},6000);
 });
 
 async function loadActivity(){
@@ -1888,6 +2092,280 @@ document.getElementById('ch-tbody').addEventListener('click',function(e){
 });
 
 // =========================================================
+// TRENDS TAB (admin)
+// =========================================================
+var TR_CHARTS={};
+var TR_TARGETS={year2026:6000000,year2027:10000000};
+function trLoadTargets(){
+  try{var s=localStorage.getItem('pstool_targets');if(s)TR_TARGETS=JSON.parse(s);}catch(e){}
+}
+function trSaveTargets(){
+  try{localStorage.setItem('pstool_targets',JSON.stringify(TR_TARGETS));}catch(e){}
+}
+function trFmtUSD(n){if(n==null||isNaN(n))return '$0';if(Math.abs(n)>=1e6)return '$'+(n/1e6).toFixed(2)+'M';if(Math.abs(n)>=1e3)return '$'+(n/1e3).toFixed(0)+'K';return '$'+Math.round(n).toLocaleString();}
+function trFmtFull(n){return '$'+Math.round(n||0).toLocaleString();}
+function trMonthKey(epoch){var d=new Date(EP0+epoch*86400000);return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0');}
+function trMonthLabel(key){var p=key.split('-');var d=new Date(Date.UTC(parseInt(p[0]),parseInt(p[1])-1,1));return d.toLocaleDateString('en-US',{month:'short',year:'2-digit',timeZone:'UTC'});}
+function trWeekKey(epoch){
+  // Monday of the week containing this epoch
+  var d=new Date(EP0+epoch*86400000);
+  var dow=d.getUTCDay();
+  var monOffset=(dow+6)%7;
+  var monMs=d.getTime()-monOffset*86400000;
+  var mon=new Date(monMs);
+  return mon.toISOString().slice(0,10);
+}
+function trDestroyChart(id){if(TR_CHARTS[id]){TR_CHARTS[id].destroy();delete TR_CHARTS[id];}}
+
+async function loadTrends(){
+  if(!ME||ME.role!=='admin')return;
+  trLoadTargets();
+  var todayEp=Math.floor((Date.now()-EP0)/86400000);
+  var todayDate=new Date();
+  var thisYear=todayDate.getUTCFullYear();
+  var thisMonth=todayDate.getUTCMonth(); // 0-indexed
+  // Build per-month and per-week aggregates across all data
+  var monthRev={},monthYearTot={},weekRev={};
+  for(var ci=0;ci<C.length;ci++){
+    var rows=D[C[ci]]||[];
+    for(var ri=0;ri<rows.length;ri++){
+      var r=rows[ri];
+      var mk=trMonthKey(r[3]);
+      monthRev[mk]=(monthRev[mk]||0)+r[2];
+      monthYearTot[r[0]+2020]=(monthYearTot[r[0]+2020]||0)+r[2];
+      var wk=trWeekKey(r[3]);
+      weekRev[wk]=(weekRev[wk]||0)+r[2];
+    }
+  }
+  // ----- Growth Target Hero -----
+  var ytd=monthYearTot[thisYear]||0;
+  var dayOfYear=Math.floor((Date.now()-Date.UTC(thisYear,0,1))/86400000)+1;
+  var pace=ytd*(365/Math.max(1,dayOfYear));
+  var target=TR_TARGETS.year2026;
+  var gap=target-pace;
+  var pct=target?Math.round((pace/target)*100):0;
+  document.getElementById('tr-target-yr').textContent=trFmtUSD(target);
+  document.getElementById('tr-target-stretch').textContent='2027 stretch: '+trFmtUSD(TR_TARGETS.year2027);
+  document.getElementById('tr-ytd').textContent=trFmtUSD(ytd);
+  document.getElementById('tr-ytd-sub').textContent=Math.round((ytd/target)*100)+'% of '+thisYear+' goal';
+  document.getElementById('tr-pace-val').textContent=trFmtUSD(pace);
+  var paceEl=document.getElementById('tr-pace-status');
+  if(pct>=100){paceEl.textContent='✓ '+pct+'% of goal pace';paceEl.className='tr-pace ahead';}
+  else if(pct>=90){paceEl.textContent=pct+'% of goal pace';paceEl.className='tr-pace ontrack';}
+  else{paceEl.textContent=pct+'% of goal pace';paceEl.className='tr-pace behind';}
+  document.getElementById('tr-gap').textContent=gap>0?trFmtUSD(gap):trFmtUSD(0);
+  document.getElementById('tr-gap-sub').textContent=gap>0?'still needed in '+thisYear:'goal already met!';
+
+  // ----- Heartbeat: last 12 months + YoY overlay -----
+  var months=[];
+  for(var i=11;i>=0;i--){
+    var d=new Date(Date.UTC(thisYear,thisMonth-i,1));
+    var mk=d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0');
+    var prevMk=(d.getUTCFullYear()-1)+'-'+String(d.getUTCMonth()+1).padStart(2,'0');
+    months.push({key:mk,label:d.toLocaleDateString('en-US',{month:'short',year:'2-digit',timeZone:'UTC'}),val:monthRev[mk]||0,prev:monthRev[prevMk]||0});
+  }
+  trDestroyChart('tr-heartbeat');
+  TR_CHARTS['tr-heartbeat']=new Chart(document.getElementById('tr-heartbeat'),{
+    type:'bar',
+    data:{
+      labels:months.map(function(m){return m.label;}),
+      datasets:[
+        {type:'bar',label:'Revenue',data:months.map(function(m){return m.val;}),backgroundColor:'rgba(26,32,53,0.85)',borderRadius:6,order:2},
+        {type:'line',label:'Same month last year',data:months.map(function(m){return m.prev;}),borderColor:'#f59e0b',backgroundColor:'#f59e0b',borderWidth:2,pointRadius:3,pointBackgroundColor:'#f59e0b',tension:0.25,order:1},
+      ],
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',align:'end',labels:{boxWidth:12,font:{size:11}}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+trFmtFull(c.parsed.y);}}}},
+      scales:{y:{ticks:{callback:function(v){return trFmtUSD(v);},font:{size:10}}},x:{ticks:{font:{size:10}}}},
+    },
+  });
+
+  // ----- Top Drug Trends (auto-detect top N by total revenue) -----
+  // Aggregate by ingredient (rolled-up across all SKUs and forms)
+  var ingTotal={},ingByMonth={};
+  for(var ci2=0;ci2<C.length;ci2++){
+    var rows2=D[C[ci2]]||[];
+    for(var rj=0;rj<rows2.length;rj++){
+      var rr=rows2[rj];
+      var ing=rollupFor(rr[1]).ingredient;
+      if(!ing||ing==='(unknown)')continue;
+      ingTotal[ing]=(ingTotal[ing]||0)+rr[2];
+      var mk2=trMonthKey(rr[3]);
+      if(!ingByMonth[ing])ingByMonth[ing]={};
+      ingByMonth[ing][mk2]=(ingByMonth[ing][mk2]||0)+rr[2];
+    }
+  }
+  var topIngs=Object.keys(ingTotal).map(function(k){return [k,ingTotal[k]];}).sort(function(a,b){return b[1]-a[1];}).slice(0,12);
+  var drugWrap=document.getElementById('tr-drugs');drugWrap.innerHTML='';
+  topIngs.forEach(function(p){
+    var ing=p[0],total=p[1];
+    var byM=ingByMonth[ing]||{};
+    // Build last 12 months
+    var spark=[],curMonthVal=0,prevMonthVal=0,yoyVal=0;
+    var thisMonthKey=thisYear+'-'+String(thisMonth+1).padStart(2,'0');
+    var prevMonthDate=new Date(Date.UTC(thisYear,thisMonth-1,1));
+    var prevMonthKey=prevMonthDate.getUTCFullYear()+'-'+String(prevMonthDate.getUTCMonth()+1).padStart(2,'0');
+    var yoyMonthKey=(thisYear-1)+'-'+String(thisMonth+1).padStart(2,'0');
+    curMonthVal=byM[thisMonthKey]||0;
+    prevMonthVal=byM[prevMonthKey]||0;
+    yoyVal=byM[yoyMonthKey]||0;
+    for(var i=11;i>=0;i--){
+      var d=new Date(Date.UTC(thisYear,thisMonth-i,1));
+      var mk3=d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0');
+      spark.push(byM[mk3]||0);
+    }
+    var momDelta=prevMonthVal>0?((curMonthVal-prevMonthVal)/prevMonthVal)*100:(curMonthVal>0?100:0);
+    var yoyDelta=yoyVal>0?((curMonthVal-yoyVal)/yoyVal)*100:(curMonthVal>0?100:0);
+    var deltaCls=momDelta>=5?'up':(momDelta<=-5?'down':'flat');
+    var deltaSym=momDelta>=0?'▲':'▼';
+    var card=document.createElement('div');card.className='tr-drug-card';card.dataset.ing=ing;
+    card.innerHTML=
+      '<div class="tr-drug-name">'+ing+'</div>'+
+      '<div class="tr-drug-rev">'+trFmtUSD(total)+'</div>'+
+      '<div><span class="tr-delta '+deltaCls+'">'+deltaSym+' '+Math.abs(Math.round(momDelta))+'% MoM</span></div>'+
+      '<div class="tr-drug-spark"><canvas></canvas></div>'+
+      '<div class="tr-drug-meta"><span>'+trFmtUSD(curMonthVal)+' MTD</span><span>YoY: '+(yoyDelta>=0?'+':'')+Math.round(yoyDelta)+'%</span></div>';
+    drugWrap.appendChild(card);
+    var sparkCanvas=card.querySelector('canvas');
+    var sparkColor=momDelta>=0?'#16a34a':'#dc2626';
+    new Chart(sparkCanvas,{
+      type:'line',
+      data:{labels:spark.map(function(_,i){return i;}),datasets:[{data:spark,borderColor:sparkColor,backgroundColor:sparkColor+'22',borderWidth:1.5,fill:true,pointRadius:0,tension:0.3}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}},elements:{line:{borderJoinStyle:'round'}}},
+    });
+  });
+
+  // ----- Rep Leaderboard -----
+  // For each rep: this month rev, prev month rev, same-month-last-year rev, active clinic count, at-risk count
+  var repAgg={};
+  REPS.forEach(function(r,ri){repAgg[ri]={rep:r,mtd:0,prevM:0,yoyM:0,activeC:new Set(),atRiskC:0};});
+  var thisMonthStart=Date.UTC(thisYear,thisMonth,1);
+  var thisMonthEnd=Date.UTC(thisYear,thisMonth+1,1);
+  var prevMonthStart=Date.UTC(thisYear,thisMonth-1,1);
+  var prevMonthEnd=thisMonthStart;
+  var yoyMonthStart=Date.UTC(thisYear-1,thisMonth,1);
+  var yoyMonthEnd=Date.UTC(thisYear-1,thisMonth+1,1);
+  var msToEp=function(ms){return Math.floor((ms-EP0)/86400000);};
+  var thisMS=msToEp(thisMonthStart),thisME=msToEp(thisMonthEnd);
+  var prevMS=msToEp(prevMonthStart),prevME=msToEp(prevMonthEnd);
+  var yoyMS=msToEp(yoyMonthStart),yoyME=msToEp(yoyMonthEnd);
+  for(var ci3=0;ci3<C.length;ci3++){
+    var k=KA[ci3]||[-1];var ri=k[0];
+    if(ri<0||!repAgg[ri])continue;
+    var rows3=D[C[ci3]]||[];
+    var c25=0,c26=0;
+    for(var rk=0;rk<rows3.length;rk++){
+      var rr2=rows3[rk];
+      if(rr2[3]>=thisMS&&rr2[3]<thisME)repAgg[ri].mtd+=rr2[2];
+      if(rr2[3]>=prevMS&&rr2[3]<prevME)repAgg[ri].prevM+=rr2[2];
+      if(rr2[3]>=yoyMS&&rr2[3]<yoyME)repAgg[ri].yoyM+=rr2[2];
+      if(rr2[0]===5)c25+=rr2[2];
+      if(rr2[0]===6){c26+=rr2[2];repAgg[ri].activeC.add(ci3);}
+    }
+    if(c25>0&&c26>0){var ann=c26*4;if((ann-c25)/c25*100<=-30)repAgg[ri].atRiskC++;}
+  }
+  var repList=Object.values(repAgg).filter(function(r){return r.mtd>0||r.prevM>0||r.yoyM>0;});
+  repList.sort(function(a,b){return b.mtd-a.mtd;});
+  var repTb=document.getElementById('tr-rep-tbody');repTb.innerHTML='';
+  repList.forEach(function(r){
+    var momPct=r.prevM>0?((r.mtd-r.prevM)/r.prevM)*100:(r.mtd>0?100:0);
+    var yoyPct=r.yoyM>0?((r.mtd-r.yoyM)/r.yoyM)*100:(r.mtd>0?100:0);
+    var momCls=momPct>=5?'up':(momPct<=-5?'down':'flat');
+    var yoyCls=yoyPct>=5?'up':(yoyPct<=-5?'down':'flat');
+    var tr=document.createElement('tr');
+    tr.innerHTML=
+      '<td class="repname">'+r.rep+'</td>'+
+      '<td style="text-align:right;font-weight:600">'+trFmtUSD(r.mtd)+'</td>'+
+      '<td style="text-align:right"><span class="tr-delta '+momCls+'">'+(momPct>=0?'+':'')+Math.round(momPct)+'%</span></td>'+
+      '<td style="text-align:right"><span class="tr-delta '+yoyCls+'">'+(yoyPct>=0?'+':'')+Math.round(yoyPct)+'%</span></td>'+
+      '<td style="text-align:right;color:#555">'+r.activeC.size+'</td>'+
+      '<td style="text-align:right;color:'+(r.atRiskC>0?'#dc2626':'#888')+';font-weight:'+(r.atRiskC>0?'600':'400')+'">'+r.atRiskC+'</td>';
+    repTb.appendChild(tr);
+  });
+  if(!repList.length)repTb.innerHTML='<tr><td colspan="6" class="tr-empty">No rep activity this period.</td></tr>';
+
+  // ----- Pipeline Radar -----
+  // Biggest at-risk = top 12 from ARL
+  var radRisk=document.getElementById('tr-radar-risk');radRisk.innerHTML='';
+  ARL.slice(0,12).forEach(function(a){
+    var idx=a[0],pct=a[1],r25=a[2];
+    var k=KA[idx]||[];
+    var item=document.createElement('div');item.className='tr-radar-item';item.dataset.idx=idx;
+    item.innerHTML='<span class="tr-rn">'+C[idx]+'</span><span class="tr-rv">'+Math.round(pct)+'% &nbsp; ('+trFmtUSD(r25)+')</span>';
+    radRisk.appendChild(item);
+  });
+  if(!ARL.length)radRisk.innerHTML='<div class="tr-empty">No at-risk clinics detected.</div>';
+  // Biggest win-back = top 12 from WBL
+  var radWB=document.getElementById('tr-radar-winback');radWB.innerHTML='';
+  WBL.slice(0,12).forEach(function(w){
+    var idx=w[0],rev=w[1];
+    var item=document.createElement('div');item.className='tr-radar-item';item.dataset.idx=idx;
+    item.innerHTML='<span class="tr-rn">'+C[idx]+'</span><span class="tr-rv green">'+trFmtUSD(rev)+'</span>';
+    radWB.appendChild(item);
+  });
+  if(!WBL.length)radWB.innerHTML='<div class="tr-empty">No win-back targets.</div>';
+  // Fastest growers = clinics with biggest YoY $ gain (2026 annualized vs 2025)
+  var growers=[];
+  for(var ci4=0;ci4<C.length;ci4++){
+    var rows4=D[C[ci4]]||[];if(!rows4.length)continue;
+    var x25=0,x26=0;rows4.forEach(function(rr){if(rr[0]===5)x25+=rr[2];else if(rr[0]===6)x26+=rr[2];});
+    if(x25>0&&x26>0){var annG=x26*4;var gain=annG-x25;if(gain>0)growers.push([ci4,gain,x25,annG]);}
+  }
+  growers.sort(function(a,b){return b[1]-a[1];});
+  var radGr=document.getElementById('tr-radar-growers');radGr.innerHTML='';
+  growers.slice(0,12).forEach(function(g){
+    var idx=g[0],gain=g[1];
+    var item=document.createElement('div');item.className='tr-radar-item';item.dataset.idx=idx;
+    item.innerHTML='<span class="tr-rn">'+C[idx]+'</span><span class="tr-rv amber">+'+trFmtUSD(gain)+'</span>';
+    radGr.appendChild(item);
+  });
+  if(!growers.length)radGr.innerHTML='<div class="tr-empty">No growth signals yet.</div>';
+}
+
+// Click a radar item -> open the clinic
+['tr-radar-risk','tr-radar-winback','tr-radar-growers'].forEach(function(id){
+  var el=document.getElementById(id);
+  if(el)el.addEventListener('click',function(e){
+    var it=e.target.closest('.tr-radar-item');
+    if(it&&it.dataset.idx)openPanel(parseInt(it.dataset.idx));
+  });
+});
+
+// Click drug card -> set up an admin chat query (if admin chat exists)
+document.getElementById('tr-drugs').addEventListener('click',function(e){
+  var card=e.target.closest('.tr-drug-card');
+  if(!card)return;
+  var ing=card.dataset.ing;
+  // Switch to chat bot tab and pre-fill
+  var tab=document.querySelector('.tab[data-page="chatbot"]');
+  if(tab)tab.click();
+  setTimeout(function(){
+    var inp=document.getElementById('ai-page-inp');
+    if(inp){inp.value='Show me the top clinics buying '+ing+' this year, broken down by rep';inp.focus();}
+  },200);
+});
+
+// Edit Targets modal
+document.getElementById('tr-edit-targets').addEventListener('click',function(){
+  trLoadTargets();
+  document.getElementById('tr-target-input-26').value=TR_TARGETS.year2026;
+  document.getElementById('tr-target-input-27').value=TR_TARGETS.year2027;
+  document.getElementById('tr-target-modal-bg').classList.add('open');
+});
+document.getElementById('tr-target-cancel').addEventListener('click',function(){document.getElementById('tr-target-modal-bg').classList.remove('open');});
+document.getElementById('tr-target-modal-bg').addEventListener('click',function(e){if(e.target.id==='tr-target-modal-bg')document.getElementById('tr-target-modal-bg').classList.remove('open');});
+document.getElementById('tr-target-save').addEventListener('click',function(){
+  var v26=parseFloat(document.getElementById('tr-target-input-26').value);
+  var v27=parseFloat(document.getElementById('tr-target-input-27').value);
+  if(v26>0)TR_TARGETS.year2026=v26;
+  if(v27>0)TR_TARGETS.year2027=v27;
+  trSaveTargets();
+  document.getElementById('tr-target-modal-bg').classList.remove('open');
+  loadTrends();
+});
+
+// =========================================================
 // INIT
 // =========================================================
 function init(){
@@ -2271,10 +2749,10 @@ function initAiChats(){
     surface:'bubble',
     msgsId:'ai-msgs',inpId:'ai-inp',sendId:'ai-send',ctxId:'ai-ctx',
     starters:[
-      'How many of my clinics ordered Pimobendan?',
+      'Compare my Pimobendan sales this month vs last month',
+      'How did my territory do this week vs last week?',
       'Show me my top 10 clinics by 2026 revenue',
-      'Which of my clinics haven\'t ordered in 60+ days?',
-      'How much Pimobendan did I use last year?'
+      'Which of my clinics haven\'t ordered in 60+ days?'
     ],
     onHistoryChange:loadBubbleHistory
   });
@@ -2304,10 +2782,10 @@ function initAiChats(){
       surface:'page',
       msgsId:'ai-page-msgs',inpId:'ai-page-inp',sendId:'ai-page-send',
       starters:[
-        'Top 10 reps by 2026 revenue',
-        'Show me the biggest at-risk clinics across all territories',
-        'Which reps sell the most Pimobendan?',
-        'Export the top 50 lost-revenue clinics as a CSV',
+        'Compare this month vs last month company-wide',
+        'March 2026 vs March 2025 by rep',
+        'Top 10 biggest revenue drops week-over-week',
+        'Export the top 50 lost-revenue clinics as CSV',
         'Put a 2025 vs 2026 company summary into a Word doc'
       ],
       onHistoryChange:loadPageChatHistory
