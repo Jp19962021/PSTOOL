@@ -3,16 +3,15 @@
 Full rebuild: pulls every invoice since EARLIEST_YEAR, regenerates data.js
 from scratch. Manual-only — triggered from the Actions tab when you want
 a clean reconcile.
-
-Uses concurrent detail-fetching (6 threads) to keep runtime manageable
-for large invoice counts. For 60k invoices, expect ~1-2 hours.
+Uses concurrent detail-fetching to keep runtime manageable for large invoice
+counts. For 60k invoices, expect ~1-2 hours.
 """
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
 from zoho_lib import (
     EARLIEST_YEAR,
+    REQUEST_DELAY,
     ZohoClient,
     fetch_all_contacts,
     fetch_invoice_detail,
@@ -23,14 +22,21 @@ from zoho_lib import (
     write_last_sync,
 )
 
-# Concurrent detail-fetches. Zoho's rate limit is about 100 req/min per org
-# on the free tier, which allows ~6 concurrent with small delays between.
-CONCURRENCY = 6
+# FIX D: 6 → 3 concurrent threads.
+# At REQUEST_DELAY=0.65s per detail call, 3 threads = ~4.6 calls/s = 276/min.
+# Still fast, still well under 300 concurrent connections, and the delay inside
+# each thread (post-call sleep) gives the org-wide bucket room to breathe.
+CONCURRENCY = 3
+
+# Pause between submitting each batch of futures to avoid spiking at launch.
+BATCH_PAUSE = 0.2
 
 
 def fetch_detail_safe(client, inv_id, inv_number):
     try:
-        return fetch_invoice_detail(client, inv_id)
+        result = fetch_invoice_detail(client, inv_id)
+        time.sleep(REQUEST_DELAY)  # per-thread pacing
+        return result
     except Exception as e:
         print(f"  ! Failed invoice {inv_number}: {e}", flush=True)
         return None
@@ -43,29 +49,30 @@ def main() -> int:
     print("=" * 60, flush=True)
 
     run_started_iso = utc_now_iso()
-
     client = ZohoClient()
 
     # All invoices since earliest year
     invoices_list = fetch_invoice_list(client, date_start=f"{EARLIEST_YEAR}-01-01")
     print(f"  ✓ {len(invoices_list)} invoices to process", flush=True)
 
-    # Parallel detail-fetch
+    # Parallel detail-fetch with per-thread pacing
     print(f"Fetching line items (concurrency={CONCURRENCY})...", flush=True)
     invoices_full = []
     completed = 0
     total = len(invoices_list)
 
     with ThreadPoolExecutor(max_workers=CONCURRENCY) as executor:
-        futures = {
-            executor.submit(
+        futures = {}
+        for inv in invoices_list:
+            f = executor.submit(
                 fetch_detail_safe,
                 client,
                 inv["invoice_id"],
                 inv.get("invoice_number", "?"),
-            ): inv
-            for inv in invoices_list
-        }
+            )
+            futures[f] = inv
+            time.sleep(BATCH_PAUSE)  # stagger submission to avoid burst
+
         for future in as_completed(futures):
             result = future.result()
             if result is not None:
@@ -74,7 +81,7 @@ def main() -> int:
             if completed % 500 == 0 or completed == total:
                 pct = 100 * completed / total
                 elapsed_min = (time.time() - start) / 60
-                rate = completed / (time.time() - start)
+                rate = completed / max(time.time() - start, 1)
                 remaining = (total - completed) / rate if rate > 0 else 0
                 print(
                     f"  {completed}/{total} ({pct:.1f}%) — "
@@ -82,11 +89,11 @@ def main() -> int:
                     f"eta {remaining/60:.1f}m",
                     flush=True,
                 )
+
     print(f"  ✓ {len(invoices_full)} invoices detailed", flush=True)
 
     contacts = fetch_all_contacts(client)
 
-    # Build from empty state
     print("Building data.js from scratch...", flush=True)
     empty_state = {"D": {}, "P": [], "C": [], "T": [], "KA": [], "REPS": []}
     state = process_invoices_into_state(
@@ -95,9 +102,7 @@ def main() -> int:
         contacts,
         replace_clinic=True,
     )
-
     write_data_js(state, note=f"full rebuild: {len(invoices_full)} invoices")
-
     write_last_sync({
         "completed_at": run_started_iso,
         "mode": "full",
