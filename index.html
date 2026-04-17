@@ -359,7 +359,7 @@ table.ptbl tr:last-child td{border-bottom:none}
 .ap-row-name:hover{text-decoration:underline}
 .ap-row-sub{font-size:11px;color:#888;margin-top:2px;font-weight:400}
 .ap-row-metric{font-variant-numeric:tabular-nums;font-weight:600;font-size:13px}
-.ap-row-metric .ap-row-metric-lbl{font-size:10px;color:#888;font-weight:500;text-transform:uppercase;letter-spacing:.04em;display:block}
+.ap-row-metric .ap-row-metric-lbl{font-size:10px;color:#888;font-weight:500;text-transform:uppercase;letter-spacing:.04em;display:block;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ap-action{font-size:12px;color:#374151;line-height:1.35}
 .ap-action b{color:#1a2035}
 .ap-row-btn{background:#1a2035;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap}
@@ -1121,7 +1121,7 @@ table.ptbl tr:last-child td{border-bottom:none}
   </div>
   <div class="dd-body">
     <div class="dd-section">
-      <div class="dd-section-title">Performance Snapshot</div>
+      <div class="dd-section-title">Performance Snapshot — <span id="dd-snap-label" style="font-weight:400;color:#6b7280"></span></div>
       <div id="dd-kpis"></div>
     </div>
     <div class="dd-section">
@@ -4337,6 +4337,7 @@ function openDrugDetail(ingredient, isNavBack, variantFilter){
     if(CUR_DRUG_FILTER.form)displayTitle+=' '+CUR_DRUG_FILTER.form;
   }
   document.getElementById('dd-title').textContent=displayTitle;
+  var snapLbl=document.getElementById('dd-snap-label');if(snapLbl)snapLbl.textContent='For '+ingredient;
   document.getElementById('dd-overlay').classList.add('open');
   document.getElementById('dd-panel').classList.add('open');
   document.body.style.overflow='hidden';
@@ -4871,6 +4872,48 @@ async function _invApplyAutoDeductions(){
   }
 }
 
+function _invConsumption(product){
+  // Returns {mtd, lastMonth, smly, yoyPct} in units (qty * pack_size).
+  // mtd = current month to date
+  // lastMonth = full previous calendar month
+  // smly = same calendar month last year (full month)
+  // yoyPct = (mtd - smlyToDate) / smlyToDate * 100 (same days of month)
+  if(typeof D==='undefined'||typeof C==='undefined'||typeof P==='undefined')return null;
+  if(typeof EP0==='undefined')return null;
+  var now=new Date();
+  var tY=now.getUTCFullYear(),tM=now.getUTCMonth(),tD=now.getUTCDate();
+  // Epoch day boundaries
+  function epOf(y,m,d){return Math.floor((Date.UTC(y,m,d)-EP0)/86400000);}
+  var mtdStart=epOf(tY,tM,1), mtdEnd=epOf(tY,tM,tD)+1;
+  var lmStart=epOf(tY,tM-1<0?tY-1:tY,tM-1<0?11:tM-1,1);
+  var lmEnd=epOf(tY,tM,1);
+  var smlyStart=epOf(tY-1,tM,1), smlyEnd=epOf(tY-1,tM+1,1);
+  var smlyTDEnd=epOf(tY-1,tM,tD)+1; // same days of month last year
+  var mtd=0,lastMonth=0,smly=0,smlyTD=0;
+  for(var pi=0;pi<P.length;pi++){
+    var packInfo=INV_STATE.packParsed[pi];
+    if(!packInfo)continue;
+    var ro=invRollupKey(pi);
+    if(!ro)continue;
+    if(ro.ing!==product.ingredient||ro.form!==product.form||(ro.strength||'')!==(product.strength||''))continue;
+    for(var ci=0;ci<C.length;ci++){
+      var rows=D[C[ci]]||[];
+      for(var ri=0;ri<rows.length;ri++){
+        var r=rows[ri];
+        if(r[1]!==pi||r.length<5)continue;
+        var ep=r[3],qty=(Number(r[4])||0)*packInfo.pack_size;
+        if(!qty)continue;
+        if(ep>=mtdStart&&ep<mtdEnd)mtd+=qty;
+        if(ep>=lmStart&&ep<lmEnd)lastMonth+=qty;
+        if(ep>=smlyStart&&ep<smlyEnd)smly+=qty;
+        if(ep>=smlyStart&&ep<smlyTDEnd)smlyTD+=qty;
+      }
+    }
+  }
+  var yoyPct=smlyTD>0?((mtd-smlyTD)/smlyTD)*100:null;
+  return{mtd:Math.round(mtd),lastMonth:Math.round(lastMonth),smly:Math.round(smly),yoyPct:yoyPct};
+}
+
 function _invBurnRate(product){
   // 30-day burn rate = sum of last 30 days of unit sales for this product's rollup.
   if(typeof D==='undefined'||typeof C==='undefined'||typeof P==='undefined')return 0;
@@ -4916,13 +4959,18 @@ function _invRenderTable(){
   var html='<table class="inv-table"><thead><tr>'+
     '<th>Drug</th><th>Form</th><th>Strength</th><th style="text-align:right">On Hand</th>'+
     '<th>Unit</th><th style="text-align:right">Burn / day</th><th style="text-align:right">Runway</th>'+
+    '<th style="text-align:right" title="Units consumed this month to date">MTD</th>'+
+    '<th style="text-align:right" title="Units consumed last calendar month">Last Mo.</th>'+
+    '<th style="text-align:right" title="Same month last year (full)">SMLY</th>'+
+    '<th style="text-align:right" title="MTD this year vs same days last year">YoY %</th>'+
     '<th>Status</th><th>Last Updated</th><th style="text-align:right">Actions</th></tr></thead><tbody>';
   // Compute rows with burn + runway
   var rows=INV_STATE.products.map(function(p){
     var burn=_invBurnRate(p);
     var onHand=Number(p.on_hand)||0;
     var runwayDays=burn>0?Math.max(0,Math.floor(onHand/burn)):null;
-    return {p:p,burn:burn,onHand:onHand,runway:runwayDays};
+    var cons=_invConsumption(p);
+    return {p:p,burn:burn,onHand:onHand,runway:runwayDays,cons:cons};
   });
   // Sort: shortest runway first (nulls at bottom)
   rows.sort(function(a,b){
@@ -4947,6 +4995,16 @@ function _invRenderTable(){
       '<td style="color:#888;font-size:12px">'+_esc(p.unit)+'</td>'+
       '<td style="text-align:right;font-variant-numeric:tabular-nums">'+(row.burn>0?_fmtNum(row.burn):'\u2014')+'</td>'+
       '<td style="text-align:right;font-variant-numeric:tabular-nums">'+runwayTxt+'</td>'+
+      '<td style="text-align:right;font-variant-numeric:tabular-nums;color:#374151">'+(row.cons&&row.cons.mtd>0?_fmtNum(row.cons.mtd):'\u2014')+'</td>'+
+      '<td style="text-align:right;font-variant-numeric:tabular-nums;color:#374151">'+(row.cons&&row.cons.lastMonth>0?_fmtNum(row.cons.lastMonth):'\u2014')+'</td>'+
+      '<td style="text-align:right;font-variant-numeric:tabular-nums;color:#6b7280">'+(row.cons&&row.cons.smly>0?_fmtNum(row.cons.smly):'\u2014')+'</td>'+
+      (function(){
+        if(!row.cons||row.cons.yoyPct==null)return '<td style="text-align:right;color:#aaa">\u2014</td>';
+        var pct=Math.round(row.cons.yoyPct);
+        var col=pct>=5?'#16a34a':pct<=-5?'#dc2626':'#6b7280';
+        var sym=pct>=0?'\u25b2':'\u25bc';
+        return '<td style="text-align:right;font-weight:600;color:'+col+'">'+(pct>=0?'+':'')+pct+'% '+sym+'</td>';
+      })()+
       '<td><span class="inv-pill '+status+'">'+statusLabel+'</span></td>'+
       '<td style="color:#888;font-size:11px">'+updatedTxt+'</td>'+
       '<td style="text-align:right;white-space:nowrap">'+
