@@ -92,8 +92,10 @@ def fetch_all_line_items(token):
     
     # Pull invoices in date-range chunks to avoid timeouts on large accounts
     all_lines = []
-    start = date(2024, 1, 1)
+    full_sync = os.environ.get('FULL_SYNC', '0') == '1'
+    start = date(2024, 1, 1) if full_sync else date.today() - timedelta(days=2)
     end   = date.today()
+    print(f'[fetch] mode={"full" if full_sync else "incremental"}, range {start} -> {end}')
     
     chunk_start = start
     while chunk_start <= end:
@@ -103,7 +105,6 @@ def fetch_all_line_items(token):
             'date_end':   chunk_end.strftime('%Y-%m-%d'),
             'status':     'paid,sent,overdue,viewed',
             'sort_column':'date',
-            'sort_order': 'ascending',
         }
         print(f'  chunk {chunk_start} → {chunk_end}', end=' ', flush=True)
         invoices = zoho_get(token, '/invoices', params)
