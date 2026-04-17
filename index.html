@@ -320,6 +320,11 @@ table.ptbl tr:last-child td{border-bottom:none}
 .esearch .ei{font-size:48px;margin-bottom:12px}
 .section-card{background:#fff;border-radius:12px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,.07);border:1px solid #e8eaed;overflow:hidden}
 
+/* Export CSV button on drug detail panel (v7) */
+.dd-export-btn{background:#16a34a;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.dd-export-btn:hover{background:#15803d}
+.dd-export-btn:disabled{background:#9ca3af;cursor:wait}
+
 /* Permissions matrix (v6) */
 .pm-table{border-collapse:separate;border-spacing:0;font-size:12px;min-width:100%}
 .pm-table th,.pm-table td{padding:8px 10px;border-bottom:1px solid #edf0f5;text-align:center;white-space:nowrap}
@@ -966,13 +971,19 @@ table.ptbl tr:last-child td{border-bottom:none}
         <div class="dd-tab" data-tab="askai">&#129302; Ask AI</div>
       </div>
       <div class="dd-pane" data-pane="stopped">
-        <div style="font-size:12px;color:#dc2626;font-weight:600;margin-bottom:8px">Estimated lost revenue: <span id="dd-stopped-loss">$0</span></div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap">
+          <div style="font-size:12px;color:#dc2626;font-weight:600">Estimated lost revenue: <span id="dd-stopped-loss">$0</span></div>
+          <button class="dd-export-btn" data-bucket="stopped" style="margin-left:auto">&#128196; Export CSV (all rows)</button>
+        </div>
         <div style="overflow-x:auto"><table class="tr-rep-tbl dd-tbl">
           <thead><tr><th>Clinic</th><th>Rep</th><th style="text-align:right">2025 Rev</th><th style="text-align:right">Lost</th><th>Last Order</th><th></th></tr></thead>
           <tbody></tbody>
         </table></div>
       </div>
       <div class="dd-pane" data-pane="active">
+        <div style="display:flex;align-items:center;margin-bottom:8px">
+          <button class="dd-export-btn" data-bucket="active" style="margin-left:auto">&#128196; Export CSV (all rows)</button>
+        </div>
         <div style="overflow-x:auto"><table class="tr-rep-tbl dd-tbl">
           <thead><tr><th>Clinic</th><th>Rep</th><th style="text-align:right">2025 Rev</th><th style="text-align:right">2026 Rev</th><th>Last Order</th><th></th></tr></thead>
           <tbody></tbody>
@@ -3376,6 +3387,7 @@ document.querySelectorAll('#dd-panel .dd-tab').forEach(function(t){
 // DRUG DETAIL slide-out panel
 // =========================================================
 var CUR_DRUG_FILTER=null; // null or {form:string, strength:string|null}
+var DD_EXPORT_DATA=null; // v7: stashed data for CSV export (set by renderDrugDetail)
 
 function openDrugDetail(ingredient, isNavBack, variantFilter){
   CUR_DRUG=ingredient;
@@ -3555,6 +3567,13 @@ function renderDrugDetail(ingredient){
 
   // Save current ingredient for "open chat about this drug" button
   document.getElementById('dd-panel').dataset.ing=ingredient;
+  // Stash full lists for CSV export (v7)
+  DD_EXPORT_DATA={
+    ingredient:ingredient,
+    filter:filter,
+    stopped:stoppedList,
+    active:activeList
+  };
 }
 function ddRenderClinicList(which,list){
   var tbody=document.querySelector('.dd-pane[data-pane="'+which+'"] tbody');
@@ -3603,6 +3622,96 @@ function ddRenderClinicList(which,list){
     }
   };
 }
+
+// ============================================================
+// v7: Drug Detail CSV Export
+// Dumps the full clinic list (not just the visible 200) for the
+// current bucket (stopped/active) + ingredient + variant filter
+// into a CSV the browser downloads directly. No worker roundtrip.
+// ============================================================
+function _csvEscape(v){
+  if(v==null)return '';
+  var s=String(v);
+  if(/[",\r\n]/.test(s))return '"'+s.replace(/"/g,'""')+'"';
+  return s;
+}
+function _csvFormatRows(headers,rows){
+  var out=headers.map(_csvEscape).join(',')+'\r\n';
+  for(var i=0;i<rows.length;i++){
+    out+=rows[i].map(_csvEscape).join(',')+'\r\n';
+  }
+  return out;
+}
+function _csvDownload(filename,csvText){
+  // BOM for Excel compatibility with special chars
+  var blob=new Blob(['\ufeff'+csvText],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download=filename;
+  document.body.appendChild(a);a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},100);
+}
+function ddExportCSV(bucket){
+  if(!DD_EXPORT_DATA){alert('No data to export yet — open a drug first.');return;}
+  var list=DD_EXPORT_DATA[bucket]||[];
+  if(!list.length){alert('No clinics in the '+bucket+' bucket for this drug.');return;}
+  var ing=DD_EXPORT_DATA.ingredient;
+  var f=DD_EXPORT_DATA.filter;
+  var variantSuffix=ing;
+  if(f){
+    if(f.strength&&f.strength!=='unspec')variantSuffix+='_'+f.strength;
+    if(f.form)variantSuffix+='_'+f.form;
+  }
+  var safeName=variantSuffix.replace(/[^a-z0-9_-]/gi,'_').slice(0,60);
+  var bucketLabel=bucket==='stopped'?'stopped':'currently_buying';
+  var today=new Date();
+  var dateStr=today.getUTCFullYear()+'-'+String(today.getUTCMonth()+1).padStart(2,'0')+'-'+String(today.getUTCDate()).padStart(2,'0');
+  var filename=safeName+'_'+bucketLabel+'_'+dateStr+'.csv';
+
+  // KA layout: [repIdx, email, phone, doctor, address, city_state_zip, last_order]
+  var headers=[
+    'Clinic','Rep','Email','Phone','Doctor','Address','City/State/ZIP',
+    '2024 Revenue','2025 Revenue','2026 Revenue','Total Revenue',
+    (bucket==='stopped'?'Lost Revenue':'2026 Revenue (repeat)'),
+    'Order Count','Last Order Date','Drug','Variant'
+  ];
+  var variantLabel='';
+  if(f){
+    if(f.form)variantLabel=(f.strength&&f.strength!=='unspec'?(f.strength+' '):'')+f.form;
+    else variantLabel='(all forms)';
+  } else {
+    variantLabel='(all variants - rollup)';
+  }
+  var rows=list.map(function(c){
+    var ka=KA[c.idx]||[];
+    var email=ka[1]||'';
+    var phone=ka[2]||'';
+    var doctor=ka[3]||'';
+    var addr=ka[4]||'';
+    var csz=ka[5]||'';
+    var lastDate=c.lastEp>=0?epDate(c.lastEp):'';
+    var lostOrY26=bucket==='stopped'?(c.y25||c.y24):c.y26;
+    return [
+      c.name,c.rep||'',email,phone,doctor,addr,csz,
+      c.y24||0,c.y25||0,c.y26||0,c.tot||0,
+      lostOrY26||0,
+      c.ordCount||0,lastDate,ing,variantLabel
+    ];
+  });
+  var csv=_csvFormatRows(headers,rows);
+  _csvDownload(filename,csv);
+}
+// Delegated handler for both panes' Export buttons
+document.addEventListener('click',function(e){
+  var btn=e.target.closest('.dd-export-btn');
+  if(!btn)return;
+  var bucket=btn.getAttribute('data-bucket');
+  var orig=btn.innerHTML;
+  btn.disabled=true;btn.innerHTML='Exporting...';
+  try{ddExportCSV(bucket);}
+  catch(ex){console.error('[csv export] error:',ex);alert('Export failed: '+(ex.message||ex));}
+  setTimeout(function(){btn.disabled=false;btn.innerHTML=orig;},400);
+});
 
 // Edit Targets modal
 document.getElementById('tr-edit-targets').addEventListener('click',function(){
