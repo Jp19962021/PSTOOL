@@ -582,6 +582,22 @@ table.ptbl tr:last-child td{border-bottom:none}
 .ch-empty{text-align:center;padding:60px 20px;color:#aaa}
 .ch-empty .ei{font-size:48px;margin-bottom:12px}
 .ch-help{font-size:11px;color:#888;padding:12px 18px;background:#f9fafc;border-top:1px solid #edf0f5;display:flex;align-items:center;gap:6px}
+/* Sortable table headers */
+.sort-th{cursor:pointer;user-select:none;white-space:nowrap;position:relative}
+.sort-th:hover{background:#eef1f6!important;color:#1a2035}
+.sort-th .sort-icon{display:inline-block;margin-left:4px;font-size:9px;opacity:.4;vertical-align:middle}
+.sort-th.asc .sort-icon::after{content:"▲";opacity:1}
+.sort-th.desc .sort-icon::after{content:"▼";opacity:1}
+.sort-th:not(.asc):not(.desc) .sort-icon::after{content:"⇅"}
+/* Tooltip */
+.th-tip{position:relative}
+.th-tip .tip-text{visibility:hidden;opacity:0;background:#1a2035;color:#fff;font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;padding:7px 10px;border-radius:7px;position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);white-space:normal;width:220px;z-index:999;line-height:1.4;box-shadow:0 4px 14px rgba(0,0,0,.2);pointer-events:none;transition:opacity .15s}
+.th-tip:hover .tip-text{visibility:visible;opacity:1}
+.th-tip .tip-icon{display:inline-block;width:14px;height:14px;line-height:14px;text-align:center;background:#d0d4dc;color:#555;border-radius:50%;font-size:9px;font-weight:700;margin-left:4px;cursor:help;vertical-align:middle}
+/* Full width tables — no horizontal scroll on main pages */
+.ch-table-wrap{overflow-x:visible}
+.ch-tbl th{white-space:normal;min-width:60px}
+.ch-tbl td{white-space:normal}
 /* AI CHAT */
 .ai-msg{max-width:85%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.5;word-wrap:break-word}
 .ai-msg.user{align-self:flex-end;background:#1a2035;color:#fff;border-bottom-right-radius:4px}
@@ -847,7 +863,7 @@ table.ptbl tr:last-child td{border-bottom:none}
   </div>
   <div class="section-card">
     <div class="sh">&#128257; Revenue in 2024/2025 &mdash; Zero in 2026 <span class="shc" id="wbc"></span></div>
-    <div style="overflow-x:auto"><table class="mt"><thead><tr><th>Clinic</th><th>Doctor</th><th>Rep</th><th>Last Order</th><th>Phone</th><th style="text-align:right">Lost Revenue</th><th></th></tr></thead><tbody id="wbb"></tbody></table></div>
+    <table class="mt" style="width:100%"><thead><tr><th class="sort-th" data-sort-tbl="wb" data-sort="clinic">Clinic<span class="sort-icon"></span></th><th class="sort-th" data-sort-tbl="wb" data-sort="doctor">Doctor<span class="sort-icon"></span></th><th class="sort-th" data-sort-tbl="wb" data-sort="rep">Rep<span class="sort-icon"></span></th><th class="sort-th" data-sort-tbl="wb" data-sort="last">Last Order<span class="sort-icon"></span></th><th>Phone</th><th class="sort-th" data-sort-tbl="wb" data-sort="rev" style="text-align:right">Lost Revenue<span class="sort-icon"></span></th><th></th></tr></thead><tbody id="wbb"></tbody></table>
   </div>
 </div></div>
 
@@ -858,7 +874,7 @@ table.ptbl tr:last-child td{border-bottom:none}
   </div>
   <div class="section-card">
     <div class="sh">&#9888; 2025 vs Annualized 2026 &mdash; Down 30%+ <span class="shc" id="arc"></span></div>
-    <div style="overflow-x:auto"><table class="mt"><thead><tr><th>Clinic</th><th>Doctor</th><th>Rep</th><th>Last Order</th><th style="text-align:right">2025</th><th style="text-align:right">2026 YTD</th><th style="text-align:right">Ann. 2026</th><th style="text-align:right">Decline</th><th></th></tr></thead><tbody id="arb"></tbody></table></div>
+    <table class="mt" style="width:100%"><thead><tr><th class="sort-th" data-sort-tbl="ar" data-sort="clinic">Clinic<span class="sort-icon"></span></th><th class="sort-th" data-sort-tbl="ar" data-sort="doctor">Doctor<span class="sort-icon"></span></th><th class="sort-th" data-sort-tbl="ar" data-sort="rep">Rep<span class="sort-icon"></span></th><th class="sort-th" data-sort-tbl="ar" data-sort="last">Last Order<span class="sort-icon"></span></th><th class="sort-th th-tip" data-sort-tbl="ar" data-sort="r25" style="text-align:right">2025<span class="sort-icon"></span><span class="tip-text">Full year 2025 revenue for this clinic.</span></th><th class="sort-th" data-sort-tbl="ar" data-sort="r26" style="text-align:right">2026 YTD<span class="sort-icon"></span></th><th class="sort-th th-tip" data-sort-tbl="ar" data-sort="ann" style="text-align:right">Ann. 2026<span class="sort-icon"></span><span class="tip-text">2026 YTD × 4 — projected full year at current pace.</span><span class="tip-icon">?</span></th><th class="sort-th th-tip" data-sort-tbl="ar" data-sort="pct" style="text-align:right">Decline<span class="sort-icon"></span><span class="tip-text">% drop from 2025 to annualized 2026. Clinics down 30%+ appear here.</span><span class="tip-icon">?</span></th><th></th></tr></thead><tbody id="arb"></tbody></table>
   </div>
   <p class="fnote">&#9432; Annualized 2026 = YTD &times; 4. Compared against full year 2025.</p>
 </div></div>
@@ -912,15 +928,15 @@ table.ptbl tr:last-child td{border-bottom:none}
     </div>
     <div style="overflow-x:auto"><table class="ch-tbl">
       <thead><tr>
-        <th>Clinic</th>
-        <th>Rep</th>
-        <th>Cadence</th>
-        <th>Overdue</th>
-        <th>Trend (last 12mo)</th>
-        <th style="text-align:right">2025 Rev</th>
-        <th style="text-align:right">Est. Annual Loss</th>
-        <th>Risk</th>
-        <th>Tier</th>
+        <th class="sort-th th-tip" data-sort="clinic">Clinic<span class="sort-icon"></span><span class="tip-text">Clinic name. Click to sort A→Z.</span></th>
+        <th class="sort-th th-tip" data-sort="rep">Rep<span class="sort-icon"></span><span class="tip-text">Sales rep assigned to this clinic.</span></th>
+        <th class="sort-th th-tip" data-sort="cadence">Cadence<span class="sort-icon"></span><span class="tip-text">How often this clinic typically orders (e.g. Monthly = every ~30 days).</span><span class="tip-icon">?</span></th>
+        <th class="sort-th th-tip" data-sort="mult">Overdue<span class="sort-icon"></span><span class="tip-text">How many times past their normal order cycle they are. 2x = double their usual gap.</span><span class="tip-icon">?</span></th>
+        <th class="th-tip">Trend (last 12mo)<span class="tip-text">Monthly revenue sparkline for the last 12 months. Green = growing, red = declining.</span><span class="tip-icon">?</span></th>
+        <th class="sort-th th-tip" data-sort="r25" style="text-align:right">2025 Rev<span class="sort-icon"></span><span class="tip-text">Total revenue from this clinic in 2025 — their baseline spend.</span></th>
+        <th class="sort-th th-tip" data-sort="estLoss" style="text-align:right">Est. Annual Loss<span class="sort-icon"></span><span class="tip-text">Revenue PetScript is losing by not selling to this clinic — based on their 2025 spend and current order gap.</span><span class="tip-icon">?</span></th>
+        <th class="sort-th th-tip" data-sort="score">Risk Score<span class="sort-icon"></span><span class="tip-text">0–100 score combining how overdue they are, their revenue size, and cadence shift. Higher = more urgent.</span><span class="tip-icon">?</span></th>
+        <th class="sort-th th-tip" data-sort="tier">Tier<span class="sort-icon"></span><span class="tip-text">Critical = 2.5x+ overdue. Slipping = 1.5–2.5x. Watch = cadence slowing but not yet late.</span><span class="tip-icon">?</span></th>
         <th></th>
       </tr></thead>
       <tbody id="ch-tbody"></tbody>
@@ -2989,6 +3005,7 @@ async function loadChurn(){
     tb.innerHTML='<tr><td colspan="10"><div class="ch-empty"><div class="ei">&#127881;</div><p style="font-size:14px">No at-risk clinics at this filter level.</p></div></td></tr>';
     return;
   }
+  CH_SHOWN=shown;
   shown.slice(0,200).forEach(function(c){
     var tr=document.createElement('tr');tr.className=c.tier;
     var k=KA[c.idx]||[];
@@ -3082,6 +3099,67 @@ function renderChurnChart(byTier){
   });
 }
 
+// Churn table sort
+var CH_SORT={col:'estLoss',dir:'desc'};
+var CH_SHOWN=[];
+document.querySelector('#ch-tbody').closest('table').addEventListener('click',function(e){
+  var th=e.target.closest('.sort-th');
+  if(!th)return;
+  var col=th.dataset.sort;
+  if(!col)return;
+  if(CH_SORT.col===col){CH_SORT.dir=CH_SORT.dir==='desc'?'asc':'desc';}
+  else{CH_SORT.col=col;CH_SORT.dir='desc';}
+  // Update header classes
+  document.querySelectorAll('#ch-tbody').forEach(function(){});
+  document.querySelectorAll('.ch-tbl .sort-th').forEach(function(t){
+    t.classList.remove('asc','desc');
+    if(t.dataset.sort===CH_SORT.col)t.classList.add(CH_SORT.dir);
+  });
+  _chSortAndRender();
+});
+function _chSortAndRender(){
+  if(!CH_SHOWN||!CH_SHOWN.length)return;
+  var sorted=CH_SHOWN.slice();
+  var col=CH_SORT.col,dir=CH_SORT.dir;
+  sorted.sort(function(a,b){
+    var av,bv;
+    if(col==='clinic'){av=a.clinic.toLowerCase();bv=b.clinic.toLowerCase();return dir==='asc'?(av>bv?1:-1):(av<bv?1:-1);}
+    if(col==='rep'){var ak=KA[a.idx]||[];var bk=KA[b.idx]||[];av=ak[0]>=0?REPS[ak[0]]:'';bv=bk[0]>=0?REPS[bk[0]]:'';return dir==='asc'?(av>bv?1:-1):(av<bv?1:-1);}
+    if(col==='cadence'){av=a.avgGap;bv=b.avgGap;}
+    else if(col==='mult'){av=a.mult;bv=b.mult;}
+    else if(col==='r25'){av=a.r25;bv=b.r25;}
+    else if(col==='estLoss'){av=a.estLoss;bv=b.estLoss;}
+    else if(col==='score'){av=a.score;bv=b.score;}
+    else if(col==='tier'){var to={critical:0,slipping:1,watch:2,healthy:3};av=to[a.tier]||0;bv=to[b.tier]||0;}
+    else{av=0;bv=0;}
+    return dir==='asc'?av-bv:bv-av;
+  });
+  var tb=document.getElementById('ch-tbody');tb.innerHTML='';
+  sorted.slice(0,200).forEach(function(c){
+    var tr=document.createElement('tr');tr.className=c.tier;
+    var k=KA[c.idx]||[];
+    var rep=k[0]>=0?REPS[k[0]]:'';
+    var multCls=c.mult>=2.5?'high':c.mult>=1.5?'med':'low';
+    var scoreColor=c.score>=75?'#dc2626':c.score>=50?'#f59e0b':c.score>=25?'#3b82f6':'#16a34a';
+    tr.dataset.idx=c.idx;
+    tr.innerHTML=
+      '<td><div class="pn">'+c.clinic+'</div><div style="font-size:11px;color:#888">Last: '+epDate(c.lastOrder)+'</div></td>'+
+      '<td style="color:#666">'+rep+'</td>'+
+      '<td><div style="font-weight:600">'+c.cadence+'</div><div style="font-size:11px;color:#888">~'+c.avgGap+' days</div></td>'+
+      '<td><span class="ch-mult '+multCls+'">'+c.mult.toFixed(1)+'x</span><div style="font-size:11px;color:#888">'+c.daysSince+' days</div></td>'+
+      '<td><svg class="ch-spark" data-spark="'+c.spark.join(',')+'"></svg></td>'+
+      '<td style="text-align:right">'+fmt(c.r25)+'</td>'+
+      '<td style="text-align:right"><span class="ch-est-loss">~'+fmt(c.estLoss)+'</span></td>'+
+      '<td><span class="ch-score-bar"><span class="ch-score-fill" style="width:'+c.score+'%;background:'+scoreColor+'"></span></span><strong>'+c.score+'</strong></td>'+
+      '<td><span class="ch-tier-badge '+c.tier+'">'+c.tier+'</span></td>'+
+      '<td><button class="vbtn" data-idx="'+c.idx+'">View &#8594;</button></td>';
+    tb.appendChild(tr);
+  });
+  document.querySelectorAll('.ch-spark').forEach(function(el){
+    var data=el.dataset.spark.split(',').map(parseFloat);
+    el.innerHTML=buildSparkline(data,80,28);
+  });
+}
 document.getElementById('ch-rep').addEventListener('change',loadChurn);
 document.getElementById('ch-minrev').addEventListener('change',loadChurn);
 document.getElementById('ch-tier').addEventListener('change',loadChurn);
@@ -5643,6 +5721,75 @@ document.getElementById('ar-tbody').addEventListener('click',function(e){
 // END AR TAB
 // ============================================================
 
+
+// ── Generic sort for Win-Back and At-Risk tables ──────────────
+var TBL_SORT={wb:{col:'rev',dir:'desc'},ar:{col:'pct',dir:'asc'}};
+
+function _sortTable(tblId, rows, col, dir){
+  return rows.slice().sort(function(a,b){
+    var av,bv;
+    if(col==='clinic'){av=(a[0]||'').toLowerCase();bv=(b[0]||'').toLowerCase();return dir==='asc'?(av>bv?1:-1):(av<bv?1:-1);}
+    if(col==='doctor'){av=(a[1]||'').toLowerCase();bv=(b[1]||'').toLowerCase();return dir==='asc'?(av>bv?1:-1):(av<bv?1:-1);}
+    if(col==='rep'){av=(a[2]||'').toLowerCase();bv=(b[2]||'').toLowerCase();return dir==='asc'?(av>bv?1:-1):(av<bv?1:-1);}
+    if(col==='last'){av=a[3]||'';bv=b[3]||'';return dir==='asc'?(av>bv?1:-1):(av<bv?1:-1);}
+    // numeric cols
+    var ni={'rev':4,'r25':4,'r26':5,'ann':6,'pct':7};
+    var idx=ni[col]||4;
+    av=parseFloat(a[idx])||0;bv=parseFloat(b[idx])||0;
+    return dir==='asc'?av-bv:bv-av;
+  });
+}
+
+document.addEventListener('click',function(e){
+  var th=e.target.closest('.sort-th[data-sort-tbl]');
+  if(!th)return;
+  var tbl=th.dataset.sortTbl;
+  var col=th.dataset.sort;
+  if(!tbl||!col)return;
+  if(TBL_SORT[tbl].col===col){TBL_SORT[tbl].dir=TBL_SORT[tbl].dir==='desc'?'asc':'desc';}
+  else{TBL_SORT[tbl].col=col;TBL_SORT[tbl].dir='desc';}
+  // Update header icons
+  document.querySelectorAll('.sort-th[data-sort-tbl="'+tbl+'"]').forEach(function(t){
+    t.classList.remove('asc','desc');
+    if(t.dataset.sort===TBL_SORT[tbl].col)t.classList.add(TBL_SORT[tbl].dir);
+  });
+  if(tbl==='wb')_rebuildWB();
+  if(tbl==='ar')_rebuildAR();
+});
+
+var WB_ROWS=[], AR_ROWS=[];
+
+function _rebuildWB(){
+  var sorted=_sortTable('wb',WB_ROWS,TBL_SORT.wb.col,TBL_SORT.wb.dir);
+  var tb=document.getElementById('wbb');tb.innerHTML='';
+  sorted.forEach(function(w){
+    var idx=w[5],rev=w[4],k=KA[idx]||[];var rep=k[0]>=0?REPS[k[0]]:'';
+    var tr=document.createElement('tr');tr.className='wbr';
+    tr.innerHTML='<td class="pn">'+C[idx]+'</td><td style="color:#666">'+(k[3]||'—')+'</td>'+
+      '<td style="color:#666">'+rep+'</td><td style="color:#888;white-space:nowrap">'+(k[6]||'—')+'</td>'+
+      '<td>'+(k[2]?'<a href="tel:'+k[2]+'" style="color:#1a2035">'+k[2]+'</a>':'—')+'</td>'+
+      '<td style="text-align:right;font-weight:600;color:#dc2626">'+fmt(rev)+'</td>'+
+      '<td><button class="vbtn" data-idx="'+idx+'">View →</button></td>';
+    tb.appendChild(tr);
+  });
+}
+
+function _rebuildAR(){
+  var sorted=_sortTable('ar',AR_ROWS,TBL_SORT.ar.col,TBL_SORT.ar.dir);
+  var tb=document.getElementById('arb');tb.innerHTML='';
+  sorted.forEach(function(a){
+    var idx=a[0],pct=a[1],r25=a[2],r26=a[3],ann=a[4],k=KA[idx]||[];var rep=k[0]>=0?REPS[k[0]]:'';
+    var tr=document.createElement('tr');tr.className='arr';
+    tr.innerHTML='<td class="pn">'+C[idx]+'</td><td style="color:#666">'+(k[3]||'—')+'</td>'+
+      '<td style="color:#666">'+rep+'</td><td style="color:#888;white-space:nowrap">'+(k[6]||'—')+'</td>'+
+      '<td style="text-align:right">'+fmt(r25)+'</td><td style="text-align:right">'+fmt(r26)+'</td>'+
+      '<td style="text-align:right;color:#b45309;font-weight:500">'+fmt(ann)+'</td>'+
+      '<td style="text-align:right"><span class="bdg bs">▼'+Math.abs(pct).toFixed(1)+'%</span></td>'+
+      '<td><button class="vbtn" data-idx="'+idx+'">View →</button></td>';
+    tb.appendChild(tr);
+  });
+}
+
 function init(){
   for(var i=0;i<C.length;i++){var k=KA[i]||[];var r=k[0]>=0?REPS[k[0]]:'';SI.push([C[i],r,k[1]||'',k[2]||'',k[3]||'',k[4]||'',k[5]||'',k[6]||''].join(' ').toLowerCase());}
   document.getElementById('smsg').textContent=C.length.toLocaleString()+' clinics loaded.';
@@ -5763,33 +5910,20 @@ document.getElementById('rsel').addEventListener('change',function(){
 document.getElementById('tb').addEventListener('click',function(e){var b=e.target.closest('.vbtn');if(b)openPanel(parseInt(b.dataset.idx));});
 
 function buildWB(){
-  var tb=document.getElementById('wbb');tb.innerHTML='';
-  WBL.slice(0,300).forEach(function(w){
+  WB_ROWS=WBL.slice(0,300).map(function(w){
     var idx=w[0],rev=w[1],k=KA[idx]||[];var rep=k[0]>=0?REPS[k[0]]:'';
-    var tr=document.createElement('tr');tr.className='wbr';
-    tr.innerHTML='<td class="pn">'+C[idx]+'</td><td style="color:#666">'+(k[3]||'\u2014')+'</td>'+
-      '<td style="color:#666">'+rep+'</td><td style="color:#888;white-space:nowrap">'+(k[6]||'\u2014')+'</td>'+
-      '<td>'+(k[2]?'<a href="tel:'+k[2]+'" style="color:#1a2035">'+k[2]+'</a>':'\u2014')+'</td>'+
-      '<td style="text-align:right;font-weight:600;color:#dc2626">'+fmt(rev)+'</td>'+
-      '<td><button class="vbtn" data-idx="'+idx+'">View &#8594;</button></td>';
-    tb.appendChild(tr);
+    return [C[idx],(k[3]||''),rep,(k[6]||''),rev,idx];
   });
+  _rebuildWB();
 }
 document.getElementById('wbb').addEventListener('click',function(e){var b=e.target.closest('.vbtn');if(b)openPanel(parseInt(b.dataset.idx));});
 
 function buildAR(){
-  var tb=document.getElementById('arb');tb.innerHTML='';
-  ARL.slice(0,300).forEach(function(a){
+  AR_ROWS=ARL.slice(0,300).map(function(a){
     var idx=a[0],pct=a[1],r25=a[2],r26=a[3],ann=a[4],k=KA[idx]||[];var rep=k[0]>=0?REPS[k[0]]:'';
-    var tr=document.createElement('tr');tr.className='arr';
-    tr.innerHTML='<td class="pn">'+C[idx]+'</td><td style="color:#666">'+(k[3]||'\u2014')+'</td>'+
-      '<td style="color:#666">'+rep+'</td><td style="color:#888;white-space:nowrap">'+(k[6]||'\u2014')+'</td>'+
-      '<td style="text-align:right">'+fmt(r25)+'</td><td style="text-align:right">'+fmt(r26)+'</td>'+
-      '<td style="text-align:right;color:#b45309;font-weight:500">'+fmt(ann)+'</td>'+
-      '<td style="text-align:right"><span class="bdg bs">&#9660;'+Math.abs(pct).toFixed(1)+'%</span></td>'+
-      '<td><button class="vbtn" data-idx="'+idx+'">View &#8594;</button></td>';
-    tb.appendChild(tr);
+    return [idx,pct,r25,r26,ann,(k[3]||''),rep,(k[6]||'')];
   });
+  _rebuildAR();
 }
 document.getElementById('arb').addEventListener('click',function(e){var b=e.target.closest('.vbtn');if(b)openPanel(parseInt(b.dataset.idx));});
 
