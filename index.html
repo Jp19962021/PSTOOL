@@ -152,15 +152,14 @@ table.ptbl tr:last-child td{border-bottom:none}
 .tr-target-card .tr-delta-line.flat{color:#cbd2e3}
 .tr-target-card .tr-pace{font-size:12px;font-weight:600;margin-top:2px}
 .tr-target-card .tr-pace.ahead{color:#86efac}.tr-target-card .tr-pace.behind{color:#fca5a5}.tr-target-card .tr-pace.ontrack{color:#fde68a}
-@media(max-width:1200px){.tr-target-card{grid-template-columns:1fr 1fr 1fr;gap:14px}}
-@media(max-width:700px){.tr-target-card{grid-template-columns:1fr 1fr;gap:14px}}
+@media(max-width:1200px){.tr-target-card{grid-template-columns:repeat(3,1fr);gap:14px;padding:18px 20px}}
+@media(max-width:780px){.tr-target-card{grid-template-columns:repeat(2,1fr);gap:12px;padding:16px 18px}.tr-target-card .tr-tv{font-size:20px}.tr-target-card .tr-tv.big{font-size:22px}}
+@media(max-width:480px){.tr-target-card{grid-template-columns:1fr;gap:10px}}
 .tr-section{margin-bottom:24px}
 .tr-section-title{font-size:14px;font-weight:700;color:#1a2035;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .tr-section-title .tr-sub{font-size:11px;color:#888;font-weight:400;margin-left:auto}
 .tr-card{background:#fff;border-radius:12px;padding:18px 20px;border:1px solid #e8eaed;box-shadow:0 1px 4px rgba(0,0,0,.05)}
-.tr-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-@media(max-width:1100px){.tr-grid-4{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:600px){.tr-grid-4{grid-template-columns:1fr}}
+.tr-grid-4{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
 .tr-drug-card{background:#fff;border-radius:10px;padding:14px 16px;border:1px solid #e8eaed;box-shadow:0 1px 3px rgba(0,0,0,.04);cursor:pointer;transition:border-color .15s,box-shadow .15s}
 .tr-drug-card:hover{border-color:#1a2035;box-shadow:0 3px 10px rgba(0,0,0,.08)}
 .tr-drug-name{font-size:13px;font-weight:700;color:#1a2035;margin-bottom:4px;line-height:1.2}
@@ -199,6 +198,24 @@ table.ptbl tr:last-child td{border-bottom:none}
 .tr-modal-actions button{padding:8px 16px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer}
 .tr-modal-actions .cancel{background:#eef0f5;color:#555}
 .tr-modal-actions .save{background:#1a2035;color:#fff}
+/* Drug Detail slide-out */
+.dd-overlay{position:fixed;inset:0;background:rgba(15,21,38,.55);z-index:1090;opacity:0;pointer-events:none;transition:opacity .2s}
+.dd-overlay.open{opacity:1;pointer-events:auto}
+.dd-panel{position:fixed;top:0;right:0;height:100vh;width:min(720px,100%);background:#fff;box-shadow:-12px 0 40px rgba(0,0,0,.18);z-index:1095;transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column}
+.dd-panel.open{transform:translateX(0)}
+.dd-header{padding:18px 24px;background:linear-gradient(135deg,#1a2035 0%,#2d3754 100%);color:#fff;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.dd-body{flex:1;overflow-y:auto;padding:18px 24px}
+.dd-section{margin-bottom:24px}
+.dd-section-title{font-size:12px;font-weight:700;color:#1a2035;text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px}
+.dd-chart-wrap{position:relative;height:240px;background:#fff;border:1px solid #e8eaed;border-radius:10px;padding:12px}
+.dd-tabs{display:flex;gap:4px;margin-bottom:12px;border-bottom:1.5px solid #e8eaed}
+.dd-tab{padding:8px 14px;font-size:12px;font-weight:600;color:#666;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1.5px;display:flex;align-items:center;gap:6px}
+.dd-tab:hover{color:#1a2035}
+.dd-tab.active{color:#1a2035;border-bottom-color:#1a2035}
+.dd-tab-count{display:inline-block;background:#eef0f5;color:#555;font-size:10px;padding:1px 7px;border-radius:10px;font-weight:600}
+.dd-tab.active .dd-tab-count{background:#1a2035;color:#fff}
+.dd-pane{display:none}
+.dd-pane.active{display:block}
 .bdg{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600}
 .ba{background:#dcfce7;color:#16a34a}.bs{background:#fee2e2;color:#dc2626}.bp{background:#fef9c3;color:#854d0e}
 .dgap{font-size:10px;color:#aaa;margin-left:4px}
@@ -672,6 +689,14 @@ table.ptbl tr:last-child td{border-bottom:none}
 <!-- TRENDS (admin only) -->
 <div id="page-trends" class="page"><div class="container">
 
+  <!-- Rep filter -->
+  <div class="ch-filter-row" style="margin-bottom:14px">
+    <div><label>View</label>
+      <select id="tr-rep"><option value="__all">All Reps (Company-wide)</option></select>
+    </div>
+    <div style="margin-left:auto;font-size:11px;color:#888">Filters apply to every chart and table below</div>
+  </div>
+
   <!-- Growth Target Hero -->
   <div class="tr-target-card" id="tr-target-card">
     <button class="tr-edit" id="tr-edit-targets">Edit Targets</button>
@@ -752,6 +777,48 @@ table.ptbl tr:last-child td{border-bottom:none}
   </div>
 
 </div></div>
+
+<!-- DRUG DETAIL slide-out panel -->
+<div class="dd-overlay" id="dd-overlay"></div>
+<div class="dd-panel" id="dd-panel">
+  <div class="dd-header">
+    <div>
+      <div style="font-size:11px;color:#a4adc7;text-transform:uppercase;letter-spacing:.08em;font-weight:600">Drug Detail</div>
+      <div id="dd-title" style="font-size:22px;font-weight:700;color:#fff;margin-top:2px"></div>
+    </div>
+    <button id="dd-close" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px">×</button>
+  </div>
+  <div class="dd-body">
+    <div class="dd-section">
+      <div class="dd-section-title">Performance Snapshot</div>
+      <div id="dd-kpis"></div>
+    </div>
+    <div class="dd-section">
+      <div class="dd-section-title">12-Month Trend (with YoY overlay)</div>
+      <div class="dd-chart-wrap"><canvas id="dd-chart"></canvas></div>
+    </div>
+    <div class="dd-section">
+      <div class="dd-section-title">Clinic Breakdown</div>
+      <div class="dd-tabs">
+        <div class="dd-tab" data-tab="stopped">⚠ Stopped Buying <span class="dd-tab-count" id="dd-stopped-count">0</span></div>
+        <div class="dd-tab" data-tab="active">✓ Currently Buying <span class="dd-tab-count" id="dd-active-count">0</span></div>
+      </div>
+      <div class="dd-pane" data-pane="stopped">
+        <div style="font-size:12px;color:#dc2626;font-weight:600;margin-bottom:8px">Estimated lost revenue: <span id="dd-stopped-loss">$0</span></div>
+        <div style="overflow-x:auto"><table class="tr-rep-tbl">
+          <thead><tr><th>Clinic</th><th>Rep</th><th style="text-align:right">2025 Rev</th><th style="text-align:right">Lost</th><th style="text-align:right">Last Order</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+      <div class="dd-pane" data-pane="active">
+        <div style="overflow-x:auto"><table class="tr-rep-tbl">
+          <thead><tr><th>Clinic</th><th>Rep</th><th style="text-align:right">2025 Rev</th><th style="text-align:right">2026 Rev</th><th style="text-align:right">Last Order</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Edit Targets modal -->
 <div class="tr-modal-bg" id="tr-target-modal-bg">
@@ -845,7 +912,11 @@ table.ptbl tr:last-child td{border-bottom:none}
         <input type="text" id="nn" placeholder="Full name">
         <input type="text" id="nu" placeholder="Username">
         <input type="password" id="np" placeholder="Password">
-        <button id="arb2">Add Rep</button>
+        <select id="nrole" style="padding:9px 12px;border:1.5px solid #d8dce3;border-radius:8px;font-size:13px;outline:none;background:#fff;color:#111">
+          <option value="rep">Rep</option>
+          <option value="admin">Admin</option>
+        </select>
+        <button id="arb2">Add User</button>
       </div>
       <div style="margin-top:-4px;margin-bottom:10px">
         <div class="lbl" style="margin-bottom:4px">Assigned Territories <span style="color:#aaa;font-weight:400;text-transform:none;font-size:11px">(which rep territories this user can see — pick 1+ for managers covering multiple reps)</span></div>
@@ -1560,6 +1631,7 @@ async function openEditRep(id){
   var rep=ALLREPS.find(function(r){return r.id==id;});
   if(!rep)return;
   var existing=Array.isArray(rep.rep_names)?rep.rep_names:[];
+  var currentRole=rep.role||'rep';
   // Build a simple modal
   var old=document.getElementById('edit-rep-modal');if(old)old.remove();
   var modal=document.createElement('div');
@@ -1568,7 +1640,12 @@ async function openEditRep(id){
   modal.innerHTML='<div style="background:#fff;border-radius:12px;padding:24px;width:min(480px,100%);box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto">'+
     '<div style="font-size:15px;font-weight:700;color:#1a2035;margin-bottom:4px">Edit User</div>'+
     '<div style="font-size:13px;color:#666;margin-bottom:16px">'+rep.name+' &middot; @'+rep.username+'</div>'+
-    '<div class="lbl" style="margin-bottom:6px">Assigned Territories</div>'+
+    '<div class="lbl" style="margin-bottom:6px">Role</div>'+
+    '<select id="er-role" style="width:100%;padding:9px 12px;border:1.5px solid #d8dce3;border-radius:8px;font-size:13px;outline:none;background:#fff;color:#111;margin-bottom:14px">'+
+      '<option value="rep"'+(currentRole==='rep'?' selected':'')+'>Rep — sees only assigned territories</option>'+
+      '<option value="admin"'+(currentRole==='admin'?' selected':'')+'>Admin — sees everything + manage users</option>'+
+    '</select>'+
+    '<div class="lbl" style="margin-bottom:6px">Assigned Territories <span style="color:#aaa;font-weight:400;text-transform:none;font-size:11px">(only used for Rep role)</span></div>'+
     '<div id="er-box" style="padding:8px;border:1.5px solid #e0e3ea;border-radius:8px;max-height:260px;overflow-y:auto;background:#fafbfc;font-size:12px;margin-bottom:16px"></div>'+
     '<div style="display:flex;gap:8px;justify-content:flex-end">'+
       '<button class="abtn" id="er-cancel" style="background:#e8eaed;color:#1a2035">Cancel</button>'+
@@ -1579,9 +1656,10 @@ async function openEditRep(id){
   document.getElementById('er-cancel').addEventListener('click',function(){modal.remove();});
   document.getElementById('er-save').addEventListener('click',async function(){
     var picked=getRepPickerValues('er-box');
+    var newRole=document.getElementById('er-role').value||'rep';
     var btn=document.getElementById('er-save');
     btn.disabled=true;btn.textContent='Saving...';
-    var {error}=await SB.from('reps').update({rep_names:picked}).eq('id',id);
+    var {error}=await SB.from('reps').update({rep_names:picked,role:newRole}).eq('id',id);
     btn.disabled=false;btn.textContent='Save';
     if(error){
       console.error('[edit user] full error:',error);
@@ -1612,13 +1690,14 @@ document.getElementById('rl2').addEventListener('click',async function(e){
 });
 document.getElementById('arb2').addEventListener('click',async function(){
   var n=document.getElementById('nn').value.trim(),u=document.getElementById('nu').value.trim(),p=document.getElementById('np').value.trim();
+  var role=document.getElementById('nrole').value||'rep';
   var msg=document.getElementById('amsg');
   if(!n||!u||!p){msg.className='smsg2 er';msg.textContent='All fields required';return;}
   var picked=getRepPickerValues('nr-box');
-  var {error}=await SB.from('reps').insert({name:n,username:u,password:p,role:'rep',rep_names:picked});
+  // Admins inherently see all territories; rep_names array is mostly meaningful for rep role
+  var {error}=await SB.from('reps').insert({name:n,username:u,password:p,role:role,rep_names:picked});
   if(error){
     msg.className='smsg2 er';
-    // Decode the actual error so we don't lie about "username taken"
     var em=(error.message||'').toLowerCase();
     var code=error.code||'';
     if(code==='23505'||em.indexOf('duplicate')>=0||em.indexOf('unique')>=0){
@@ -1633,8 +1712,11 @@ document.getElementById('arb2').addEventListener('click',async function(){
     console.error('[add user] full error:',error);
     return;
   }
-  msg.className='smsg2 ok';msg.textContent='Rep added successfully'+(picked.length?' with '+picked.length+' assigned territor'+(picked.length===1?'y':'ies'):' \u2014 no territory assigned yet, edit to add')+'!';
+  var roleLabel=role==='admin'?'Admin':'Rep';
+  msg.className='smsg2 ok';
+  msg.textContent=roleLabel+' added successfully'+(role==='rep'?(picked.length?' with '+picked.length+' assigned territor'+(picked.length===1?'y':'ies'):' \u2014 no territory assigned yet, edit to add'):' (admins see all territories)')+'!';
   document.getElementById('nn').value='';document.getElementById('nu').value='';document.getElementById('np').value='';
+  document.getElementById('nrole').value='rep';
   renderRepPicker('nr-box',[]);
   loadReps();setTimeout(function(){msg.textContent='';},6000);
 });
@@ -1750,8 +1832,9 @@ var CH_CHART_RISK=null;
 var CH_DATA=null;
 
 function churnInit(){
-  // Populate rep dropdown based on user role
+  // Populate rep dropdown based on user role — preserve current selection across re-inits
   var sel=document.getElementById('ch-rep');
+  var prevValue=sel.value; // save what user had picked
   sel.innerHTML='';
   if(ME&&ME.role==='admin'){
     sel.innerHTML='<option value="__all">All Reps (Company-wide)</option>';
@@ -1769,6 +1852,12 @@ function churnInit(){
       mine.forEach(function(r){var o=document.createElement('option');o.value=r;o.textContent=r;sel.appendChild(o);});
     }
     sel.disabled=false;
+  }
+  // Restore previous selection if it still exists in the rebuilt list
+  if(prevValue){
+    var found=false;
+    for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===prevValue){found=true;break;}}
+    if(found)sel.value=prevValue;
   }
 }
 
@@ -2128,16 +2217,36 @@ function trWeekKey(epoch){
 }
 function trDestroyChart(id){if(TR_CHARTS[id]){TR_CHARTS[id].destroy();delete TR_CHARTS[id];}}
 
+var TR_INGREDIENT_CACHE=null;
+var TR_REP_FILTER='__all'; // current selection in trends tab
+
 async function loadTrends(){
   if(!ME||ME.role!=='admin')return;
   trLoadTargets();
+  // Init rep filter dropdown (preserves selection across reloads)
+  var repSel=document.getElementById('tr-rep');
+  if(repSel){
+    var prev=repSel.value||TR_REP_FILTER;
+    repSel.innerHTML='<option value="__all">All Reps (Company-wide)</option>';
+    REPS.forEach(function(r){var o=document.createElement('option');o.value=r;o.textContent=r;repSel.appendChild(o);});
+    repSel.value=prev;
+    TR_REP_FILTER=prev;
+  }
+  // Build clinic-allowed set based on rep filter (admin can pick a single rep)
+  var allowedClinicIdx=null;
+  if(TR_REP_FILTER&&TR_REP_FILTER!=='__all'){
+    var ridx=REPS.indexOf(TR_REP_FILTER);
+    allowedClinicIdx={};
+    for(var ci0=0;ci0<C.length;ci0++){var ka0=KA[ci0]||[-1];if(ka0[0]===ridx)allowedClinicIdx[ci0]=1;}
+  }
   var todayEp=Math.floor((Date.now()-EP0)/86400000);
   var todayDate=new Date();
   var thisYear=todayDate.getUTCFullYear();
   var thisMonth=todayDate.getUTCMonth(); // 0-indexed
-  // Build per-month, per-week, per-day aggregates across all data
+  // Build per-month, per-week, per-day aggregates across all data (or filtered)
   var monthRev={},monthYearTot={},weekRev={},dayRev={};
   for(var ci=0;ci<C.length;ci++){
+    if(allowedClinicIdx&&!allowedClinicIdx[ci])continue;
     var rows=D[C[ci]]||[];
     for(var ri=0;ri<rows.length;ri++){
       var r=rows[ri];
@@ -2251,9 +2360,10 @@ async function loadTrends(){
   });
 
   // ----- Top Drug Trends (auto-detect top N by total revenue) -----
-  // Aggregate by ingredient (rolled-up across all SKUs and forms)
-  var ingTotal={},ingByMonth={};
+  // Aggregate by ingredient (rolled-up across all SKUs and forms) — also per-day for fair MTD math
+  var ingTotal={},ingByMonth={},ingByDay={};
   for(var ci2=0;ci2<C.length;ci2++){
+    if(allowedClinicIdx&&!allowedClinicIdx[ci2])continue;
     var rows2=D[C[ci2]]||[];
     for(var rj=0;rj<rows2.length;rj++){
       var rr=rows2[rj];
@@ -2263,38 +2373,56 @@ async function loadTrends(){
       var mk2=trMonthKey(rr[3]);
       if(!ingByMonth[ing])ingByMonth[ing]={};
       ingByMonth[ing][mk2]=(ingByMonth[ing][mk2]||0)+rr[2];
+      var dd2=new Date(EP0+rr[3]*86400000);
+      var dKey2=dd2.getUTCFullYear()+'-'+String(dd2.getUTCMonth()+1).padStart(2,'0')+'-'+String(dd2.getUTCDate()).padStart(2,'0');
+      if(!ingByDay[ing])ingByDay[ing]={};
+      ingByDay[ing][dKey2]=(ingByDay[ing][dKey2]||0)+rr[2];
     }
   }
+  // Save for the drill-down panel
+  TR_INGREDIENT_CACHE={ingTotal:ingTotal,ingByMonth:ingByMonth,ingByDay:ingByDay,allowedClinicIdx:allowedClinicIdx};
   var topIngs=Object.keys(ingTotal).map(function(k){return [k,ingTotal[k]];}).sort(function(a,b){return b[1]-a[1];}).slice(0,12);
   var drugWrap=document.getElementById('tr-drugs');drugWrap.innerHTML='';
   topIngs.forEach(function(p){
     var ing=p[0],total=p[1];
     var byM=ingByMonth[ing]||{};
-    // Build last 12 months
-    var spark=[],curMonthVal=0,prevMonthVal=0,yoyVal=0;
-    var thisMonthKey=thisYear+'-'+String(thisMonth+1).padStart(2,'0');
-    var prevMonthDate=new Date(Date.UTC(thisYear,thisMonth-1,1));
-    var prevMonthKey=prevMonthDate.getUTCFullYear()+'-'+String(prevMonthDate.getUTCMonth()+1).padStart(2,'0');
-    var yoyMonthKey=(thisYear-1)+'-'+String(thisMonth+1).padStart(2,'0');
-    curMonthVal=byM[thisMonthKey]||0;
-    prevMonthVal=byM[prevMonthKey]||0;
-    yoyVal=byM[yoyMonthKey]||0;
+    var byD=ingByDay[ing]||{};
+    // Spark = last 12 calendar months
+    var spark=[];
     for(var i=11;i>=0;i--){
       var d=new Date(Date.UTC(thisYear,thisMonth-i,1));
       var mk3=d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0');
       spark.push(byM[mk3]||0);
     }
-    var momDelta=prevMonthVal>0?((curMonthVal-prevMonthVal)/prevMonthVal)*100:(curMonthVal>0?100:0);
-    var yoyDelta=yoyVal>0?((curMonthVal-yoyVal)/yoyVal)*100:(curMonthVal>0?100:0);
+    // Fair MTD-vs-MTD math: Apr 1..today this year vs Apr 1..today last year (YoY)
+    // and Apr 1..today vs Mar 1..today this year (MoM)
+    var dayOfMonthCard=todayDate.getUTCDate();
+    var mtdCur=0,mtdYoy=0,mtdPrevMonth=0;
+    for(var dd3=1;dd3<=dayOfMonthCard;dd3++){
+      var k1=thisYear+'-'+String(thisMonth+1).padStart(2,'0')+'-'+String(dd3).padStart(2,'0');
+      var k2=(thisYear-1)+'-'+String(thisMonth+1).padStart(2,'0')+'-'+String(dd3).padStart(2,'0');
+      var prevMonthDate2=new Date(Date.UTC(thisYear,thisMonth-1,1));
+      var k3=prevMonthDate2.getUTCFullYear()+'-'+String(prevMonthDate2.getUTCMonth()+1).padStart(2,'0')+'-'+String(dd3).padStart(2,'0');
+      mtdCur+=byD[k1]||0;
+      mtdYoy+=byD[k2]||0;
+      mtdPrevMonth+=byD[k3]||0;
+    }
+    var momDelta=mtdPrevMonth>0?((mtdCur-mtdPrevMonth)/mtdPrevMonth)*100:(mtdCur>0?100:0);
+    var yoyDelta=mtdYoy>0?((mtdCur-mtdYoy)/mtdYoy)*100:(mtdCur>0?100:0);
     var deltaCls=momDelta>=5?'up':(momDelta<=-5?'down':'flat');
     var deltaSym=momDelta>=0?'▲':'▼';
+    var yoyCls=yoyDelta>=5?'up':(yoyDelta<=-5?'down':'flat');
+    var yoySym=yoyDelta>=0?'▲':'▼';
     var card=document.createElement('div');card.className='tr-drug-card';card.dataset.ing=ing;
     card.innerHTML=
       '<div class="tr-drug-name">'+ing+'</div>'+
       '<div class="tr-drug-rev">'+trFmtUSD(total)+'</div>'+
-      '<div><span class="tr-delta '+deltaCls+'">'+deltaSym+' '+Math.abs(Math.round(momDelta))+'% MoM</span></div>'+
+      '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
+        '<span class="tr-delta '+deltaCls+'" title="MTD this month vs same days last month">'+deltaSym+' '+Math.abs(Math.round(momDelta))+'% MoM</span>'+
+        '<span class="tr-delta '+yoyCls+'" title="MTD this year vs same days last year">'+yoySym+' '+Math.abs(Math.round(yoyDelta))+'% YoY</span>'+
+      '</div>'+
       '<div class="tr-drug-spark"><canvas></canvas></div>'+
-      '<div class="tr-drug-meta"><span>'+trFmtUSD(curMonthVal)+' MTD</span><span>YoY: '+(yoyDelta>=0?'+':'')+Math.round(yoyDelta)+'%</span></div>';
+      '<div class="tr-drug-meta"><span>'+trFmtUSD(mtdCur)+' MTD</span><span style="color:#aaa">click to drill</span></div>';
     drugWrap.appendChild(card);
     var sparkCanvas=card.querySelector('canvas');
     var sparkColor=momDelta>=0?'#16a34a':'#dc2626';
@@ -2320,6 +2448,7 @@ async function loadTrends(){
   var prevMS=msToEp(prevMonthStart),prevME=msToEp(prevMonthEnd);
   var yoyMS=msToEp(yoyMonthStart),yoyME=msToEp(yoyMonthEnd);
   for(var ci3=0;ci3<C.length;ci3++){
+    if(allowedClinicIdx&&!allowedClinicIdx[ci3])continue;
     var k=KA[ci3]||[-1];var ri=k[0];
     if(ri<0||!repAgg[ri])continue;
     var rows3=D[C[ci3]]||[];
@@ -2355,28 +2484,29 @@ async function loadTrends(){
   if(!repList.length)repTb.innerHTML='<tr><td colspan="6" class="tr-empty">No rep activity this period.</td></tr>';
 
   // ----- Pipeline Radar -----
-  // Biggest at-risk = top 12 from ARL
+  // Filter ARL/WBL by allowed clinics if rep filter active
+  var filteredARL=allowedClinicIdx?ARL.filter(function(a){return allowedClinicIdx[a[0]];}):ARL;
+  var filteredWBL=allowedClinicIdx?WBL.filter(function(w){return allowedClinicIdx[w[0]];}):WBL;
   var radRisk=document.getElementById('tr-radar-risk');radRisk.innerHTML='';
-  ARL.slice(0,12).forEach(function(a){
+  filteredARL.slice(0,12).forEach(function(a){
     var idx=a[0],pct=a[1],r25=a[2];
-    var k=KA[idx]||[];
     var item=document.createElement('div');item.className='tr-radar-item';item.dataset.idx=idx;
     item.innerHTML='<span class="tr-rn">'+C[idx]+'</span><span class="tr-rv">'+Math.round(pct)+'% &nbsp; ('+trFmtUSD(r25)+')</span>';
     radRisk.appendChild(item);
   });
-  if(!ARL.length)radRisk.innerHTML='<div class="tr-empty">No at-risk clinics detected.</div>';
-  // Biggest win-back = top 12 from WBL
+  if(!filteredARL.length)radRisk.innerHTML='<div class="tr-empty">No at-risk clinics detected.</div>';
   var radWB=document.getElementById('tr-radar-winback');radWB.innerHTML='';
-  WBL.slice(0,12).forEach(function(w){
+  filteredWBL.slice(0,12).forEach(function(w){
     var idx=w[0],rev=w[1];
     var item=document.createElement('div');item.className='tr-radar-item';item.dataset.idx=idx;
     item.innerHTML='<span class="tr-rn">'+C[idx]+'</span><span class="tr-rv green">'+trFmtUSD(rev)+'</span>';
     radWB.appendChild(item);
   });
-  if(!WBL.length)radWB.innerHTML='<div class="tr-empty">No win-back targets.</div>';
+  if(!filteredWBL.length)radWB.innerHTML='<div class="tr-empty">No win-back targets.</div>';
   // Fastest growers = clinics with biggest YoY $ gain (2026 annualized vs 2025)
   var growers=[];
   for(var ci4=0;ci4<C.length;ci4++){
+    if(allowedClinicIdx&&!allowedClinicIdx[ci4])continue;
     var rows4=D[C[ci4]]||[];if(!rows4.length)continue;
     var x25=0,x26=0;rows4.forEach(function(rr){if(rr[0]===5)x25+=rr[2];else if(rr[0]===6)x26+=rr[2];});
     if(x25>0&&x26>0){var annG=x26*4;var gain=annG-x25;if(gain>0)growers.push([ci4,gain,x25,annG]);}
@@ -2401,19 +2531,193 @@ async function loadTrends(){
   });
 });
 
-// Click drug card -> set up an admin chat query (if admin chat exists)
+// Click drug card -> open drug detail slide-out
 document.getElementById('tr-drugs').addEventListener('click',function(e){
   var card=e.target.closest('.tr-drug-card');
   if(!card)return;
   var ing=card.dataset.ing;
-  // Switch to chat bot tab and pre-fill
-  var tab=document.querySelector('.tab[data-page="chatbot"]');
-  if(tab)tab.click();
-  setTimeout(function(){
-    var inp=document.getElementById('ai-page-inp');
-    if(inp){inp.value='Show me the top clinics buying '+ing+' this year, broken down by rep';inp.focus();}
-  },200);
+  openDrugDetail(ing);
 });
+
+// Rep filter on Trends tab — auto-applies on change
+var trRepEl=document.getElementById('tr-rep');
+if(trRepEl)trRepEl.addEventListener('change',function(){TR_REP_FILTER=trRepEl.value;loadTrends();});
+
+// Drug detail panel close + tab switching
+document.getElementById('dd-close').addEventListener('click',closeDrugDetail);
+document.getElementById('dd-overlay').addEventListener('click',closeDrugDetail);
+document.querySelectorAll('.dd-tab').forEach(function(t){
+  t.addEventListener('click',function(){
+    document.querySelectorAll('.dd-tab').forEach(function(x){x.classList.remove('active');});
+    document.querySelectorAll('.dd-pane').forEach(function(x){x.classList.remove('active');});
+    t.classList.add('active');
+    document.querySelector('.dd-pane[data-pane="'+t.dataset.tab+'"]').classList.add('active');
+  });
+});
+
+// =========================================================
+// DRUG DETAIL slide-out panel
+// =========================================================
+function openDrugDetail(ingredient){
+  document.getElementById('dd-title').textContent=ingredient;
+  document.getElementById('dd-overlay').classList.add('open');
+  document.getElementById('dd-panel').classList.add('open');
+  document.body.style.overflow='hidden';
+  renderDrugDetail(ingredient);
+}
+function closeDrugDetail(){
+  document.getElementById('dd-overlay').classList.remove('open');
+  document.getElementById('dd-panel').classList.remove('open');
+  document.body.style.overflow='';
+  if(TR_CHARTS['dd-12mo']){TR_CHARTS['dd-12mo'].destroy();delete TR_CHARTS['dd-12mo'];}
+}
+function renderDrugDetail(ingredient){
+  if(!TR_INGREDIENT_CACHE){loadTrends();return;}
+  var allowedClinicIdx=TR_INGREDIENT_CACHE.allowedClinicIdx;
+  var byMonth=TR_INGREDIENT_CACHE.ingByMonth[ingredient]||{};
+  var byDay=TR_INGREDIENT_CACHE.ingByDay[ingredient]||{};
+  var todayDate=new Date();var thisYear=todayDate.getUTCFullYear();var thisMonth=todayDate.getUTCMonth();var dayOfMonth=todayDate.getUTCDate();
+
+  // Per-year totals
+  var y24=0,y25=0,y26=0;
+  Object.keys(byMonth).forEach(function(mk){
+    var yr=parseInt(mk.slice(0,4));
+    if(yr===2024)y24+=byMonth[mk];
+    else if(yr===2025)y25+=byMonth[mk];
+    else if(yr===2026)y26+=byMonth[mk];
+  });
+  var yoy2526=y25>0?((y26-y25)/y25)*100:null;
+  var yoy2425=y24>0?((y25-y24)/y24)*100:null;
+
+  // MTD-vs-MTD slices (this month vs prev month vs same month last year)
+  var mtdCur=0,mtdPrev=0,mtdYoy=0;
+  for(var d=1;d<=dayOfMonth;d++){
+    var k1=thisYear+'-'+String(thisMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var prevDate=new Date(Date.UTC(thisYear,thisMonth-1,1));
+    var k2=prevDate.getUTCFullYear()+'-'+String(prevDate.getUTCMonth()+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var k3=(thisYear-1)+'-'+String(thisMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    mtdCur+=byDay[k1]||0;
+    mtdPrev+=byDay[k2]||0;
+    mtdYoy+=byDay[k3]||0;
+  }
+  // Last completed month
+  var lcm=new Date(Date.UTC(thisYear,thisMonth-1,1));
+  var lcmKey=lcm.getUTCFullYear()+'-'+String(lcm.getUTCMonth()+1).padStart(2,'0');
+  var lcmYoyKey=(lcm.getUTCFullYear()-1)+'-'+String(lcm.getUTCMonth()+1).padStart(2,'0');
+  var lcmVal=byMonth[lcmKey]||0;
+  var lcmYoyVal=byMonth[lcmYoyKey]||0;
+
+  var deltaPill=function(cur,base,label){
+    var pct=base>0?((cur-base)/base)*100:(cur>0?100:0);
+    var cls=pct>=5?'up':(pct<=-5?'down':'flat');
+    var sym=pct>=0?'▲':'▼';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#f8fafc;border-radius:8px;margin-bottom:6px"><div><div style="font-size:11px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:.04em">'+label+'</div><div style="font-size:16px;font-weight:700;color:#1a2035;margin-top:2px">'+trFmtUSD(cur)+'</div></div><div style="text-align:right"><span class="tr-delta '+cls+'" style="font-size:12px;padding:2px 9px">'+sym+' '+(pct>=0?'+':'')+Math.round(pct)+'%</span><div style="font-size:10px;color:#888;margin-top:3px">vs '+trFmtUSD(base)+'</div></div></div>';
+  };
+
+  // KPI summary
+  var kpiHtml='';
+  kpiHtml+=deltaPill(mtdCur,mtdPrev,todayDate.toLocaleDateString('en-US',{month:'long',timeZone:'UTC'})+' MTD vs Same Days Last Month');
+  kpiHtml+=deltaPill(mtdCur,mtdYoy,todayDate.toLocaleDateString('en-US',{month:'long',timeZone:'UTC'})+' MTD vs Same Days Last Year');
+  kpiHtml+=deltaPill(lcmVal,lcmYoyVal,lcm.toLocaleDateString('en-US',{month:'long',year:'numeric',timeZone:'UTC'})+' vs '+(lcm.getUTCFullYear()-1));
+  kpiHtml+=deltaPill(y26,y25,'2026 YTD vs 2025 YTD (full year)');
+  document.getElementById('dd-kpis').innerHTML=kpiHtml;
+
+  // 12-month chart with YoY overlay
+  var labels=[],cur12=[],prev12=[];
+  for(var i=11;i>=0;i--){
+    var dCur=new Date(Date.UTC(thisYear,thisMonth-i,1));
+    var mkCur=dCur.getUTCFullYear()+'-'+String(dCur.getUTCMonth()+1).padStart(2,'0');
+    var mkPrev=(dCur.getUTCFullYear()-1)+'-'+String(dCur.getUTCMonth()+1).padStart(2,'0');
+    labels.push(dCur.toLocaleDateString('en-US',{month:'short',year:'2-digit',timeZone:'UTC'}));
+    cur12.push(byMonth[mkCur]||0);
+    prev12.push(byMonth[mkPrev]||0);
+  }
+  if(TR_CHARTS['dd-12mo']){TR_CHARTS['dd-12mo'].destroy();}
+  TR_CHARTS['dd-12mo']=new Chart(document.getElementById('dd-chart'),{
+    type:'bar',
+    data:{labels:labels,datasets:[
+      {type:'bar',label:'Revenue',data:cur12,backgroundColor:'rgba(26,32,53,0.85)',borderRadius:5,order:2},
+      {type:'line',label:'Same month last year',data:prev12,borderColor:'#f59e0b',backgroundColor:'#f59e0b',borderWidth:2,pointRadius:3,pointBackgroundColor:'#f59e0b',tension:0.25,order:1},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+trFmtFull(c.parsed.y);}}}},scales:{y:{ticks:{callback:function(v){return trFmtUSD(v);},font:{size:10}}},x:{ticks:{font:{size:10}}}}},
+  });
+
+  // Clinic-level breakdown — per ingredient, find clinics that bought + their status (Active in 2026 / Stopped / Past Only)
+  var clinicAgg={}; // ci -> {tot,y26,y25,y24,lastEp}
+  for(var ci=0;ci<C.length;ci++){
+    if(allowedClinicIdx&&!allowedClinicIdx[ci])continue;
+    var rows=D[C[ci]]||[];
+    var saw=false;
+    for(var ri2=0;ri2<rows.length;ri2++){
+      var rr=rows[ri2];
+      var ing2=rollupFor(rr[1]).ingredient;
+      if(ing2!==ingredient)continue;
+      saw=true;
+      if(!clinicAgg[ci])clinicAgg[ci]={tot:0,y24:0,y25:0,y26:0,lastEp:-1,ordCount:0};
+      clinicAgg[ci].tot+=rr[2];
+      if(rr[0]===4)clinicAgg[ci].y24+=rr[2];
+      else if(rr[0]===5)clinicAgg[ci].y25+=rr[2];
+      else clinicAgg[ci].y26+=rr[2];
+      if(rr[3]>clinicAgg[ci].lastEp)clinicAgg[ci].lastEp=rr[3];
+      clinicAgg[ci].ordCount++;
+    }
+  }
+  // Build status buckets
+  var stoppedList=[],activeList=[],pastList=[];
+  Object.keys(clinicAgg).forEach(function(ci){
+    var c=clinicAgg[ci];c.idx=parseInt(ci);
+    var k=KA[c.idx]||[-1];c.rep=k[0]>=0?REPS[k[0]]:'';
+    c.name=C[c.idx];
+    if(c.y26>0)activeList.push(c);
+    else if(c.y25>0||c.y24>0)stoppedList.push(c);
+    else pastList.push(c);
+  });
+  stoppedList.sort(function(a,b){return (b.y25||b.y24)-(a.y25||a.y24);});
+  activeList.sort(function(a,b){return b.tot-a.tot;});
+
+  // Build the three-tab clinic table
+  document.getElementById('dd-stopped-count').textContent=stoppedList.length;
+  document.getElementById('dd-active-count').textContent=activeList.length;
+  document.getElementById('dd-stopped-loss').textContent=trFmtUSD(stoppedList.reduce(function(s,c){return s+(c.y25||c.y24);},0));
+  // Render clinic table — default to "Stopped" view (most actionable)
+  ddRenderClinicList('stopped',stoppedList);
+  ddRenderClinicList('active',activeList);
+  // Show stopped tab by default
+  document.querySelectorAll('.dd-tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelector('.dd-tab[data-tab="stopped"]').classList.add('active');
+  document.querySelectorAll('.dd-pane').forEach(function(p){p.classList.remove('active');});
+  document.querySelector('.dd-pane[data-pane="stopped"]').classList.add('active');
+
+  // Save current ingredient for "open chat about this drug" button
+  document.getElementById('dd-panel').dataset.ing=ingredient;
+}
+function ddRenderClinicList(which,list){
+  var tbody=document.querySelector('.dd-pane[data-pane="'+which+'"] tbody');
+  tbody.innerHTML='';
+  if(!list.length){tbody.innerHTML='<tr><td colspan="5" style="padding:20px;text-align:center;color:#aaa">No clinics in this bucket.</td></tr>';return;}
+  list.slice(0,200).forEach(function(c){
+    var tr=document.createElement('tr');tr.dataset.idx=c.idx;tr.style.cursor='pointer';
+    var lastDateStr=c.lastEp>=0?epDate(c.lastEp):'\u2014';
+    if(which==='stopped'){
+      tr.innerHTML='<td class="pn">'+c.name+'</td>'+
+        '<td style="color:#666">'+(c.rep||'\u2014')+'</td>'+
+        '<td style="text-align:right">'+trFmtUSD(c.y25||c.y24)+'</td>'+
+        '<td style="text-align:right;color:#dc2626;font-weight:600">'+trFmtUSD(c.y25||c.y24)+'</td>'+
+        '<td style="text-align:right;color:#888;font-size:11px">'+lastDateStr+'</td>';
+    } else {
+      tr.innerHTML='<td class="pn">'+c.name+'</td>'+
+        '<td style="color:#666">'+(c.rep||'\u2014')+'</td>'+
+        '<td style="text-align:right">'+trFmtUSD(c.y25)+'</td>'+
+        '<td style="text-align:right;color:#16a34a;font-weight:600">'+trFmtUSD(c.y26)+'</td>'+
+        '<td style="text-align:right;color:#888;font-size:11px">'+lastDateStr+'</td>';
+    }
+    tbody.appendChild(tr);
+  });
+  // Attach click handler (idempotent: replace handler each render)
+  tbody.onclick=function(e){
+    var tr=e.target.closest('tr');if(tr&&tr.dataset.idx)openPanel(parseInt(tr.dataset.idx));
+  };
+}
 
 // Edit Targets modal
 document.getElementById('tr-edit-targets').addEventListener('click',function(){
