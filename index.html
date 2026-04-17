@@ -3964,7 +3964,7 @@ async function loadActionPlan(){
   if(AP_STATE.loading)return;
   AP_STATE.loading=true;
   document.getElementById('ap-msg').textContent='';
-  document.getElementById('ap-refresh-info').innerHTML='<b>Loading fresh data from Zoho Analytics...</b> (first load takes 20-40 sec)';
+  document.getElementById('ap-refresh-info').innerHTML='<b>Loading fresh data from Zoho Analytics...</b> (async export mode — takes 60-90 seconds for 4 queries)';
   try{
     // Load already-contacted clinics from last 14 days so we don't re-surface them
     await _apLoadDoneClinics();
@@ -4020,7 +4020,7 @@ function _apSaveCache(data){
 }
 
 async function _apRefreshFromZoho(){
-  document.getElementById('ap-refresh-info').innerHTML='<b>Querying Zoho Analytics...</b> (this takes 20-40 sec for 3 queries)';
+  document.getElementById('ap-refresh-info').innerHTML='<b>Querying Zoho Analytics...</b> (async mode — 60-90 sec for 4 queries. Please wait.)';
   var excludeList=_apExcludeSQL();
 
   // Query 1: RESCUE — 2025 revenue > $500, zero 2026 revenue
