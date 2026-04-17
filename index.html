@@ -325,6 +325,55 @@ table.ptbl tr:last-child td{border-bottom:none}
 .dd-export-btn:hover{background:#15803d}
 .dd-export-btn:disabled{background:#9ca3af;cursor:wait}
 
+/* Drug Inventory (v7) */
+.inv-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+.inv-table th,.inv-table td{padding:10px 12px;border-bottom:1px solid #edf0f5;text-align:left;white-space:nowrap}
+.inv-table thead th{background:#f7f8fa;font-weight:700;color:#1a2035;font-size:11px;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #d8dce3;cursor:pointer;user-select:none}
+.inv-table thead th:hover{background:#eef1f6}
+.inv-table tbody tr:hover{background:#fafbfc}
+.inv-pill{display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.inv-pill.ok{background:#dcfce7;color:#166534}
+.inv-pill.low{background:#fef3c7;color:#92400e}
+.inv-pill.crit{background:#fee2e2;color:#991b1b}
+.inv-row-btn{padding:5px 10px;font-size:11px;border-radius:6px;border:1.5px solid #d8dce3;background:#fff;color:#1a2035;cursor:pointer;font-weight:600;margin-left:4px}
+.inv-row-btn:hover{background:#f1f3f7}
+.inv-row-btn.del{color:#dc2626;border-color:#fecaca}
+.inv-row-btn.del:hover{background:#fef2f2}
+.inv-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1200;display:flex;align-items:center;justify-content:center;padding:20px}
+.inv-modal[hidden]{display:none}
+.inv-modal-card{background:#fff;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.3);width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden}
+.inv-modal-hdr{padding:16px 20px;border-bottom:1px solid #edf0f5;display:flex;align-items:center;justify-content:space-between;font-size:15px;font-weight:700;color:#1a2035}
+.inv-modal-x{background:none;border:none;font-size:22px;cursor:pointer;color:#aaa;line-height:1;padding:0 4px}
+.inv-modal-x:hover{color:#111}
+.inv-modal-body{padding:18px 20px;overflow-y:auto;flex:1}
+.inv-modal-body input[type=text],.inv-modal-body input[type=number]{width:100%;padding:10px 12px;border:1.5px solid #d8dce3;border-radius:8px;font-size:13px;outline:none;color:#111;background:#fff}
+.inv-modal-body input:focus{border-color:#1a2035}
+.inv-modal-ftr{padding:12px 20px;border-top:1px solid #edf0f5;display:flex;justify-content:flex-end;gap:8px;background:#fafbfc}
+.invm-list{margin-top:8px;max-height:220px;overflow-y:auto;border:1.5px solid #e0e3ea;border-radius:8px;background:#fafbfc}
+.invm-list-item{padding:9px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid #edf0f5;display:flex;justify-content:space-between;align-items:center}
+.invm-list-item:last-child{border-bottom:none}
+.invm-list-item:hover{background:#eef1f6}
+.invm-list-item.sel{background:#1a2035;color:#fff}
+.invm-list-item .sub{font-size:11px;color:#888}
+.invm-list-item.sel .sub{color:rgba(255,255,255,.7)}
+.invm-pillrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.invm-pill{padding:7px 12px;border:1.5px solid #d8dce3;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;background:#fff;color:#1a2035}
+.invm-pill:hover{background:#f1f3f7}
+.invm-pill.sel{background:#1a2035;color:#fff;border-color:#1a2035}
+.invm-summary{padding:10px 12px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:8px;font-size:13px;color:#166534;font-weight:600}
+.invm-matched-skus{margin-top:12px;padding:8px 10px;background:#f7f8fa;border-radius:8px;max-height:120px;overflow-y:auto;font-size:11px;color:#666}
+.invm-matched-skus .warn{color:#b45309}
+.inv-led-row{display:grid;grid-template-columns:110px 80px 90px 1fr 120px;gap:8px;padding:8px 0;border-bottom:1px solid #edf0f5;font-size:12px;align-items:center}
+.inv-led-row .delta-pos{color:#16a34a;font-weight:700}
+.inv-led-row .delta-neg{color:#dc2626;font-weight:700}
+.inv-led-reason{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase}
+.inv-led-reason.opening{background:#e0e7ff;color:#3730a3}
+.inv-led-reason.restock{background:#dcfce7;color:#166534}
+.inv-led-reason.sale{background:#fef3c7;color:#92400e}
+.inv-led-reason.manual_adjust{background:#fee2e2;color:#991b1b}
+.inv-unm-row{display:grid;grid-template-columns:1fr 110px 110px 80px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #edf0f5;font-size:12px}
+.inv-unm-row input,.inv-unm-row select{padding:6px 8px;border:1.5px solid #d8dce3;border-radius:6px;font-size:12px;outline:none;background:#fff;color:#111;width:100%}
+
 /* Permissions matrix (v6) */
 .pm-table{border-collapse:separate;border-spacing:0;font-size:12px;min-width:100%}
 .pm-table th,.pm-table td{padding:8px 10px;border-bottom:1px solid #edf0f5;text-align:center;white-space:nowrap}
@@ -694,6 +743,7 @@ table.ptbl tr:last-child td{border-bottom:none}
   <div class="tab" data-page="churn">&#128302; Churn Predictor</div>
   <div class="tab admin-tab" data-page="trends" id="trtab" style="display:none">&#128200; Trends</div>
   <div class="tab admin-tab" data-page="drugsearch" id="dstab" style="display:none">&#128269; Drug Search</div>
+  <div class="tab admin-tab" data-page="inventory" id="invtab" style="display:none">&#128230; Drug Inventory</div>
   <div class="tab" data-page="notestasks">&#128221; My Notes &amp; Tasks</div>
   <div class="tab admin-tab" data-page="admin" id="atab" style="display:none">&#9881; Admin</div>
   <div class="tab admin-tab" data-page="chatbot" id="cbtab" style="display:none">&#129302; Chat Bot</div>
@@ -1181,6 +1231,131 @@ table.ptbl tr:last-child td{border-bottom:none}
   </div>
 </div></div>
 
+<!-- DRUG INVENTORY TAB (v7) -->
+<div id="page-inventory" class="page"><div class="container">
+  <div class="section-card" style="margin-bottom:16px">
+    <div class="sh">&#128230; Drug Inventory
+      <span id="inv-warn" style="font-size:11px;color:#b45309;font-weight:500;margin-left:12px;display:none"></span>
+      <button class="abtn" id="inv-add" style="margin-left:auto">&#43; Add Inventory</button>
+      <button class="abtn" id="inv-refresh" style="background:#e8eaed;color:#1a2035;margin-left:6px">&#8635; Refresh</button>
+    </div>
+    <div style="padding:12px 18px;font-size:12px;color:#666;border-bottom:1px solid #edf0f5;display:flex;gap:18px;flex-wrap:wrap">
+      <div>Products tracked: <b id="inv-stat-products" style="color:#1a2035">0</b></div>
+      <div>Mapped SKUs: <b id="inv-stat-mapped" style="color:#16a34a">0</b></div>
+      <div>Unmapped SKUs: <b id="inv-stat-unmapped" style="color:#dc2626">0</b> <a href="#" id="inv-review-unmapped" style="color:#2563eb;font-weight:500">review</a></div>
+      <div>Sync status: <b id="inv-stat-sync" style="color:#16a34a">checking...</b></div>
+    </div>
+    <div id="inv-msg" class="smsg2" style="margin:8px 16px 0"></div>
+    <div style="padding:12px 16px;overflow-x:auto">
+      <div id="inv-table-wrap">Loading...</div>
+    </div>
+  </div>
+</div></div>
+
+</div>
+
+<!-- Inventory: Add Product Modal -->
+<div id="inv-add-modal" class="inv-modal" hidden>
+  <div class="inv-modal-card" style="max-width:540px">
+    <div class="inv-modal-hdr">
+      <div>Add Inventory Product</div>
+      <button class="inv-modal-x" data-close-inv-add>&times;</button>
+    </div>
+    <div class="inv-modal-body">
+      <div class="lbl">Step 1: Ingredient</div>
+      <input type="text" id="invm-ing-search" placeholder="Type to filter (e.g. pimobendan)" autocomplete="off">
+      <div id="invm-ing-list" class="invm-list"></div>
+
+      <div id="invm-step2" style="display:none;margin-top:14px">
+        <div class="lbl">Step 2: Form</div>
+        <div id="invm-form-list" class="invm-pillrow"></div>
+      </div>
+
+      <div id="invm-step3" style="display:none;margin-top:14px">
+        <div class="lbl">Step 3: Strength</div>
+        <div id="invm-strength-list" class="invm-pillrow"></div>
+      </div>
+
+      <div id="invm-step4" style="display:none;margin-top:14px">
+        <div class="invm-summary" id="invm-summary"></div>
+        <div class="lbl" style="margin-top:10px">Starting quantity on shelf</div>
+        <div style="display:flex;gap:8px">
+          <input type="number" id="invm-qty" placeholder="e.g. 100000" step="any" min="0" style="flex:1">
+          <select id="invm-unit" style="padding:10px 12px;border:1.5px solid #d8dce3;border-radius:8px;font-size:13px;outline:none;background:#fff;color:#111">
+            <option value="tablets">tablets</option>
+            <option value="capsules">capsules</option>
+            <option value="ml">ml</option>
+            <option value="g">g</option>
+            <option value="mg">mg</option>
+            <option value="doses">doses</option>
+            <option value="chews">chews</option>
+            <option value="bottles">bottles</option>
+          </select>
+        </div>
+        <div class="lbl" style="margin-top:10px">Notes (optional)</div>
+        <input type="text" id="invm-notes" placeholder="e.g. Lot #A-2026-04, production date">
+        <div class="invm-matched-skus" id="invm-matched-skus"></div>
+      </div>
+    </div>
+    <div class="inv-modal-ftr">
+      <button class="abtn" data-close-inv-add style="background:#e8eaed;color:#1a2035">Cancel</button>
+      <button class="abtn" id="invm-save" disabled>Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Inventory: Restock / Adjust Modal -->
+<div id="inv-adj-modal" class="inv-modal" hidden>
+  <div class="inv-modal-card" style="max-width:460px">
+    <div class="inv-modal-hdr">
+      <div id="inv-adj-title">Restock</div>
+      <button class="inv-modal-x" data-close-inv-adj>&times;</button>
+    </div>
+    <div class="inv-modal-body">
+      <div id="inv-adj-prod" style="font-size:13px;color:#666;margin-bottom:12px"></div>
+      <div class="lbl">Quantity <span id="inv-adj-hint" style="color:#aaa;font-weight:400;text-transform:none;font-size:11px"></span></div>
+      <input type="number" id="inv-adj-qty" placeholder="0" step="any">
+      <div class="lbl" style="margin-top:10px">Reason</div>
+      <input type="text" id="inv-adj-note" placeholder="e.g. Manufactured 50k on 2026-04-15">
+    </div>
+    <div class="inv-modal-ftr">
+      <button class="abtn" data-close-inv-adj style="background:#e8eaed;color:#1a2035">Cancel</button>
+      <button class="abtn" id="inv-adj-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Inventory: Ledger Modal -->
+<div id="inv-led-modal" class="inv-modal" hidden>
+  <div class="inv-modal-card" style="max-width:720px">
+    <div class="inv-modal-hdr">
+      <div id="inv-led-title">Ledger</div>
+      <button class="inv-modal-x" data-close-inv-led>&times;</button>
+    </div>
+    <div class="inv-modal-body">
+      <div id="inv-led-body" style="max-height:60vh;overflow-y:auto">Loading...</div>
+    </div>
+    <div class="inv-modal-ftr">
+      <button class="abtn" data-close-inv-led style="background:#e8eaed;color:#1a2035">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Inventory: Unmapped SKUs Modal -->
+<div id="inv-unm-modal" class="inv-modal" hidden>
+  <div class="inv-modal-card" style="max-width:780px">
+    <div class="inv-modal-hdr">
+      <div>Unmapped SKUs (parser couldn't detect pack size)</div>
+      <button class="inv-modal-x" data-close-inv-unm>&times;</button>
+    </div>
+    <div class="inv-modal-body">
+      <div style="font-size:12px;color:#666;margin-bottom:10px">SKUs below have no pack size in the name, so sales of them can't be auto-deducted. Enter a pack size + unit to override.</div>
+      <div id="inv-unm-body" style="max-height:60vh;overflow-y:auto">Loading...</div>
+    </div>
+    <div class="inv-modal-ftr">
+      <button class="abtn" data-close-inv-unm style="background:#e8eaed;color:#1a2035">Close</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1200,6 +1375,7 @@ var TAB_CATALOG=[
   {key:'churn',       label:'Churn Predictor',   adminOnly:false},
   {key:'trends',      label:'Trends',            adminOnly:true},
   {key:'drugsearch',  label:'Drug Search',       adminOnly:true},
+  {key:'inventory',   label:'Drug Inventory',    adminOnly:true},
   {key:'notestasks',  label:'My Notes & Tasks',  adminOnly:false},
   {key:'admin',       label:'Admin',             adminOnly:true},
   {key:'chatbot',     label:'Chat Bot',          adminOnly:true}
@@ -1302,6 +1478,7 @@ document.querySelectorAll('.tab').forEach(function(t){
     if(t.dataset.page==='churn'){loadChurn();}
     if(t.dataset.page==='trends'){loadTrends();}
     if(t.dataset.page==='drugsearch'){loadDrugSearch();}
+    if(t.dataset.page==='inventory'){loadInventory();}
   });
 });
 
@@ -3712,6 +3889,615 @@ document.addEventListener('click',function(e){
   catch(ex){console.error('[csv export] error:',ex);alert('Export failed: '+(ex.message||ex));}
   setTimeout(function(){btn.disabled=false;btn.innerHTML=orig;},400);
 });
+
+// ============================================================
+// v7: DRUG INVENTORY
+// Phase 1: Finished product inventory at ingredient+form+strength rollup level.
+// Deducts invoice_qty * pack_size from on_hand for each sale.
+// Pack sizes parsed from SKU names (e.g. "Pimobendan 5mg Tablet - 500ct" -> 500 tablets).
+// Admin can override via sku_pack_overrides table for SKUs the parser misses.
+// ============================================================
+var INV_STATE={
+  products:[],      // rows from inventory_products
+  overrides:{},     // sku -> {pack_size, unit}
+  packParsed:{},    // prodIdx -> {pack_size, unit, source:'name'|'override'|null}
+  unmapped:[],      // prodIdx[] where parser failed and no override
+  syncHasQty:null,  // null=unknown, true=data.js has qty (row[4]), false=no qty found
+  adjProductId:null,
+  adjMode:'restock',
+  wizard:{ing:null,form:null,strength:null}
+};
+
+// Parse pack size + unit from end of SKU name. Examples handled:
+//   "Pimobendan 5mg Quadrisect Tablet - 500ct"  -> 500 tablets
+//   "Doxycycline 100mg Suspension - 60ml"       -> 60 ml
+//   "Phenylbutazone 12gm/60ml Oral Paste - 60ml" -> 60 ml
+//   "Gabapentin 100mg Capsule - 100 caps"       -> 100 capsules
+function invParsePack(skuName){
+  if(!skuName)return null;
+  // Look at substring after the final " - " (most reliable signal)
+  var afterDash=skuName;
+  var dashIdx=skuName.lastIndexOf(' - ');
+  if(dashIdx>=0)afterDash=skuName.slice(dashIdx+3);
+  // Regex: NUMBER + optional space + UNIT (ct, count, tab, tabs, cap, caps, ml, g, gm, grams, lb, dose, doses, chew, chews)
+  var re=/(\d+(?:[.,]\d+)?)\s*(ct|count|tabs?|caps?|capsules?|chews?|doses?|ml|millilit(?:re|er)s?|gm|grams?|g|kg|lbs?|bottles?|oz)\b/i;
+  var m=afterDash.match(re);
+  if(!m){
+    // Fall back: search entire name
+    m=skuName.match(re);
+    if(!m)return null;
+  }
+  var qty=parseFloat(String(m[1]).replace(',',''));
+  if(!qty||qty<=0)return null;
+  var unitRaw=m[2].toLowerCase();
+  var unit='units';
+  if(/^(ct|count|tabs?)$/.test(unitRaw))unit='tablets';
+  else if(/^caps?|capsules?$/.test(unitRaw))unit='capsules';
+  else if(/^chews?$/.test(unitRaw))unit='chews';
+  else if(/^doses?$/.test(unitRaw))unit='doses';
+  else if(/^ml$|^millilit/.test(unitRaw))unit='ml';
+  else if(/^gm$|^grams?$|^g$/.test(unitRaw))unit='g';
+  else if(/^kg$/.test(unitRaw))unit='g'; // normalize kg to g in detection
+  else if(/^lbs?$/.test(unitRaw))unit='g';
+  else if(/^bottles?$/.test(unitRaw))unit='bottles';
+  else if(/^oz$/.test(unitRaw))unit='g';
+  // If kg detected, multiply
+  if(unitRaw==='kg')qty=qty*1000;
+  return {pack_size:qty,unit:unit,raw:m[0]};
+}
+
+function invBuildPackIndex(){
+  INV_STATE.packParsed={};
+  INV_STATE.unmapped=[];
+  if(typeof P==='undefined'||!Array.isArray(P))return;
+  for(var i=0;i<P.length;i++){
+    var skuName=P[i];
+    var ov=INV_STATE.overrides[skuName];
+    if(ov){
+      INV_STATE.packParsed[i]={pack_size:ov.pack_size,unit:ov.unit,source:'override'};
+      continue;
+    }
+    var parsed=invParsePack(skuName);
+    if(parsed){
+      INV_STATE.packParsed[i]={pack_size:parsed.pack_size,unit:parsed.unit,source:'name'};
+    } else {
+      INV_STATE.unmapped.push(i);
+    }
+  }
+}
+
+// Rollup key builder (matches how DS_INGS groups things)
+function invRollupKey(prodIdx){
+  if(typeof rollupFor!=='function')return null;
+  var ro=rollupFor(prodIdx);
+  if(!ro||!ro.ingredient||!ro.form)return null;
+  var strength=ro.strength&&ro.strength!=='unspec'?ro.strength:'';
+  return {ing:ro.ingredient,form:ro.form,strength:strength,key:ro.ingredient+'|'+ro.form+'|'+strength};
+}
+
+// Detect whether data.js carries invoice quantity as the 5th element of each row
+function invDetectSyncQty(){
+  if(typeof D==='undefined'||typeof C==='undefined')return false;
+  var sampled=0,hasQty=0;
+  for(var ci=0;ci<C.length&&sampled<500;ci++){
+    var rows=D[C[ci]]||[];
+    for(var ri=0;ri<rows.length&&sampled<500;ri++){
+      sampled++;
+      var r=rows[ri];
+      if(r.length>=5&&typeof r[4]==='number'&&r[4]>0)hasQty++;
+    }
+  }
+  return sampled>0 && (hasQty/sampled)>0.5;
+}
+
+// ---------- Main loader ----------
+async function loadInventory(){
+  if(!canSee('inventory'))return;
+  var wrap=document.getElementById('inv-table-wrap');
+  wrap.innerHTML='<div style="color:#aaa;font-size:13px;padding:8px 0">Loading...</div>';
+  // Load overrides first
+  var {data:ovData}=await SB.from('sku_pack_overrides').select('*');
+  INV_STATE.overrides={};
+  (ovData||[]).forEach(function(o){INV_STATE.overrides[o.sku]={pack_size:Number(o.pack_size),unit:o.unit};});
+  // Build pack index
+  invBuildPackIndex();
+  // Load products
+  var {data:prodData,error:prodErr}=await SB.from('inventory_products').select('*').order('ingredient').order('form').order('strength');
+  if(prodErr){
+    wrap.innerHTML='<div style="color:#dc2626;font-size:13px;padding:8px 0">Error loading inventory: '+_esc(prodErr.message||JSON.stringify(prodErr))+'<br><br>If this is your first time, run the <b>v7_inventory_migration.sql</b> in Supabase.</div>';
+    return;
+  }
+  INV_STATE.products=prodData||[];
+  // Detect sync qty status
+  INV_STATE.syncHasQty=invDetectSyncQty();
+  _invRenderStats();
+  // Apply auto-deductions for any products
+  if(INV_STATE.products.length&&INV_STATE.syncHasQty){
+    await _invApplyAutoDeductions();
+  }
+  _invRenderTable();
+}
+
+function _invRenderStats(){
+  document.getElementById('inv-stat-products').textContent=INV_STATE.products.length;
+  var mapped=Object.keys(INV_STATE.packParsed).length;
+  document.getElementById('inv-stat-mapped').textContent=mapped;
+  document.getElementById('inv-stat-unmapped').textContent=INV_STATE.unmapped.length;
+  var syncEl=document.getElementById('inv-stat-sync');
+  var warn=document.getElementById('inv-warn');
+  if(INV_STATE.syncHasQty){
+    syncEl.textContent='live';
+    syncEl.style.color='#16a34a';
+    warn.style.display='none';
+  } else {
+    syncEl.textContent='qty missing';
+    syncEl.style.color='#dc2626';
+    warn.style.display='';
+    warn.textContent='\u26A0 data.js has no invoice quantities \u2014 auto-deduction is paused. Update the Zoho sync to include qty as the 5th field per transaction row.';
+  }
+}
+
+// Auto-deduct: scan sales since last_deducted_epoch for each product, deduct, record ledger
+async function _invApplyAutoDeductions(){
+  if(typeof D==='undefined'||typeof C==='undefined'||typeof P==='undefined')return;
+  // Build an index: rollup key -> product record
+  var rollupToProd={};
+  INV_STATE.products.forEach(function(p){
+    var k=(p.ingredient||'')+'|'+(p.form||'')+'|'+(p.strength||'');
+    rollupToProd[k]=p;
+  });
+  // For each product, walk all sales, collect deductions since last_deducted_epoch
+  var deductionsByProd={}; // productId -> [{delta, ref_sku, ref_epoch}]
+  for(var pi=0;pi<P.length;pi++){
+    var packInfo=INV_STATE.packParsed[pi];
+    if(!packInfo)continue;
+    var ro=invRollupKey(pi);
+    if(!ro)continue;
+    var prod=rollupToProd[ro.key];
+    if(!prod)continue;
+    var sinceEp=prod.last_deducted_epoch==null?-1:prod.last_deducted_epoch;
+    // Walk all clinics' rows for this prodIdx
+    for(var ci=0;ci<C.length;ci++){
+      var rows=D[C[ci]]||[];
+      for(var ri=0;ri<rows.length;ri++){
+        var r=rows[ri];
+        if(r[1]!==pi)continue;
+        if(r.length<5)continue;
+        var qty=Number(r[4])||0;
+        if(!qty)continue;
+        var ep=r[3];
+        if(ep<=sinceEp)continue;
+        var units=qty*packInfo.pack_size;
+        if(!deductionsByProd[prod.id])deductionsByProd[prod.id]=[];
+        deductionsByProd[prod.id].push({delta:-units,ref_sku:P[pi],ref_epoch:ep});
+      }
+    }
+  }
+  // Apply per product: insert ledger entries + update on_hand + last_deducted_epoch
+  var prodIds=Object.keys(deductionsByProd);
+  for(var j=0;j<prodIds.length;j++){
+    var pid=parseInt(prodIds[j]);
+    var entries=deductionsByProd[pid];
+    if(!entries.length)continue;
+    var totalDelta=entries.reduce(function(s,e){return s+e.delta;},0);
+    var maxEp=entries.reduce(function(m,e){return Math.max(m,e.ref_epoch);},0);
+    var ledgerRows=entries.map(function(e){return {product_id:pid,delta:e.delta,reason:'sale',ref_sku:e.ref_sku,ref_epoch:e.ref_epoch,actor:ME?ME.username:null};});
+    // Batch insert in chunks (Supabase payload limits)
+    var CHUNK=500;
+    for(var k=0;k<ledgerRows.length;k+=CHUNK){
+      await SB.from('inventory_ledger').insert(ledgerRows.slice(k,k+CHUNK));
+    }
+    var prod=INV_STATE.products.find(function(p){return p.id===pid;});
+    if(prod){
+      var newOnHand=Number(prod.on_hand)+totalDelta;
+      await SB.from('inventory_products').update({on_hand:newOnHand,last_deducted_epoch:maxEp,updated_at:new Date().toISOString()}).eq('id',pid);
+      prod.on_hand=newOnHand;
+      prod.last_deducted_epoch=maxEp;
+    }
+  }
+}
+
+function _invBurnRate(product){
+  // 30-day burn rate = sum of last 30 days of unit sales for this product's rollup.
+  if(typeof D==='undefined'||typeof C==='undefined'||typeof P==='undefined')return 0;
+  if(typeof EP0==='undefined')return 0;
+  var tep=Math.floor((Date.now()-EP0)/86400000);
+  var cutoff=tep-30;
+  var units=0;
+  for(var pi=0;pi<P.length;pi++){
+    var packInfo=INV_STATE.packParsed[pi];
+    if(!packInfo)continue;
+    var ro=invRollupKey(pi);
+    if(!ro)continue;
+    if(ro.ing!==product.ingredient||ro.form!==product.form||(ro.strength||'')!==(product.strength||''))continue;
+    for(var ci=0;ci<C.length;ci++){
+      var rows=D[C[ci]]||[];
+      for(var ri=0;ri<rows.length;ri++){
+        var r=rows[ri];
+        if(r[1]!==pi)continue;
+        if(r.length<5)continue;
+        if(r[3]<cutoff)continue;
+        var qty=Number(r[4])||0;
+        units+=qty*packInfo.pack_size;
+      }
+    }
+  }
+  return units/30; // units per day
+}
+
+function _fmtNum(n){
+  if(n==null||isNaN(n))return '0';
+  var v=Number(n);
+  if(Math.abs(v)>=1e6)return (v/1e6).toFixed(2)+'M';
+  if(Math.abs(v)>=1e3)return (v/1e3).toFixed(1)+'K';
+  return Math.round(v).toLocaleString();
+}
+
+function _invRenderTable(){
+  var wrap=document.getElementById('inv-table-wrap');
+  if(!INV_STATE.products.length){
+    wrap.innerHTML='<div style="color:#888;font-size:13px;padding:20px;text-align:center">No inventory products yet. Click <b>+ Add Inventory</b> to seed one.</div>';
+    return;
+  }
+  var html='<table class="inv-table"><thead><tr>'+
+    '<th>Drug</th><th>Form</th><th>Strength</th><th style="text-align:right">On Hand</th>'+
+    '<th>Unit</th><th style="text-align:right">Burn / day</th><th style="text-align:right">Runway</th>'+
+    '<th>Status</th><th>Last Updated</th><th style="text-align:right">Actions</th></tr></thead><tbody>';
+  // Compute rows with burn + runway
+  var rows=INV_STATE.products.map(function(p){
+    var burn=_invBurnRate(p);
+    var onHand=Number(p.on_hand)||0;
+    var runwayDays=burn>0?Math.max(0,Math.floor(onHand/burn)):null;
+    return {p:p,burn:burn,onHand:onHand,runway:runwayDays};
+  });
+  // Sort: shortest runway first (nulls at bottom)
+  rows.sort(function(a,b){
+    if(a.runway==null&&b.runway==null)return 0;
+    if(a.runway==null)return 1;
+    if(b.runway==null)return -1;
+    return a.runway-b.runway;
+  });
+  rows.forEach(function(row){
+    var p=row.p;
+    var status='ok',statusLabel='Healthy';
+    if(row.runway!=null&&row.runway<=14){status='crit';statusLabel='Critical';}
+    else if(row.runway!=null&&row.runway<=30){status='low';statusLabel='Low';}
+    else if(row.burn===0){status='ok';statusLabel='Stable';}
+    var runwayTxt=row.runway==null?'\u2014':row.runway+' days';
+    var updatedTxt=p.updated_at?new Date(p.updated_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'\u2014';
+    html+='<tr>'+
+      '<td style="font-weight:600;color:#1a2035">'+_esc(p.ingredient)+'</td>'+
+      '<td>'+_esc(p.form)+'</td>'+
+      '<td>'+_esc(p.strength||'\u2014')+'</td>'+
+      '<td style="text-align:right;font-weight:700;font-variant-numeric:tabular-nums">'+_fmtNum(row.onHand)+'</td>'+
+      '<td style="color:#888;font-size:12px">'+_esc(p.unit)+'</td>'+
+      '<td style="text-align:right;font-variant-numeric:tabular-nums">'+(row.burn>0?_fmtNum(row.burn):'\u2014')+'</td>'+
+      '<td style="text-align:right;font-variant-numeric:tabular-nums">'+runwayTxt+'</td>'+
+      '<td><span class="inv-pill '+status+'">'+statusLabel+'</span></td>'+
+      '<td style="color:#888;font-size:11px">'+updatedTxt+'</td>'+
+      '<td style="text-align:right;white-space:nowrap">'+
+        '<button class="inv-row-btn" data-inv-act="restock" data-id="'+p.id+'">+ Restock</button>'+
+        '<button class="inv-row-btn" data-inv-act="adjust" data-id="'+p.id+'">Adjust</button>'+
+        '<button class="inv-row-btn" data-inv-act="ledger" data-id="'+p.id+'">Ledger</button>'+
+        '<button class="inv-row-btn del" data-inv-act="delete" data-id="'+p.id+'">\u00D7</button>'+
+      '</td></tr>';
+  });
+  html+='</tbody></table>';
+  wrap.innerHTML=html;
+}
+
+// ---------- Row actions ----------
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-inv-act]');
+  if(!b)return;
+  var grid=document.getElementById('inv-table-wrap');
+  if(!grid||!grid.contains(b))return;
+  var act=b.getAttribute('data-inv-act'),id=parseInt(b.getAttribute('data-id'));
+  if(act==='restock'||act==='adjust')_invOpenAdjust(id,act);
+  else if(act==='ledger')_invOpenLedger(id);
+  else if(act==='delete')_invDelete(id);
+});
+
+async function _invDelete(id){
+  var prod=INV_STATE.products.find(function(p){return p.id===id;});
+  if(!prod)return;
+  if(!confirm('Delete inventory for '+prod.ingredient+' '+prod.form+' '+(prod.strength||'')+'?\n\nThis also deletes its ledger history. Cannot be undone.'))return;
+  var {error}=await SB.from('inventory_products').delete().eq('id',id);
+  if(error){alert('Delete failed: '+error.message);return;}
+  loadInventory();
+}
+
+function _invOpenAdjust(id,mode){
+  var prod=INV_STATE.products.find(function(p){return p.id===id;});
+  if(!prod)return;
+  INV_STATE.adjProductId=id;
+  INV_STATE.adjMode=mode;
+  document.getElementById('inv-adj-title').textContent=mode==='restock'?'+ Restock':'Adjust Count';
+  document.getElementById('inv-adj-prod').innerHTML='<b>'+_esc(prod.ingredient)+' '+_esc(prod.form)+(prod.strength?' \u00B7 '+_esc(prod.strength):'')+'</b><br>Current on hand: <b>'+_fmtNum(prod.on_hand)+' '+_esc(prod.unit)+'</b>';
+  document.getElementById('inv-adj-hint').textContent=mode==='restock'?'(added to current)':'(use negative to remove; positive to add)';
+  document.getElementById('inv-adj-qty').value='';
+  document.getElementById('inv-adj-note').value='';
+  document.getElementById('inv-adj-modal').hidden=false;
+}
+
+document.getElementById('inv-adj-save').addEventListener('click',async function(){
+  var qty=parseFloat(document.getElementById('inv-adj-qty').value);
+  var note=document.getElementById('inv-adj-note').value.trim();
+  if(!qty||isNaN(qty)){alert('Enter a quantity.');return;}
+  var id=INV_STATE.adjProductId,mode=INV_STATE.adjMode;
+  var prod=INV_STATE.products.find(function(p){return p.id===id;});
+  if(!prod)return;
+  var delta=mode==='restock'?Math.abs(qty):qty;
+  var newOnHand=Number(prod.on_hand)+delta;
+  var {error:e1}=await SB.from('inventory_products').update({on_hand:newOnHand,updated_at:new Date().toISOString()}).eq('id',id);
+  if(e1){alert('Save failed: '+e1.message);return;}
+  await SB.from('inventory_ledger').insert({product_id:id,delta:delta,reason:mode==='restock'?'restock':'manual_adjust',actor:ME?ME.username:null,note:note||null});
+  document.getElementById('inv-adj-modal').hidden=true;
+  prod.on_hand=newOnHand;
+  prod.updated_at=new Date().toISOString();
+  _invRenderTable();
+});
+
+async function _invOpenLedger(id){
+  var prod=INV_STATE.products.find(function(p){return p.id===id;});
+  if(!prod)return;
+  document.getElementById('inv-led-title').textContent='Ledger: '+prod.ingredient+' '+prod.form+(prod.strength?' '+prod.strength:'');
+  document.getElementById('inv-led-body').innerHTML='<div style="color:#aaa;padding:8px 0">Loading...</div>';
+  document.getElementById('inv-led-modal').hidden=false;
+  var {data,error}=await SB.from('inventory_ledger').select('*').eq('product_id',id).order('created_at',{ascending:false}).limit(500);
+  if(error){document.getElementById('inv-led-body').innerHTML='<div style="color:#dc2626">Error: '+_esc(error.message)+'</div>';return;}
+  if(!data.length){document.getElementById('inv-led-body').innerHTML='<div style="color:#aaa;padding:8px 0">No ledger entries yet.</div>';return;}
+  var html='<div class="inv-led-row" style="font-weight:700;color:#888;font-size:10px;text-transform:uppercase;border-bottom:2px solid #d8dce3">'+
+    '<div>Date</div><div style="text-align:right">Delta</div><div>Reason</div><div>Details</div><div>Actor</div></div>';
+  data.forEach(function(e){
+    var dt=new Date(e.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    var dc=e.delta>0?'delta-pos':'delta-neg';
+    var sign=e.delta>0?'+':'';
+    var details=e.ref_sku?_esc(e.ref_sku):(e.note?_esc(e.note):'');
+    html+='<div class="inv-led-row"><div style="color:#666">'+dt+'</div>'+
+      '<div style="text-align:right" class="'+dc+'">'+sign+_fmtNum(e.delta)+'</div>'+
+      '<div><span class="inv-led-reason '+_esc(e.reason)+'">'+_esc(e.reason)+'</span></div>'+
+      '<div style="color:#666;font-size:11px;overflow:hidden;text-overflow:ellipsis">'+details+'</div>'+
+      '<div style="color:#888;font-size:11px">'+_esc(e.actor||'\u2014')+'</div></div>';
+  });
+  document.getElementById('inv-led-body').innerHTML=html;
+}
+
+// ---------- Close handlers for modals ----------
+document.addEventListener('click',function(e){
+  if(e.target.closest('[data-close-inv-add]'))document.getElementById('inv-add-modal').hidden=true;
+  if(e.target.closest('[data-close-inv-adj]'))document.getElementById('inv-adj-modal').hidden=true;
+  if(e.target.closest('[data-close-inv-led]'))document.getElementById('inv-led-modal').hidden=true;
+  if(e.target.closest('[data-close-inv-unm]'))document.getElementById('inv-unm-modal').hidden=true;
+  // Click outside card closes
+  ['inv-add-modal','inv-adj-modal','inv-led-modal','inv-unm-modal'].forEach(function(mid){
+    var m=document.getElementById(mid);
+    if(m&&!m.hidden&&e.target===m)m.hidden=true;
+  });
+});
+
+// ---------- Add Inventory Wizard ----------
+document.getElementById('inv-add').addEventListener('click',function(){
+  INV_STATE.wizard={ing:null,form:null,strength:null};
+  document.getElementById('invm-ing-search').value='';
+  document.getElementById('invm-qty').value='';
+  document.getElementById('invm-notes').value='';
+  document.getElementById('invm-step2').style.display='none';
+  document.getElementById('invm-step3').style.display='none';
+  document.getElementById('invm-step4').style.display='none';
+  document.getElementById('invm-save').disabled=true;
+  _invRenderIngList('');
+  document.getElementById('inv-add-modal').hidden=false;
+  setTimeout(function(){document.getElementById('invm-ing-search').focus();},50);
+});
+
+document.getElementById('invm-ing-search').addEventListener('input',function(e){
+  _invRenderIngList(e.target.value);
+});
+
+function _invRenderIngList(filter){
+  var list=document.getElementById('invm-ing-list');
+  if(typeof DS_INGS==='undefined'||!DS_INGS){if(typeof dsBuildIndex==='function')dsBuildIndex();}
+  var src=(typeof DS_INGS!=='undefined'&&DS_INGS)?DS_INGS:[];
+  var q=(filter||'').trim().toLowerCase();
+  var rows=src.filter(function(x){return !q||x.ing.toLowerCase().indexOf(q)>=0;}).slice(0,50);
+  if(!rows.length){list.innerHTML='<div style="padding:12px;color:#aaa;font-size:12px">No ingredients match.</div>';return;}
+  list.innerHTML=rows.map(function(x){
+    var sel=INV_STATE.wizard.ing===x.ing?' sel':'';
+    var skuCount=Object.keys(x.forms||{}).reduce(function(s,f){
+      var fo=x.forms[f];
+      return s+Object.keys(fo.strengths||{}).reduce(function(ss,st){return ss+(fo.strengths[st].skus?fo.strengths[st].skus.length:0);},0);
+    },0);
+    return '<div class="invm-list-item'+sel+'" data-invm-ing="'+_esc(x.ing)+'"><span>'+_esc(x.ing)+'</span><span class="sub">'+skuCount+' SKUs</span></div>';
+  }).join('');
+}
+
+document.getElementById('invm-ing-list').addEventListener('click',function(e){
+  var item=e.target.closest('[data-invm-ing]');
+  if(!item)return;
+  var ing=item.getAttribute('data-invm-ing');
+  INV_STATE.wizard.ing=ing;
+  INV_STATE.wizard.form=null;
+  INV_STATE.wizard.strength=null;
+  _invRenderIngList(document.getElementById('invm-ing-search').value);
+  _invRenderFormList();
+});
+
+function _invRenderFormList(){
+  var ing=INV_STATE.wizard.ing;
+  if(!ing)return;
+  var ingObj=(DS_INGS||[]).find(function(x){return x.ing===ing;});
+  var forms=ingObj?Object.keys(ingObj.forms||{}):[];
+  var box=document.getElementById('invm-form-list');
+  box.innerHTML=forms.length?forms.map(function(f){
+    var sel=INV_STATE.wizard.form===f?' sel':'';
+    return '<div class="invm-pill'+sel+'" data-invm-form="'+_esc(f)+'">'+_esc(f)+'</div>';
+  }).join(''):'<span style="color:#aaa;font-size:12px">No forms indexed for this ingredient.</span>';
+  document.getElementById('invm-step2').style.display='';
+  document.getElementById('invm-step3').style.display='none';
+  document.getElementById('invm-step4').style.display='none';
+  document.getElementById('invm-save').disabled=true;
+}
+
+document.getElementById('invm-form-list').addEventListener('click',function(e){
+  var item=e.target.closest('[data-invm-form]');
+  if(!item)return;
+  INV_STATE.wizard.form=item.getAttribute('data-invm-form');
+  INV_STATE.wizard.strength=null;
+  _invRenderFormList();
+  _invRenderStrengthList();
+});
+
+function _invRenderStrengthList(){
+  var ing=INV_STATE.wizard.ing,form=INV_STATE.wizard.form;
+  if(!ing||!form)return;
+  var ingObj=(DS_INGS||[]).find(function(x){return x.ing===ing;});
+  var formObj=ingObj?(ingObj.forms||{})[form]:null;
+  var strengths=formObj?Object.keys(formObj.strengths||{}):[];
+  var box=document.getElementById('invm-strength-list');
+  box.innerHTML=strengths.length?strengths.map(function(s){
+    var label=s==='unspec'?'(unspecified)':s;
+    var sel=INV_STATE.wizard.strength===s?' sel':'';
+    return '<div class="invm-pill'+sel+'" data-invm-strength="'+_esc(s)+'">'+_esc(label)+'</div>';
+  }).join(''):'<span style="color:#aaa;font-size:12px">No strengths indexed.</span>';
+  document.getElementById('invm-step3').style.display='';
+  document.getElementById('invm-step4').style.display='none';
+  document.getElementById('invm-save').disabled=true;
+}
+
+document.getElementById('invm-strength-list').addEventListener('click',function(e){
+  var item=e.target.closest('[data-invm-strength]');
+  if(!item)return;
+  INV_STATE.wizard.strength=item.getAttribute('data-invm-strength');
+  _invRenderStrengthList();
+  _invRenderSummary();
+});
+
+function _invRenderSummary(){
+  var w=INV_STATE.wizard;
+  if(!w.ing||!w.form||!w.strength)return;
+  var ingObj=(DS_INGS||[]).find(function(x){return x.ing===w.ing;});
+  var formObj=ingObj?(ingObj.forms||{})[w.form]:null;
+  var strengthObj=formObj?formObj.strengths[w.strength]:null;
+  var skus=strengthObj?(strengthObj.skus||[]):[];
+  var label=w.ing+' \u00B7 '+(w.strength==='unspec'?'':w.strength+' ')+w.form;
+  document.getElementById('invm-summary').textContent=label+' \u2014 '+skus.length+' SKU'+(skus.length===1?'':'s')+' will deduct from this inventory';
+  // Show matched SKUs with pack sizes + missing ones
+  var skuRowsHtml='<div style="font-weight:600;color:#1a2035;margin-bottom:4px">SKU \u2192 Pack Size Detection</div>';
+  var unmappedAny=false;
+  skus.forEach(function(skuName){
+    var pi=P.indexOf(skuName);
+    var pack=pi>=0?INV_STATE.packParsed[pi]:null;
+    if(pack){
+      skuRowsHtml+='<div>&#10003; '+_esc(skuName)+' \u2192 <b>'+pack.pack_size+' '+_esc(pack.unit)+'</b> ('+pack.source+')</div>';
+    } else {
+      unmappedAny=true;
+      skuRowsHtml+='<div class="warn">&#9888; '+_esc(skuName)+' \u2192 pack size not detected \u2014 sales won\'t auto-deduct until you add an override</div>';
+    }
+  });
+  // Guess default unit from majority of mapped SKUs
+  var unitCounts={};
+  skus.forEach(function(skuName){
+    var pi=P.indexOf(skuName);
+    var pack=pi>=0?INV_STATE.packParsed[pi]:null;
+    if(pack){unitCounts[pack.unit]=(unitCounts[pack.unit]||0)+1;}
+  });
+  var bestUnit='tablets',best=0;
+  Object.keys(unitCounts).forEach(function(u){if(unitCounts[u]>best){best=unitCounts[u];bestUnit=u;}});
+  var unitSel=document.getElementById('invm-unit');
+  // Make sure option exists; if not, add
+  if(!Array.from(unitSel.options).some(function(o){return o.value===bestUnit;})){
+    var o=document.createElement('option');o.value=bestUnit;o.textContent=bestUnit;unitSel.appendChild(o);
+  }
+  unitSel.value=bestUnit;
+  document.getElementById('invm-matched-skus').innerHTML=skuRowsHtml;
+  document.getElementById('invm-step4').style.display='';
+  document.getElementById('invm-save').disabled=false;
+}
+
+document.getElementById('invm-save').addEventListener('click',async function(){
+  var w=INV_STATE.wizard;
+  var qty=parseFloat(document.getElementById('invm-qty').value);
+  var unit=document.getElementById('invm-unit').value;
+  var notes=document.getElementById('invm-notes').value.trim();
+  if(!w.ing||!w.form||!w.strength){alert('Finish all 3 steps.');return;}
+  if(!qty||isNaN(qty)||qty<0){alert('Enter a valid starting quantity.');return;}
+  var btn=document.getElementById('invm-save');
+  btn.disabled=true;btn.textContent='Saving...';
+  var strengthVal=w.strength==='unspec'?'':w.strength;
+  // Check for existing record (unique constraint)
+  var {data:existing}=await SB.from('inventory_products').select('id').eq('ingredient',w.ing).eq('form',w.form).eq('strength',strengthVal).maybeSingle();
+  if(existing&&existing.id){
+    alert('Inventory already exists for this drug+form+strength. Use Restock on the existing row instead.');
+    btn.disabled=false;btn.textContent='Save';
+    return;
+  }
+  var {data:ins,error}=await SB.from('inventory_products').insert({
+    ingredient:w.ing,form:w.form,strength:strengthVal,unit:unit,on_hand:qty,notes:notes||null,
+    last_deducted_epoch:(typeof EP0!=='undefined'?Math.floor((Date.now()-EP0)/86400000):null)
+  }).select().single();
+  if(error){
+    alert('Save failed: '+error.message+(error.message.indexOf('inventory_products')>=0?'\n\nRun v7_inventory_migration.sql in Supabase first.':''));
+    btn.disabled=false;btn.textContent='Save';
+    return;
+  }
+  // Initial ledger entry
+  await SB.from('inventory_ledger').insert({product_id:ins.id,delta:qty,reason:'opening',actor:ME?ME.username:null,note:notes||'Opening stock'});
+  document.getElementById('inv-add-modal').hidden=true;
+  btn.disabled=false;btn.textContent='Save';
+  loadInventory();
+});
+
+// ---------- Unmapped SKUs modal ----------
+document.getElementById('inv-review-unmapped').addEventListener('click',function(e){
+  e.preventDefault();
+  _invOpenUnmapped();
+});
+
+function _invOpenUnmapped(){
+  var body=document.getElementById('inv-unm-body');
+  document.getElementById('inv-unm-modal').hidden=false;
+  if(!INV_STATE.unmapped.length){body.innerHTML='<div style="color:#16a34a;padding:8px 0">All SKUs have a detectable pack size. Nothing to review.</div>';return;}
+  var html='<div class="inv-unm-row" style="font-weight:700;color:#888;font-size:10px;text-transform:uppercase;border-bottom:2px solid #d8dce3;padding-bottom:6px">'+
+    '<div>SKU</div><div>Pack Size</div><div>Unit</div><div>Save</div></div>';
+  INV_STATE.unmapped.slice(0,200).forEach(function(pi){
+    var sku=P[pi];
+    html+='<div class="inv-unm-row" data-unm-sku="'+_esc(sku).replace(/"/g,'&quot;')+'">'+
+      '<div style="font-size:12px;color:#1a2035;overflow:hidden;text-overflow:ellipsis" title="'+_esc(sku)+'">'+_esc(sku)+'</div>'+
+      '<input type="number" class="unm-qty" placeholder="e.g. 100" step="any" min="0">'+
+      '<select class="unm-unit"><option value="tablets">tablets</option><option value="capsules">capsules</option><option value="ml">ml</option><option value="g">g</option><option value="chews">chews</option><option value="doses">doses</option><option value="bottles">bottles</option></select>'+
+      '<button class="abtn unm-save" style="padding:6px 10px;font-size:11px">Save</button>'+
+    '</div>';
+  });
+  if(INV_STATE.unmapped.length>200)html+='<div style="padding:8px;color:#888;font-size:11px">Showing first 200 of '+INV_STATE.unmapped.length+'.</div>';
+  body.innerHTML=html;
+}
+
+document.getElementById('inv-unm-body').addEventListener('click',async function(e){
+  var btn=e.target.closest('.unm-save');
+  if(!btn)return;
+  var row=btn.closest('.inv-unm-row');
+  var sku=row.getAttribute('data-unm-sku');
+  var qty=parseFloat(row.querySelector('.unm-qty').value);
+  var unit=row.querySelector('.unm-unit').value;
+  if(!qty||isNaN(qty)||qty<=0){alert('Enter pack size.');return;}
+  btn.disabled=true;btn.textContent='...';
+  var {error}=await SB.from('sku_pack_overrides').upsert({sku:sku,pack_size:qty,unit:unit,actor:ME?ME.username:null});
+  btn.disabled=false;btn.textContent='Save';
+  if(error){alert('Save failed: '+error.message);return;}
+  // Remove row visually
+  row.style.opacity='.4';row.style.pointerEvents='none';
+  btn.textContent='\u2713 Saved';
+  // Update in-memory override + re-parse
+  INV_STATE.overrides[sku]={pack_size:qty,unit:unit};
+  invBuildPackIndex();
+  _invRenderStats();
+});
+
+document.getElementById('inv-refresh').addEventListener('click',loadInventory);
+// ============================================================
+// END v7: DRUG INVENTORY
+// ============================================================
 
 // Edit Targets modal
 document.getElementById('tr-edit-targets').addEventListener('click',function(){
