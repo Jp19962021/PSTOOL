@@ -319,6 +319,27 @@ table.ptbl tr:last-child td{border-bottom:none}
 .esearch{text-align:center;padding:60px 20px;color:#bbb}
 .esearch .ei{font-size:48px;margin-bottom:12px}
 .section-card{background:#fff;border-radius:12px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,.07);border:1px solid #e8eaed;overflow:hidden}
+
+/* Permissions matrix (v6) */
+.pm-table{border-collapse:separate;border-spacing:0;font-size:12px;min-width:100%}
+.pm-table th,.pm-table td{padding:8px 10px;border-bottom:1px solid #edf0f5;text-align:center;white-space:nowrap}
+.pm-table thead th{background:#f7f8fa;font-weight:700;color:#1a2035;position:sticky;top:0;z-index:2;border-bottom:2px solid #d8dce3}
+.pm-table th.pm-user-h,.pm-table td.pm-user-c{text-align:left;padding-left:14px;padding-right:16px;position:sticky;left:0;background:#fff;z-index:1;border-right:1px solid #edf0f5;min-width:220px;max-width:260px;overflow:hidden;text-overflow:ellipsis}
+.pm-table thead th.pm-user-h{background:#f7f8fa;z-index:3}
+.pm-table tr:hover td{background:#fafbfc}
+.pm-table tr:hover td.pm-user-c{background:#fafbfc}
+.pm-uname{font-weight:600;color:#1a2035}
+.pm-urole{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:.05em;margin-left:6px}
+.pm-urole.adm{color:#b45309}
+.pm-cell{position:relative;cursor:pointer;user-select:none;min-width:44px}
+.pm-cell.dirty{background:#fff9db}
+.pm-chip{display:inline-block;width:22px;height:22px;line-height:20px;border-radius:6px;border:1.5px solid #d8dce3;background:#fff;font-size:13px;font-weight:700;color:#16a34a}
+.pm-cell[data-state="off"] .pm-chip{color:#dc2626;border-color:#f1c2c2;background:#fef2f2}
+.pm-cell[data-state="on"] .pm-chip{color:#16a34a;border-color:#bbf7d0;background:#f0fdf4}
+.pm-cell[data-state="inherit"] .pm-chip{color:#aaa;border-color:#e5e7eb;background:#fafbfc}
+.pm-cell[data-explicit="1"] .pm-chip{box-shadow:0 0 0 2px rgba(37,99,235,.18)}
+.pm-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:#666;margin-bottom:8px}
+.pm-legend span b{color:#1a2035}
 .sh{font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.07em;padding:14px 20px;border-bottom:1px solid #edf0f5;background:#f9fafc;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .sh .shc{background:#e8eaed;color:#666;border-radius:20px;padding:2px 9px;font-size:11px;font-weight:600}
 .mt{width:100%;border-collapse:collapse;font-size:13px}
@@ -1098,6 +1119,19 @@ table.ptbl tr:last-child td{border-bottom:none}
     </div>
   </div>
 
+  <!-- Permissions Matrix -->
+  <div class="section-card" style="margin-top:20px">
+    <div class="sh">&#128274; Tab Permissions
+      <span style="font-size:11px;color:#888;font-weight:500;margin-left:8px">Per-user overrides. Empty cells follow role defaults. Inherited = matches role default; Explicit = overridden.</span>
+      <button class="abtn" id="pm-save" style="margin-left:auto;background:#16a34a">Save Changes</button>
+      <button class="abtn" id="pm-reset" style="background:#e8eaed;color:#1a2035;margin-left:6px">Reset</button>
+    </div>
+    <div id="pm-msg" class="smsg2" style="margin:8px 16px 0"></div>
+    <div style="padding:12px 16px;overflow-x:auto">
+      <div id="pm-grid">Loading...</div>
+    </div>
+  </div>
+
   <!-- Admin: all reps' private notes & tasks -->
   <div class="section-card" style="margin-top:20px">
     <div class="sh">&#128221; All Reps' Private Notes &amp; Tasks
@@ -1141,6 +1175,41 @@ table.ptbl tr:last-child td{border-bottom:none}
 <script>
 var SB=supabase.createClient('https://kijoonuxbkpzejnqxnwl.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtpam9vbnV4YmtwemVqbnF4bndsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMzkyOTAsImV4cCI6MjA5MTkxNTI5MH0.tdTwDNLpY2jq16-NhmFwOj326d_UYpT4BlTyYoYSYVM');
 var ME=null,CUR=null,ALLREPS=[];
+
+// ---- v6: Custom permissions ----
+// TAB_CATALOG defines every tab that can be granted/revoked per user.
+// key = data-page attribute on the tab element
+// label = friendly name shown in the permissions UI
+// adminOnly = true if this tab defaults to admin-only (role-based default when no permission override is set)
+var TAB_CATALOG=[
+  {key:'search',      label:'Search',            adminOnly:false},
+  {key:'territory',   label:'Territory',         adminOnly:false},
+  {key:'winback',     label:'Win-Back',          adminOnly:false},
+  {key:'atrisk',      label:'At-Risk',           adminOnly:false},
+  {key:'churn',       label:'Churn Predictor',   adminOnly:false},
+  {key:'trends',      label:'Trends',            adminOnly:true},
+  {key:'drugsearch',  label:'Drug Search',       adminOnly:true},
+  {key:'notestasks',  label:'My Notes & Tasks',  adminOnly:false},
+  {key:'admin',       label:'Admin',             adminOnly:true},
+  {key:'chatbot',     label:'Chat Bot',          adminOnly:true}
+];
+
+// Resolve whether the current user (or a given rep record) can see a given tab.
+// Explicit permission override wins; otherwise fall back to role-based default.
+function canSee(tabKey,repRec){
+  var u=repRec||ME;
+  if(!u)return false;
+  var p=u.permissions;
+  if(p&&typeof p==='object'&&!Array.isArray(p)&&Object.prototype.hasOwnProperty.call(p,tabKey)){
+    return !!p[tabKey];
+  }
+  var meta=TAB_CATALOG.find(function(t){return t.key===tabKey;});
+  if(!meta)return false;
+  if(meta.adminOnly)return u.role==='admin';
+  return true;
+}
+// ---- end v6 ----
+
 var EP0=new Date(Date.UTC(2024,0,1)).getTime();
 var SI=[],WBL=[],ARL=[];
 var WORKER='https://fragrant-cloud-6ef2.jp-d4e.workers.dev';
@@ -1182,14 +1251,17 @@ async function login(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='block';
   document.getElementById('rbadge').textContent=data.name+(data.role==='admin'?' (Admin)':'');
-  if(data.role==='admin'){
-    document.getElementById('atab').style.display='';
-    document.getElementById('cbtab').style.display='';
-    document.getElementById('trtab').style.display='';
-    document.getElementById('dstab').style.display='';
-  }
+  applyTabVisibility();
   await logAction('login','Signed in');
   init();
+}
+
+// Show/hide every tab based on canSee(). Called after login and whenever permissions change.
+function applyTabVisibility(){
+  document.querySelectorAll('.tab[data-page]').forEach(function(t){
+    var key=t.dataset.page;
+    t.style.display=canSee(key)?'':'none';
+  });
 }
 document.getElementById('lout').addEventListener('click',function(){
   ME=null;
@@ -1205,12 +1277,12 @@ document.getElementById('lout').addEventListener('click',function(){
 
 document.querySelectorAll('.tab').forEach(function(t){
   t.addEventListener('click',function(){
-    if((t.dataset.page==='admin'||t.dataset.page==='chatbot'||t.dataset.page==='trends'||t.dataset.page==='drugsearch')&&(!ME||ME.role!=='admin'))return;
+    if(!canSee(t.dataset.page))return;
     document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
     document.querySelectorAll('.page').forEach(function(x){x.classList.remove('active');});
     t.classList.add('active');
     document.getElementById('page-'+t.dataset.page).classList.add('active');
-    if(t.dataset.page==='admin'){loadReps();loadActivity();loadScorecards(7);loadAdminNP();}
+    if(t.dataset.page==='admin'){loadReps();loadActivity();loadScorecards(7);loadAdminNP();loadPermissionsMatrix();}
     if(t.dataset.page==='chatbot'){
       if(aiPageChat&&aiPageChat.msgs.length===0)aiPageChat.renderStarters();
       loadPageChatHistory();
@@ -1855,7 +1927,8 @@ async function openEditRep(id){
       return;
     }
     modal.remove();
-    loadReps();
+    await loadReps();
+    loadPermissionsMatrix();
   });
   modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
 }
@@ -1865,7 +1938,8 @@ document.getElementById('rl2').addEventListener('click',async function(e){
   var b=e.target.closest('.drep[data-id]');if(!b)return;
   if(!confirm('Delete this rep? This cannot be undone.'))return;
   await SB.from('reps').delete().eq('id',b.getAttribute('data-id'));
-  loadReps();
+  await loadReps();
+  loadPermissionsMatrix();
 });
 document.getElementById('arb2').addEventListener('click',async function(){
   var n=document.getElementById('nn').value.trim(),u=document.getElementById('nu').value.trim(),p=document.getElementById('np').value.trim();
@@ -1897,7 +1971,199 @@ document.getElementById('arb2').addEventListener('click',async function(){
   document.getElementById('nn').value='';document.getElementById('nu').value='';document.getElementById('np').value='';
   document.getElementById('nrole').value='rep';
   renderRepPicker('nr-box',[]);
-  loadReps();setTimeout(function(){msg.textContent='';},6000);
+  await loadReps();
+  loadPermissionsMatrix();
+  setTimeout(function(){msg.textContent='';},6000);
+});
+
+// ============================================================
+// v6: Permissions Matrix
+// Renders a users x tabs grid. Each cell cycles: inherit -> on -> off -> inherit.
+// "inherit" = no override stored; tab visibility follows role defaults.
+// Saving writes the `permissions` JSONB only for users with any explicit override.
+// ============================================================
+var PM_STATE={}; // { repId: { tabKey: true|false } } — pending changes, mirrors permissions object
+
+function _pmInitialStateForRep(rep){
+  var p=rep.permissions;
+  if(!p||typeof p!=='object'||Array.isArray(p))return {};
+  var out={};
+  Object.keys(p).forEach(function(k){
+    if(typeof p[k]==='boolean')out[k]=p[k];
+  });
+  return out;
+}
+
+async function loadPermissionsMatrix(){
+  var grid=document.getElementById('pm-grid');
+  if(!grid)return;
+  grid.innerHTML='<div style="color:#aaa;font-size:13px;padding:8px 0">Loading...</div>';
+  // Use ALLREPS if already loaded (loadReps runs first), else fetch
+  var reps=ALLREPS;
+  if(!reps||!reps.length){
+    var {data}=await SB.from('reps').select('*').order('created_at');
+    reps=data||[];
+  }
+  PM_STATE={};
+  reps.forEach(function(r){PM_STATE[r.id]=_pmInitialStateForRep(r);});
+  document.getElementById('pm-msg').textContent='';
+  document.getElementById('pm-msg').className='smsg2';
+  _pmRender(reps);
+}
+
+function _pmRender(reps){
+  var grid=document.getElementById('pm-grid');
+  if(!reps||!reps.length){grid.innerHTML='<div style="color:#aaa;font-size:13px;padding:8px 0">No users yet</div>';return;}
+  var legend='<div class="pm-legend">'+
+    '<span><b style="color:#16a34a">&#10003;</b> allowed</span>'+
+    '<span><b style="color:#dc2626">&#10007;</b> denied</span>'+
+    '<span><b style="color:#aaa">&ndash;</b> inherit from role default</span>'+
+    '<span style="color:#2563eb"><b>blue ring</b> = explicit override (differs from role default)</span>'+
+    '<span style="color:#b45309"><b>yellow cell</b> = unsaved change</span>'+
+    '</div>';
+  var html=legend+'<table class="pm-table"><thead><tr>';
+  html+='<th class="pm-user-h">User</th>';
+  TAB_CATALOG.forEach(function(t){
+    html+='<th title="'+(t.adminOnly?'Admin-only by default':'Visible to all by default')+'">'+t.label+'</th>';
+  });
+  html+='</tr></thead><tbody>';
+  reps.forEach(function(r){
+    html+='<tr data-rep="'+r.id+'">';
+    html+='<td class="pm-user-c"><span class="pm-uname">'+_esc(r.name)+'</span>'+
+      '<span class="pm-urole'+(r.role==='admin'?' adm':'')+'">'+(r.role==='admin'?'admin':'rep')+'</span>'+
+      '<div style="font-size:10px;color:#aaa">@'+_esc(r.username)+'</div></td>';
+    TAB_CATALOG.forEach(function(t){
+      html+=_pmCellHtml(r,t.key);
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  grid.innerHTML=html;
+}
+
+function _esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+function _pmCellState(repId,tabKey){
+  var s=PM_STATE[repId];
+  if(!s||!Object.prototype.hasOwnProperty.call(s,tabKey))return 'inherit';
+  return s[tabKey]?'on':'off';
+}
+
+function _pmRoleDefault(rep,tabKey){
+  // What the tab would show if no override is set, given the rep's role
+  var fakeRep={role:rep.role,permissions:null};
+  return canSee(tabKey,fakeRep);
+}
+
+function _pmCellHtml(rep,tabKey){
+  var st=_pmCellState(rep.id,tabKey);
+  var chip=st==='on'?'&#10003;':st==='off'?'&#10007;':'&ndash;';
+  var explicit='0';
+  if(st!=='inherit'){
+    var roleDef=_pmRoleDefault(rep,tabKey);
+    var cur=(st==='on');
+    if(cur!==roleDef)explicit='1';
+  }
+  return '<td class="pm-cell" data-rep="'+rep.id+'" data-tab="'+tabKey+'" data-state="'+st+'" data-explicit="'+explicit+'"><span class="pm-chip">'+chip+'</span></td>';
+}
+
+// Cell click: cycle inherit -> on -> off -> inherit
+document.addEventListener('click',function(e){
+  var cell=e.target.closest('.pm-cell');
+  if(!cell)return;
+  var grid=document.getElementById('pm-grid');if(!grid||!grid.contains(cell))return;
+  var repId=cell.getAttribute('data-rep');
+  var tabKey=cell.getAttribute('data-tab');
+  var cur=cell.getAttribute('data-state');
+  var next=cur==='inherit'?'on':cur==='on'?'off':'inherit';
+  if(!PM_STATE[repId])PM_STATE[repId]={};
+  if(next==='inherit'){delete PM_STATE[repId][tabKey];}
+  else{PM_STATE[repId][tabKey]=(next==='on');}
+  // Re-render just this cell
+  var rep=(ALLREPS||[]).find(function(r){return String(r.id)===String(repId);})||{id:repId,role:'rep',permissions:null};
+  var tmp=document.createElement('tbody');
+  tmp.innerHTML='<tr>'+_pmCellHtml(rep,tabKey)+'</tr>';
+  var nc=tmp.firstChild.firstChild;
+  nc.classList.add('dirty');
+  cell.parentNode.replaceChild(nc,cell);
+});
+
+async function _pmSave(){
+  var btn=document.getElementById('pm-save');
+  var msg=document.getElementById('pm-msg');
+  btn.disabled=true;btn.textContent='Saving...';
+  msg.className='smsg2';msg.textContent='';
+  try{
+    var repsToUpdate=[];
+    (ALLREPS||[]).forEach(function(r){
+      var cur=PM_STATE[r.id]||{};
+      var orig=_pmInitialStateForRep(r);
+      // Compare keys to decide if an update is needed
+      var curKeys=Object.keys(cur),origKeys=Object.keys(orig);
+      var changed=curKeys.length!==origKeys.length;
+      if(!changed){
+        for(var i=0;i<curKeys.length;i++){
+          if(cur[curKeys[i]]!==orig[curKeys[i]]){changed=true;break;}
+        }
+      }
+      if(changed){
+        // Store null when empty so role defaults apply cleanly
+        var newVal=Object.keys(cur).length?cur:null;
+        repsToUpdate.push({id:r.id,permissions:newVal});
+      }
+    });
+    if(!repsToUpdate.length){
+      msg.className='smsg2 ok';msg.textContent='No changes to save.';
+      btn.disabled=false;btn.textContent='Save Changes';
+      setTimeout(function(){msg.textContent='';},4000);
+      return;
+    }
+    var errors=[];
+    for(var j=0;j<repsToUpdate.length;j++){
+      var u=repsToUpdate[j];
+      var {error}=await SB.from('reps').update({permissions:u.permissions}).eq('id',u.id);
+      if(error)errors.push({id:u.id,error:error});
+    }
+    if(errors.length){
+      console.error('[permissions save] errors:',errors);
+      var firstErr=errors[0].error;
+      var em=(firstErr.message||'').toLowerCase();
+      if(em.indexOf('permissions')>=0||em.indexOf('column')>=0){
+        msg.className='smsg2 er';msg.textContent='Database is missing the permissions column. Run the v6 migration in Supabase: ALTER TABLE reps ADD COLUMN permissions JSONB DEFAULT NULL;';
+      } else if(em.indexOf('row-level security')>=0||em.indexOf('rls')>=0||em.indexOf('policy')>=0){
+        msg.className='smsg2 er';msg.textContent='Permission denied by Supabase RLS. Add an UPDATE policy on reps or disable RLS.';
+      } else {
+        msg.className='smsg2 er';msg.textContent='Save failed on '+errors.length+' row(s): '+(firstErr.message||JSON.stringify(firstErr));
+      }
+      btn.disabled=false;btn.textContent='Save Changes';
+      return;
+    }
+    // Update ALLREPS in memory so the grid reflects saved state without a full reload
+    repsToUpdate.forEach(function(u){
+      var r=ALLREPS.find(function(x){return x.id===u.id;});
+      if(r)r.permissions=u.permissions;
+    });
+    // If the current user's own permissions were changed, refresh their tabs too
+    if(ME){
+      var selfUpdate=repsToUpdate.find(function(u){return u.id===ME.id;});
+      if(selfUpdate){ME.permissions=selfUpdate.permissions;applyTabVisibility();}
+    }
+    msg.className='smsg2 ok';msg.textContent='Saved changes to '+repsToUpdate.length+' user'+(repsToUpdate.length===1?'':'s')+'.';
+    btn.disabled=false;btn.textContent='Save Changes';
+    // Re-render grid so dirty highlights clear
+    _pmRender(ALLREPS);
+    setTimeout(function(){msg.textContent='';},5000);
+  }catch(ex){
+    console.error('[permissions save] exception:',ex);
+    msg.className='smsg2 er';msg.textContent='Unexpected error: '+(ex.message||ex);
+    btn.disabled=false;btn.textContent='Save Changes';
+  }
+}
+
+document.getElementById('pm-save').addEventListener('click',_pmSave);
+document.getElementById('pm-reset').addEventListener('click',function(){
+  if(!confirm('Discard unsaved permission changes?'))return;
+  loadPermissionsMatrix();
 });
 
 async function loadActivity(){
@@ -2407,7 +2673,7 @@ var DS_SELECTED=new Set(); // selected ingredient names
 var DS_CHARTS={};
 
 function loadDrugSearch(){
-  if(!ME||ME.role!=='admin')return;
+  if(!canSee('drugsearch'))return;
   if(!DS_INGS)dsBuildIndex();
   dsRenderList();
   dsRenderResults();
@@ -2742,7 +3008,7 @@ document.addEventListener('DOMContentLoaded',function(){
 });
 
 async function loadTrends(){
-  if(!ME||ME.role!=='admin')return;
+  if(!canSee('trends'))return;
   trLoadTargets();
   // Init rep filter dropdown (preserves selection across reloads)
   var repSel=document.getElementById('tr-rep');
