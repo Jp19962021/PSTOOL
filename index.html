@@ -805,6 +805,7 @@ table.ptbl tr:last-child td{border-bottom:none}
   <div class="tab admin-tab" data-page="actionplan" id="aptab" style="display:none">&#127919; Action Plan</div>
   <div class="tab admin-tab" data-page="drugsearch" id="dstab" style="display:none">&#128269; Drug Search</div>
   <div class="tab admin-tab" data-page="inventory" id="invtab" style="display:none">&#128230; Drug Inventory</div>
+  <div class="tab admin-tab" data-page="ar" id="artab" style="display:none">&#128185; Receivables</div>
   <div class="tab" data-page="notestasks">&#128221; My Notes &amp; Tasks</div>
   <div class="tab admin-tab" data-page="admin" id="atab" style="display:none">&#9881; Admin</div>
   <div class="tab admin-tab" data-page="chatbot" id="cbtab" style="display:none">&#129302; Chat Bot</div>
@@ -1422,9 +1423,56 @@ table.ptbl tr:last-child td{border-bottom:none}
   </div>
 </div></div>
 
-</div>
+<!-- AR / RECEIVABLES TAB (admin only) -->
+<div id="page-ar" class="page"><div class="container">
+  <div class="ch-filter-row" style="margin-bottom:14px">
+    <div><label>Rep Filter</label>
+      <select id="ar-rep"><option value="">All Reps</option></select>
+    </div>
+    <div><label>Status</label>
+      <select id="ar-status">
+        <option value="">All</option>
+        <option value="overdue">Overdue</option>
+        <option value="open">Open</option>
+        <option value="partially_paid">Partially Paid</option>
+      </select>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <button class="abtn" id="ar-refresh">&#8635; Refresh</button>
+      <button class="abtn" id="ar-export" style="background:#16a34a">&#128196; Export CSV</button>
+    </div>
+  </div>
 
-<!-- Inventory: Add Product Modal -->
+  <!-- Summary strip -->
+  <div class="ch-hero" id="ar-hero" style="margin-bottom:20px"></div>
+
+  <!-- Table -->
+  <div class="ch-table-wrap">
+    <div class="sh">&#128185; Outstanding Invoices <span class="shc" id="ar-count">0</span>
+      <div style="margin-left:auto;font-size:11px;color:#888;font-weight:400">Sorted by days overdue</div>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="ch-tbl" id="ar-tbl">
+        <thead><tr>
+          <th>Clinic</th>
+          <th>Rep</th>
+          <th>Invoice #</th>
+          <th>Invoice Date</th>
+          <th>Due Date</th>
+          <th style="text-align:right">Total</th>
+          <th style="text-align:right">Balance Due</th>
+          <th>Days Overdue</th>
+          <th>Status</th>
+          <th></th>
+        </tr></thead>
+        <tbody id="ar-tbody"></tbody>
+      </table>
+    </div>
+    <div class="ch-help">&#128161; Click any row to open the clinic profile.</div>
+  </div>
+</div></div>
+
+</div>
 <div id="inv-add-modal" class="inv-modal" hidden>
   <div class="inv-modal-card" style="max-width:540px">
     <div class="inv-modal-hdr">
@@ -1549,7 +1597,8 @@ var TAB_CATALOG=[
   {key:'inventory',   label:'Drug Inventory',    adminOnly:true},
   {key:'notestasks',  label:'My Notes & Tasks',  adminOnly:false},
   {key:'admin',       label:'Admin',             adminOnly:true},
-  {key:'chatbot',     label:'Chat Bot',          adminOnly:true}
+  {key:'chatbot',     label:'Chat Bot',          adminOnly:true},
+  {key:'ar',          label:'Receivables',       adminOnly:true}
 ];
 
 // Resolve whether the current user (or a given rep record) can see a given tab.
@@ -1651,6 +1700,7 @@ document.querySelectorAll('.tab').forEach(function(t){
     if(t.dataset.page==='actionplan'){loadActionPlan();}
     if(t.dataset.page==='drugsearch'){loadDrugSearch();}
     if(t.dataset.page==='inventory'){loadInventory();}
+    if(t.dataset.page==='ar'){loadAR();}
   });
 });
 
@@ -5445,6 +5495,154 @@ document.getElementById('tr-target-save').addEventListener('click',function(){
 // =========================================================
 // INIT
 // =========================================================
+
+// ============================================================
+// AR / RECEIVABLES TAB (admin only)
+// ============================================================
+var AR_DATA = null;
+
+async function loadAR(){
+  if(!canSee('ar'))return;
+  var tbody=document.getElementById('ar-tbody');
+  var hero=document.getElementById('ar-hero');
+  tbody.innerHTML='<tr><td colspan="10" style="padding:20px;text-align:center;color:#aaa">Loading...</td></tr>';
+  hero.innerHTML='';
+  document.getElementById('ar-count').textContent='...';
+
+  // Populate rep filter once
+  var repSel=document.getElementById('ar-rep');
+  if(repSel.options.length<=1){
+    REPS.forEach(function(r){var o=document.createElement('option');o.value=r;o.textContent=r;repSel.appendChild(o);});
+  }
+
+  try{
+    var resp=await fetch(WORKER+'/ar',{method:'GET',headers:{'Content-Type':'application/json'}});
+    var j=await resp.json();
+    if(!j.success){
+      tbody.innerHTML='<tr><td colspan="10" style="padding:20px;text-align:center;color:#dc2626">Error: '+_esc(j.error||'Unknown error')+'</td></tr>';
+      return;
+    }
+    AR_DATA=j;
+    _arRender();
+  }catch(e){
+    tbody.innerHTML='<tr><td colspan="10" style="padding:20px;text-align:center;color:#dc2626">Failed to load: '+_esc(e.message)+'</td></tr>';
+  }
+}
+
+function _arRender(){
+  if(!AR_DATA)return;
+  var repFilter=document.getElementById('ar-rep').value;
+  var statusFilter=document.getElementById('ar-status').value;
+
+  // Filter invoices
+  var invoices=AR_DATA.invoices.filter(function(inv){
+    if(statusFilter&&inv.status!==statusFilter)return false;
+    if(repFilter){
+      // Match by clinic -> rep lookup in KA
+      var ci=C.indexOf(inv.customer_name);
+      if(ci<0)return true; // unknown clinic, show anyway
+      var ka=KA[ci]||[-1];
+      var rep=ka[0]>=0?REPS[ka[0]]:'';
+      if(rep!==repFilter)return false;
+    }
+    return true;
+  });
+
+  // Recompute summary for filtered set
+  var sumTotal=0,sumCurrent=0,sum30=0,sum60=0,sum90=0;
+  invoices.forEach(function(inv){
+    sumTotal+=inv.balance;
+    if(inv.days_overdue<=0)sumCurrent+=inv.balance;
+    else if(inv.days_overdue<=30)sum30+=inv.balance;
+    else if(inv.days_overdue<=60)sum60+=inv.balance;
+    else sum90+=inv.balance;
+  });
+
+  // Hero cards
+  var hero=document.getElementById('ar-hero');
+  hero.innerHTML=[
+    {label:'Total Outstanding',val:sumTotal,sub:invoices.length+' invoices',cls:''},
+    {label:'Current',val:sumCurrent,sub:'Not yet due',cls:'healthy'},
+    {label:'1–30 Days',val:sum30,sub:'Overdue',cls:'watch'},
+    {label:'31–60 Days',val:sum60,sub:'Overdue',cls:'slipping'},
+    {label:'60+ Days',val:sum90,sub:'Overdue',cls:'critical'},
+  ].map(function(c){
+    return '<div class="ch-hero-card '+c.cls+'">'+
+      '<div class="ch-hv">'+trFmtUSD(c.val)+'</div>'+
+      '<div class="ch-hv-sub">'+c.sub+'</div>'+
+      '<div class="ch-hl">'+c.label+'</div>'+
+    '</div>';
+  }).join('');
+
+  document.getElementById('ar-count').textContent=invoices.length;
+
+  // Table
+  var tbody=document.getElementById('ar-tbody');
+  tbody.innerHTML='';
+  if(!invoices.length){
+    tbody.innerHTML='<tr><td colspan="10" style="padding:30px;text-align:center;color:#aaa">No outstanding invoices found.</td></tr>';
+    return;
+  }
+
+  invoices.forEach(function(inv){
+    var ci=C.indexOf(inv.customer_name);
+    var ka=ci>=0?(KA[ci]||[-1]):[-1];
+    var rep=ka[0]>=0?REPS[ka[0]]:'—';
+    var overdueCls=inv.days_overdue>60?'critical':inv.days_overdue>30?'slipping':inv.days_overdue>0?'watch':'';
+    var statusBadge='<span class="ch-tier-badge '+overdueCls+'" style="'+(overdueCls?'':'background:#e8eaed;color:#555')+'">'+inv.status.replace('_',' ')+'</span>';
+    var overdueDisplay=inv.days_overdue>0?'<span style="font-weight:700;color:'+(inv.days_overdue>60?'#dc2626':inv.days_overdue>30?'#f59e0b':'#3b82f6')+'">'+inv.days_overdue+'d</span>':'<span style="color:#16a34a">current</span>';
+    var tr=document.createElement('tr');
+    tr.className=overdueCls;
+    if(ci>=0)tr.dataset.idx=ci;
+    tr.innerHTML=
+      '<td><div class="pn">'+_esc(inv.customer_name)+'</div></td>'+
+      '<td style="color:#666">'+_esc(rep)+'</td>'+
+      '<td style="color:#888;font-size:12px">'+_esc(inv.invoice_number||'—')+'</td>'+
+      '<td style="color:#888;font-size:12px;white-space:nowrap">'+_esc(inv.invoice_date||'—')+'</td>'+
+      '<td style="color:#888;font-size:12px;white-space:nowrap">'+_esc(inv.due_date||'—')+'</td>'+
+      '<td style="text-align:right">'+trFmtUSD(inv.total)+'</td>'+
+      '<td style="text-align:right;font-weight:700;color:#dc2626">'+trFmtUSD(inv.balance)+'</td>'+
+      '<td style="text-align:center">'+overdueDisplay+'</td>'+
+      '<td>'+statusBadge+'</td>'+
+      '<td>'+(ci>=0?'<button class="vbtn" data-idx="'+ci+'">View &#8594;</button>':'')+'</td>';
+    tbody.appendChild(tr);
+  });
+
+  // Store filtered for CSV
+  AR_DATA._filtered=invoices;
+}
+
+// AR CSV export
+document.getElementById('ar-export').addEventListener('click',function(){
+  if(!AR_DATA||!AR_DATA._filtered){alert('Load AR data first.');return;}
+  var headers=['Clinic','Rep','Invoice #','Invoice Date','Due Date','Total','Balance Due','Days Overdue','Status'];
+  var rows=AR_DATA._filtered.map(function(inv){
+    var ci=C.indexOf(inv.customer_name);
+    var ka=ci>=0?(KA[ci]||[-1]):[-1];
+    var rep=ka[0]>=0?REPS[ka[0]]:'';
+    return [inv.customer_name,rep,inv.invoice_number||'',inv.invoice_date||'',inv.due_date||'',inv.total,inv.balance,inv.days_overdue,inv.status];
+  });
+  var csv=_csvFormatRows(headers,rows);
+  var today=new Date();
+  var dateStr=today.getUTCFullYear()+'-'+String(today.getUTCMonth()+1).padStart(2,'0')+'-'+String(today.getUTCDate()).padStart(2,'0');
+  _csvDownload('receivables_'+dateStr+'.csv',csv);
+});
+
+document.getElementById('ar-refresh').addEventListener('click',function(){AR_DATA=null;loadAR();});
+document.getElementById('ar-rep').addEventListener('change',_arRender);
+document.getElementById('ar-status').addEventListener('change',_arRender);
+
+// Click row -> open clinic
+document.getElementById('ar-tbody').addEventListener('click',function(e){
+  var btn=e.target.closest('.vbtn');
+  if(btn){openPanel(parseInt(btn.dataset.idx));return;}
+  var tr=e.target.closest('tr');
+  if(tr&&tr.dataset.idx)openPanel(parseInt(tr.dataset.idx));
+});
+// ============================================================
+// END AR TAB
+// ============================================================
+
 function init(){
   for(var i=0;i<C.length;i++){var k=KA[i]||[];var r=k[0]>=0?REPS[k[0]]:'';SI.push([C[i],r,k[1]||'',k[2]||'',k[3]||'',k[4]||'',k[5]||'',k[6]||''].join(' ').toLowerCase());}
   document.getElementById('smsg').textContent=C.length.toLocaleString()+' clinics loaded.';
