@@ -4064,12 +4064,17 @@ async function _apRefreshFromZoho(){
   // Also need customer names for the IDs we get back
   var sqlCustomers='SELECT "Customer ID", "Display Name" AS name FROM "Customers"';
 
-  var [rescueR,expandR,pitchR,custR]=await Promise.all([
-    _apCallWorkerQuery(sqlRescue),
-    _apCallWorkerQuery(sqlExpand),
-    _apCallWorkerQuery(sqlPitch),
-    _apCallWorkerQuery(sqlCustomers)
-  ]);
+  // Run queries SEQUENTIALLY (not Promise.all) to avoid hitting Zoho's OAuth rate limit.
+  // Zoho limits token refreshes to ~10/min; parallel calls from a cold worker fire 4 refreshes in 1 sec.
+  // First call primes the token cache; subsequent 3 reuse it.
+  document.getElementById('ap-refresh-info').innerHTML='<b>Querying Zoho Analytics...</b> Step 1/4: customer names';
+  var custR=await _apCallWorkerQuery(sqlCustomers);
+  document.getElementById('ap-refresh-info').innerHTML='<b>Querying Zoho Analytics...</b> Step 2/4: rescue candidates';
+  var rescueR=await _apCallWorkerQuery(sqlRescue);
+  document.getElementById('ap-refresh-info').innerHTML='<b>Querying Zoho Analytics...</b> Step 3/4: expand candidates';
+  var expandR=await _apCallWorkerQuery(sqlExpand);
+  document.getElementById('ap-refresh-info').innerHTML='<b>Querying Zoho Analytics...</b> Step 4/4: pitch candidates';
+  var pitchR=await _apCallWorkerQuery(sqlPitch);
 
   // Build ID -> name map
   var idToName={};
