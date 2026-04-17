@@ -103,7 +103,7 @@ def fetch_all_line_items(token):
         params = {
             'date_start': chunk_start.strftime('%Y-%m-%d'),
             'date_end':   chunk_end.strftime('%Y-%m-%d'),
-            'status':     'paid,sent,overdue,viewed',
+
             'sort_column':'date',
         }
         print(f'  chunk {chunk_start} → {chunk_end}', end=' ', flush=True)
