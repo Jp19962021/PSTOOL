@@ -137,17 +137,23 @@ table.ptbl tr:last-child td{border-bottom:none}
 .sku-count-pill{display:inline-block;font-size:10px;background:#eef0f5;color:#555;padding:1px 7px;border-radius:10px;margin-left:8px;font-weight:500}
 .partial-pill{display:inline-block;font-size:9px;background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:10px;margin-left:6px;font-weight:600;letter-spacing:0.02em;cursor:help}
 /* TRENDS TAB */
-.tr-target-card{background:linear-gradient(135deg,#1a2035 0%,#2d3754 100%);color:#fff;border-radius:14px;padding:24px 28px;margin-bottom:20px;display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:20px;align-items:center;box-shadow:0 4px 18px rgba(26,32,53,.18);position:relative;overflow:hidden}
+.tr-target-card{background:linear-gradient(135deg,#1a2035 0%,#2d3754 100%);color:#fff;border-radius:14px;padding:20px 24px;margin-bottom:20px;display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr 1fr;gap:18px;align-items:center;box-shadow:0 4px 18px rgba(26,32,53,.18);position:relative;overflow:hidden}
 .tr-target-card::before{content:'';position:absolute;top:-30%;right:-10%;width:280px;height:280px;background:radial-gradient(circle,rgba(255,255,255,.06) 0%,transparent 70%);pointer-events:none}
-.tr-target-card .tr-tt{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#a4adc7;font-weight:600;margin-bottom:6px}
-.tr-target-card .tr-tv{font-size:28px;font-weight:700;color:#fff;line-height:1.1;letter-spacing:-.02em}
+.tr-target-card .tr-tt{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#a4adc7;font-weight:600;margin-bottom:6px;white-space:nowrap}
+.tr-target-card .tr-tv{font-size:24px;font-weight:700;color:#fff;line-height:1.1;letter-spacing:-.02em}
 .tr-target-card .tr-tv.muted{color:#c4c9da;font-size:22px;font-weight:600}
-.tr-target-card .tr-ts{font-size:11px;color:#a4adc7;margin-top:4px}
-.tr-target-card .tr-edit{position:absolute;top:14px;right:16px;background:rgba(255,255,255,.12);border:none;color:#fff;padding:5px 11px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:500}
+.tr-target-card .tr-tv.big{font-size:28px}
+.tr-target-card .tr-ts{font-size:11px;color:#a4adc7;margin-top:4px;line-height:1.3}
+.tr-target-card .tr-edit{position:absolute;top:12px;right:14px;background:rgba(255,255,255,.12);border:none;color:#fff;padding:5px 11px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:500}
 .tr-target-card .tr-edit:hover{background:rgba(255,255,255,.22)}
-.tr-target-card .tr-pace{font-size:13px;font-weight:600;margin-top:2px}
+.tr-target-card .tr-delta-line{font-size:11px;font-weight:600;margin-top:4px;line-height:1.3}
+.tr-target-card .tr-delta-line.up{color:#86efac}
+.tr-target-card .tr-delta-line.down{color:#fca5a5}
+.tr-target-card .tr-delta-line.flat{color:#cbd2e3}
+.tr-target-card .tr-pace{font-size:12px;font-weight:600;margin-top:2px}
 .tr-target-card .tr-pace.ahead{color:#86efac}.tr-target-card .tr-pace.behind{color:#fca5a5}.tr-target-card .tr-pace.ontrack{color:#fde68a}
-@media(max-width:900px){.tr-target-card{grid-template-columns:1fr 1fr;gap:14px}}
+@media(max-width:1200px){.tr-target-card{grid-template-columns:1fr 1fr 1fr;gap:14px}}
+@media(max-width:700px){.tr-target-card{grid-template-columns:1fr 1fr;gap:14px}}
 .tr-section{margin-bottom:24px}
 .tr-section-title{font-size:14px;font-weight:700;color:#1a2035;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .tr-section-title .tr-sub{font-size:11px;color:#888;font-weight:400;margin-left:auto}
@@ -671,23 +677,28 @@ table.ptbl tr:last-child td{border-bottom:none}
     <button class="tr-edit" id="tr-edit-targets">Edit Targets</button>
     <div>
       <div class="tr-tt">2026 Goal</div>
-      <div class="tr-tv" id="tr-target-yr">$6.0M</div>
+      <div class="tr-tv big" id="tr-target-yr">$6.0M</div>
       <div class="tr-ts" id="tr-target-stretch">2027 stretch: $10M</div>
     </div>
     <div>
       <div class="tr-tt">YTD Actual</div>
       <div class="tr-tv muted" id="tr-ytd">$0</div>
-      <div class="tr-ts" id="tr-ytd-sub">vs goal</div>
+      <div class="tr-ts" id="tr-ytd-sub">— of goal</div>
     </div>
     <div>
-      <div class="tr-tt">Annualized Pace</div>
+      <div class="tr-tt" id="tr-lcm-label">Last Month</div>
+      <div class="tr-tv muted" id="tr-lcm-val">$0</div>
+      <div class="tr-delta-line flat" id="tr-lcm-delta">vs last yr</div>
+    </div>
+    <div>
+      <div class="tr-tt" id="tr-mtd-label">Month to Date</div>
+      <div class="tr-tv muted" id="tr-mtd-val">$0</div>
+      <div class="tr-delta-line flat" id="tr-mtd-delta">vs same days last yr</div>
+    </div>
+    <div>
+      <div class="tr-tt">On-Pace Forecast</div>
       <div class="tr-tv muted" id="tr-pace-val">$0</div>
-      <div class="tr-pace ontrack" id="tr-pace-status">on pace</div>
-    </div>
-    <div>
-      <div class="tr-tt">Gap to Goal</div>
-      <div class="tr-tv muted" id="tr-gap">$0</div>
-      <div class="tr-ts" id="tr-gap-sub">to hit target</div>
+      <div class="tr-pace ontrack" id="tr-pace-status">— of goal</div>
     </div>
   </div>
 
@@ -2124,8 +2135,8 @@ async function loadTrends(){
   var todayDate=new Date();
   var thisYear=todayDate.getUTCFullYear();
   var thisMonth=todayDate.getUTCMonth(); // 0-indexed
-  // Build per-month and per-week aggregates across all data
-  var monthRev={},monthYearTot={},weekRev={};
+  // Build per-month, per-week, per-day aggregates across all data
+  var monthRev={},monthYearTot={},weekRev={},dayRev={};
   for(var ci=0;ci<C.length;ci++){
     var rows=D[C[ci]]||[];
     for(var ri=0;ri<rows.length;ri++){
@@ -2135,26 +2146,84 @@ async function loadTrends(){
       monthYearTot[r[0]+2020]=(monthYearTot[r[0]+2020]||0)+r[2];
       var wk=trWeekKey(r[3]);
       weekRev[wk]=(weekRev[wk]||0)+r[2];
+      // ISO date for per-day lookups (used for same-MTD-slice comparisons)
+      var dd=new Date(EP0+r[3]*86400000);
+      var dayKey=dd.getUTCFullYear()+'-'+String(dd.getUTCMonth()+1).padStart(2,'0')+'-'+String(dd.getUTCDate()).padStart(2,'0');
+      dayRev[dayKey]=(dayRev[dayKey]||0)+r[2];
     }
   }
   // ----- Growth Target Hero -----
   var ytd=monthYearTot[thisYear]||0;
-  var dayOfYear=Math.floor((Date.now()-Date.UTC(thisYear,0,1))/86400000)+1;
-  var pace=ytd*(365/Math.max(1,dayOfYear));
   var target=TR_TARGETS.year2026;
-  var gap=target-pace;
-  var pct=target?Math.round((pace/target)*100):0;
+
+  // Last completed month (e.g. if today is mid-April 2026, this is March 2026)
+  var lcmDate=new Date(Date.UTC(thisYear,thisMonth-1,1));
+  var lcmKey=lcmDate.getUTCFullYear()+'-'+String(lcmDate.getUTCMonth()+1).padStart(2,'0');
+  var lcmYoyKey=(lcmDate.getUTCFullYear()-1)+'-'+String(lcmDate.getUTCMonth()+1).padStart(2,'0');
+  var lcmVal=monthRev[lcmKey]||0;
+  var lcmYoyVal=monthRev[lcmYoyKey]||0;
+  var lcmDelta=lcmYoyVal>0?((lcmVal-lcmYoyVal)/lcmYoyVal)*100:(lcmVal>0?100:0);
+  var lcmLabel=lcmDate.toLocaleDateString('en-US',{month:'long',year:'numeric',timeZone:'UTC'});
+
+  // Current month to date — sum all days in current month so far
+  var mtdVal=0,mtdYoyVal=0;
+  var dayOfMonth=todayDate.getUTCDate(); // 1..31
+  for(var d=1;d<=dayOfMonth;d++){
+    var dKey=thisYear+'-'+String(thisMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var yKey=(thisYear-1)+'-'+String(thisMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    mtdVal+=dayRev[dKey]||0;
+    mtdYoyVal+=dayRev[yKey]||0;
+  }
+  var mtdDelta=mtdYoyVal>0?((mtdVal-mtdYoyVal)/mtdYoyVal)*100:(mtdVal>0?100:0);
+  var mtdLabel=todayDate.toLocaleDateString('en-US',{month:'long',timeZone:'UTC'})+' MTD';
+  var mtdYoyDayLabel=todayDate.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
+
+  // On-Pace Forecast: use the trailing 3 completed months × 4 (annualized run rate),
+  // not naive YTD × (365/dayOfYear) which spikes early in the year.
+  var trailing3=0,trailing3Count=0;
+  for(var m=1;m<=3;m++){
+    var pd=new Date(Date.UTC(thisYear,thisMonth-m,1));
+    var pKey=pd.getUTCFullYear()+'-'+String(pd.getUTCMonth()+1).padStart(2,'0');
+    if(monthRev[pKey]!=null){trailing3+=monthRev[pKey];trailing3Count++;}
+  }
+  var pace;
+  if(trailing3Count>=2){
+    var avgMonth=trailing3/trailing3Count;
+    pace=avgMonth*12;
+  } else {
+    // Fallback: YTD × (12 / months elapsed including current as half)
+    var monthsElapsed=thisMonth+1; // 0-indexed → +1 for human count, current month counts as full
+    pace=monthsElapsed>0?ytd*(12/monthsElapsed):0;
+  }
+  var pacePct=target?Math.round((pace/target)*100):0;
+
+  // Render
   document.getElementById('tr-target-yr').textContent=trFmtUSD(target);
   document.getElementById('tr-target-stretch').textContent='2027 stretch: '+trFmtUSD(TR_TARGETS.year2027);
   document.getElementById('tr-ytd').textContent=trFmtUSD(ytd);
   document.getElementById('tr-ytd-sub').textContent=Math.round((ytd/target)*100)+'% of '+thisYear+' goal';
+
+  document.getElementById('tr-lcm-label').textContent=lcmLabel;
+  document.getElementById('tr-lcm-val').textContent=trFmtUSD(lcmVal);
+  var lcmDeltaEl=document.getElementById('tr-lcm-delta');
+  var lcmCls=lcmDelta>=5?'up':(lcmDelta<=-5?'down':'flat');
+  var lcmSym=lcmDelta>=0?'▲':'▼';
+  lcmDeltaEl.className='tr-delta-line '+lcmCls;
+  lcmDeltaEl.textContent=lcmSym+' '+(lcmDelta>=0?'+':'')+Math.round(lcmDelta)+'% vs '+(lcmDate.getUTCFullYear()-1);
+
+  document.getElementById('tr-mtd-label').textContent=mtdLabel;
+  document.getElementById('tr-mtd-val').textContent=trFmtUSD(mtdVal);
+  var mtdDeltaEl=document.getElementById('tr-mtd-delta');
+  var mtdCls=mtdDelta>=5?'up':(mtdDelta<=-5?'down':'flat');
+  var mtdSym=mtdDelta>=0?'▲':'▼';
+  mtdDeltaEl.className='tr-delta-line '+mtdCls;
+  mtdDeltaEl.textContent=mtdSym+' '+(mtdDelta>=0?'+':'')+Math.round(mtdDelta)+'% vs '+mtdYoyDayLabel+' '+(thisYear-1);
+
   document.getElementById('tr-pace-val').textContent=trFmtUSD(pace);
   var paceEl=document.getElementById('tr-pace-status');
-  if(pct>=100){paceEl.textContent='✓ '+pct+'% of goal pace';paceEl.className='tr-pace ahead';}
-  else if(pct>=90){paceEl.textContent=pct+'% of goal pace';paceEl.className='tr-pace ontrack';}
-  else{paceEl.textContent=pct+'% of goal pace';paceEl.className='tr-pace behind';}
-  document.getElementById('tr-gap').textContent=gap>0?trFmtUSD(gap):trFmtUSD(0);
-  document.getElementById('tr-gap-sub').textContent=gap>0?'still needed in '+thisYear:'goal already met!';
+  if(pacePct>=100){paceEl.textContent='✓ '+pacePct+'% of goal · '+(pace>target?'+':'')+trFmtUSD(pace-target);paceEl.className='tr-pace ahead';}
+  else if(pacePct>=90){paceEl.textContent=pacePct+'% of goal · gap '+trFmtUSD(target-pace);paceEl.className='tr-pace ontrack';}
+  else{paceEl.textContent=pacePct+'% of goal · gap '+trFmtUSD(target-pace);paceEl.className='tr-pace behind';}
 
   // ----- Heartbeat: last 12 months + YoY overlay -----
   var months=[];
