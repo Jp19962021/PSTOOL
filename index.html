@@ -120,9 +120,21 @@ table.ptbl{width:100%;border-collapse:collapse;font-size:12px}
 table.ptbl th{text-align:left;font-size:10px;font-weight:600;color:#888;padding:7px 10px;border-bottom:1px solid #edf0f5;white-space:nowrap;text-transform:uppercase;background:#fafbfc}
 table.ptbl td{padding:6px 10px;border-bottom:1px solid #f3f4f6;vertical-align:top}
 table.ptbl tr:last-child td{border-bottom:none}
-.pgrp td{background:#f9fafc!important;font-weight:600;color:#1a2035;padding-top:10px!important}
-.orow td{padding:4px 10px 4px 20px!important;color:#555}
+.pgrp td{background:#f9fafc!important;font-weight:600;color:#1a2035;padding-top:10px!important;cursor:pointer}
+.pgrp:hover td{background:#f1f4f9!important}
+.pgrp .ptoggle{display:inline-block;width:14px;font-size:10px;color:#888;transition:transform 0.15s}
+.pgrp.open .ptoggle{transform:rotate(90deg)}
+.psku td{background:#fbfcfd!important;padding:5px 10px 5px 28px!important;font-size:11px;color:#333;border-bottom:1px dashed #eef0f3!important;cursor:pointer}
+.psku:hover td{background:#f4f7fb!important}
+.psku .skuname{color:#667;font-weight:500}
+.psku .skustat{font-size:9px;font-weight:600;padding:1px 6px;border-radius:10px;margin-left:6px}
+.psku .skustat.act{background:#dcfce7;color:#16a34a}
+.psku .skustat.stp{background:#fee2e2;color:#dc2626}
+.psku .skustat.pst{background:#fef9c3;color:#854d0e}
+.orow td{padding:4px 10px 4px 44px!important;color:#555}
 .srbg{background:#fff8f8!important}
+.pgrp-hidden,.psku-hidden,.orow-hidden{display:none}
+.sku-count-pill{display:inline-block;font-size:10px;background:#eef0f5;color:#555;padding:1px 7px;border-radius:10px;margin-left:8px;font-weight:500}
 .bdg{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600}
 .ba{background:#dcfce7;color:#16a34a}.bs{background:#fee2e2;color:#dc2626}.bp{background:#fef9c3;color:#854d0e}
 .dgap{font-size:10px;color:#aaa;margin-left:4px}
@@ -671,6 +683,10 @@ table.ptbl tr:last-child td{border-bottom:none}
         <input type="password" id="np" placeholder="Password">
         <button id="arb2">Add Rep</button>
       </div>
+      <div style="margin-top:-4px;margin-bottom:10px">
+        <div class="lbl" style="margin-bottom:4px">Assigned Territories <span style="color:#aaa;font-weight:400;text-transform:none;font-size:11px">(which rep territories this user can see — pick 1+ for managers covering multiple reps)</span></div>
+        <div id="nr-box" style="padding:8px;border:1.5px solid #e0e3ea;border-radius:8px;max-height:140px;overflow-y:auto;background:#fafbfc;font-size:12px">Loading...</div>
+      </div>
       <div id="amsg" class="smsg2"></div>
       <div id="rl2" style="margin-top:12px">Loading...</div>
     </div>
@@ -828,6 +844,96 @@ document.getElementById('overlay').addEventListener('click',closePanel);
 document.getElementById('pcl').addEventListener('click',closePanel);
 document.getElementById('pprt').addEventListener('click',function(){window.print();});
 
+// Products table: click rollup row -> toggle SKU rows; click SKU row -> toggle order rows
+document.getElementById('ppb').addEventListener('click',function(e){
+  var tr=e.target.closest('tr');
+  if(!tr)return;
+  if(tr.classList.contains('pgrp')){
+    var gidx=tr.dataset.gidx;
+    var isOpen=tr.classList.toggle('open');
+    // Toggle SKU rows under this group
+    var skus=document.querySelectorAll('#ppb tr.psku[data-gidx="'+gidx+'"]');
+    skus.forEach(function(s){
+      if(isOpen){s.classList.remove('psku-hidden');}
+      else{s.classList.add('psku-hidden');
+        // When closing group, also collapse any expanded SKUs under it
+        s.classList.remove('open');
+        var sidx=s.dataset.sidx;
+        document.querySelectorAll('#ppb tr.orow[data-gidx="'+gidx+'"][data-sidx="'+sidx+'"]').forEach(function(o){o.classList.add('orow-hidden');});
+      }
+    });
+  }else if(tr.classList.contains('psku')){
+    var gidx=tr.dataset.gidx,sidx=tr.dataset.sidx;
+    var isOpen=tr.classList.toggle('open');
+    var ords=document.querySelectorAll('#ppb tr.orow[data-gidx="'+gidx+'"][data-sidx="'+sidx+'"]');
+    ords.forEach(function(o){if(isOpen)o.classList.remove('orow-hidden');else o.classList.add('orow-hidden');});
+  }
+});
+
+// ============================================================
+// Product label parser — rolls up SKUs by ingredient+strength+form
+// Mirrors the Worker's parseProductLabel() logic.
+// ============================================================
+var FORM_PATTERNS=[
+  {re:/transdermal\s*gel/i,form:'Transdermal Gel'},
+  {re:/topi-?click/i,form:'Transdermal Gel'},
+  {re:/ophthalmic\s*(?:solution|ointment|drop)/i,form:'Ophthalmic'},
+  {re:/otic\s*(?:ointment|solution|drop)/i,form:'Otic'},
+  {re:/oral\s*suspension/i,form:'Liquid'},
+  {re:/oral\s*solution/i,form:'Liquid'},
+  {re:/oral\s*paste/i,form:'Paste'},
+  {re:/\bliquid\b/i,form:'Liquid'},
+  {re:/chewable\s*treat/i,form:'Chewable'},
+  {re:/chewable/i,form:'Chewable'},
+  {re:/\b(?:quadrisect|bisect|split)\s*tab/i,form:'Tablet'},
+  {re:/\btablet\b/i,form:'Tablet'},
+  {re:/\bcapsule\b/i,form:'Capsule'},
+  {re:/\binjection\b/i,form:'Injection'},
+  {re:/\bsuppositor/i,form:'Suppository'},
+  {re:/\bointment\b/i,form:'Ointment'},
+  {re:/\bcream\b/i,form:'Cream'},
+  {re:/\bpowder\b/i,form:'Powder'}
+];
+var ROLLUP_CACHE={};
+function detectFormJS(n){for(var i=0;i<FORM_PATTERNS.length;i++)if(FORM_PATTERNS[i].re.test(n))return FORM_PATTERNS[i].form;return'Other';}
+function isComboJS(n){return /[A-Z][a-z]+\s*[\/\+]\s*[A-Z][a-z]+/.test(n);}
+function extractIngredientJS(n){
+  var head=n.trim().split(' - ')[0];
+  if(isComboJS(n)&&/\s\/\s/.test(head)){
+    return head.split(/\s*\/\s*/).map(function(p){return p.replace(/\s*\d+(?:\.\d+)?\s*(?:mg|mcg|g|ml|%|ct|iu)\S*.*$/i,'').trim();}).filter(Boolean).join(' / ');
+  }
+  if(/\//.test(head)&&/[A-Z][a-z]+\/[A-Z]/.test(head.replace(/\s/g,''))){
+    var cm=head.match(/^([A-Z][a-zA-Z\/]+(?:\/[A-Z][a-zA-Z]+)+)/);
+    if(cm)return cm[1];
+  }
+  var m=head.match(/^([A-Za-z][A-Za-z\-\s]+?)(?=\s*\d)/);
+  if(m)return m[1].trim();
+  var m2=head.match(/^([A-Za-z][A-Za-z\-\s]{2,}?)(?=\s+(?:Chewable|Tablet|Capsule|Injection|Oral|Transdermal|Ophthalmic|Otic|Ointment|Cream))/i);
+  if(m2)return m2[1].trim();
+  return head.split(/\s{2,}/)[0].trim();
+}
+function extractStrengthJS(n){
+  var c=n.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|g|iu)\s*\/\s*(\d+(?:\.\d+)?)\s*ml/i);
+  if(c)return c[1]+c[2].toLowerCase()+'/'+c[3]+'ml';
+  var k=n.match(/\((\d+(?:\.\d+)?)\s*(mg|mcg)\s*per\s*click\)/i);
+  if(k)return k[1]+k[2].toLowerCase()+'/click';
+  var p=n.match(/(\d+(?:\.\d+)?)\s*%/);
+  if(p&&!/mg|mcg/i.test(n.slice(0,p.index)))return p[1]+'%';
+  var mg=n.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|g|iu)\b/i);
+  if(mg)return mg[1]+mg[2].toLowerCase();
+  return 'unspec';
+}
+function rollupFor(pi){
+  if(ROLLUP_CACHE[pi])return ROLLUP_CACHE[pi];
+  var name=P[pi]||'';
+  var ing=extractIngredientJS(name),str=extractStrengthJS(name),form=detectFormJS(name);
+  var label=(ing+' '+(str==='unspec'?'':str)+' '+form).replace(/\s+/g,' ').trim();
+  var key=(ing+'|'+str+'|'+form).toLowerCase();
+  var res={key:key,label:label,ingredient:ing,strength:str,form:form};
+  ROLLUP_CACHE[pi]=res;
+  return res;
+}
+
 // Clinic sub-tabs
 document.querySelectorAll('.cltab').forEach(function(ct){
   ct.addEventListener('click',function(){
@@ -866,14 +972,16 @@ function fillPanel(idx){
     '<div class="sc"><div class="sl">2024</div><div class="sv">'+fmt(r24)+'</div><div class="sy">'+yoy(r24,r25)+' vs 2024</div></div>'+
     '<div class="sc"><div class="sl">3-Year Total</div><div class="sv">'+fmt(r24+r25+r26)+'</div></div>';
 
-  // Overview "at a glance"
-  var numProd=Object.keys(pm).length;
-  var stopped=0;Object.keys(pm).forEach(function(pi){var yrs={};pm[pi].forEach(function(o){yrs[o.yr]=1;});if((yrs[4]||yrs[5])&&!yrs[6])stopped++;});
+  // Overview "at a glance" — uses ingredient rollup so bottle-size changes don't count as "stopped"
+  var rollupYears={};
+  rows.forEach(function(r){var rk=rollupFor(r[1]).key;if(!rollupYears[rk])rollupYears[rk]={};rollupYears[rk][r[0]]=1;});
+  var numProdRollup=Object.keys(rollupYears).length;
+  var stopped=0;Object.keys(rollupYears).forEach(function(rk){var y=rollupYears[rk];if((y[4]||y[5])&&!y[6])stopped++;});
   document.getElementById('cl-glance').innerHTML=
-    '<div>&#9679; <strong>'+numProd+'</strong> total products ordered, <strong style="color:#dc2626">'+stopped+'</strong> stopped</div>'+
+    '<div>&#9679; <strong>'+numProdRollup+'</strong> distinct products ordered, <strong style="color:#dc2626">'+stopped+'</strong> stopped</div>'+
     '<div>&#9679; '+(rows.length)+' orders on file across 3 years</div>'+
     '<div>&#9679; Rep on account: <strong>'+(rep||'none')+'</strong></div>'+
-    '<div style="margin-top:10px;color:#888;font-size:12px">Switch tabs above to see private notes, tasks, shared team notes, orders, and pitch ideas.</div>';
+    '<div style="margin-top:10px;color:#888;font-size:11px">Products grouped by ingredient + strength + form. Click a product row to see individual SKUs; click a SKU to see orders.</div>';
 
   // Reset to overview tab
   document.querySelectorAll('.cltab').forEach(function(x){x.classList.remove('active');});
@@ -881,36 +989,80 @@ function fillPanel(idx){
   document.querySelector('.cltab[data-pane="overview"]').classList.add('active');
   document.querySelector('.clpane[data-pane="overview"]').classList.add('active');
 
-  // Orders table
-  var pl=Object.keys(pm).map(function(pi){
-    var p2=parseInt(pi),ords=pm[pi].slice().sort(function(a,b){return a.ep-b.ep;});
-    var hy={};ords.forEach(function(o){hy[o.yr]=1;});
-    var in26=!!hy[6],stopped=(hy[4]||hy[5])&&!hy[6];
-    return{pi:p2,ords:ords,in26:in26,stopped:stopped,tot:ords.reduce(function(s,o){return s+o.rev;},0)};
+  // ============================================================
+  // Products & Order History — two-level rollup:
+  // Rollup row (ingredient+strength+form) -> SKU rows -> individual orders
+  // ============================================================
+  // Step 1: group SKUs by rollup key
+  var rollups={};
+  Object.keys(pm).forEach(function(pi){
+    var p2=parseInt(pi);
+    var ro=rollupFor(p2);
+    if(!rollups[ro.key])rollups[ro.key]={key:ro.key,label:ro.label,skus:[],yrs:{},tot:0,r25:0,lastEp:-1,ordCount:0};
+    var grp=rollups[ro.key];
+    var ords=pm[pi].slice().sort(function(a,b){return a.ep-b.ep;});
+    var hy={};ords.forEach(function(o){hy[o.yr]=1;grp.yrs[o.yr]=1;grp.tot+=o.rev;grp.ordCount++;if(o.yr===5)grp.r25+=o.rev;if(o.ep>grp.lastEp)grp.lastEp=o.ep;});
+    var skuStatus=hy[6]?'act':(hy[5]||hy[4])?'stp':'pst';
+    grp.skus.push({pi:p2,name:P[p2]||'?',ords:ords,hy:hy,stat:skuStatus,tot:ords.reduce(function(s,o){return s+o.rev;},0)});
   });
-  pl.sort(function(a,b){if(a.stopped!==b.stopped)return a.stopped?1:-1;if(a.in26!==b.in26)return a.in26?-1:1;return b.tot-a.tot;});
+  // Step 2: determine rollup status + sort
+  var rlist=Object.values(rollups).map(function(g){
+    var y=g.yrs;
+    g.in26=!!y[6];
+    g.stopped=(y[4]||y[5])&&!y[6];
+    g.pastOnly=!y[5]&&!y[6]&&y[4];
+    return g;
+  });
+  rlist.sort(function(a,b){
+    if(a.stopped!==b.stopped)return a.stopped?1:-1;
+    if(a.in26!==b.in26)return a.in26?-1:1;
+    if(a.stopped)return b.r25-a.r25;
+    return b.tot-a.tot;
+  });
+  // Step 3: render
   var pb=document.getElementById('ppb');pb.innerHTML='';
-  pl.forEach(function(p){
-    var pn=P[p.pi]||'?',badge,rc='',cls='';
-    if(p.stopped){badge='<span class="bdg bs">Stopped</span>';rc='srbg';cls='sn';}
-    else if(p.in26){badge='<span class="bdg ba">Active</span>';}
+  rlist.forEach(function(g,gi){
+    var badge,rc='',cls='';
+    if(g.stopped){badge='<span class="bdg bs">Stopped</span>';rc='srbg';cls='sn';}
+    else if(g.in26){badge='<span class="bdg ba">Active</span>';}
     else{badge='<span class="bdg bp">Past only</span>';}
-    var htr=document.createElement('tr');htr.className='pgrp'+(rc?' '+rc:'');
-    htr.innerHTML='<td colspan="2"><span class="pn '+cls+'">'+pn+'</span>'+(p.stopped?'<div class="rl">&#9888; Lost: '+fmt(p.tot)+'</div>':'')+'</td>'+
+    // Sort SKUs: active first, stopped middle, past only last; then by revenue
+    g.skus.sort(function(a,b){
+      var ord={act:0,stp:1,pst:2};
+      if(ord[a.stat]!==ord[b.stat])return ord[a.stat]-ord[b.stat];
+      return b.tot-a.tot;
+    });
+    var skuPill=g.skus.length>1?'<span class="sku-count-pill">'+g.skus.length+' SKUs</span>':'';
+    var lostHtml=g.stopped?'<div class="rl">&#9888; Lost: '+fmt(g.r25||g.tot)+'</div>':'';
+    var htr=document.createElement('tr');htr.className='pgrp'+(rc?' '+rc:'');htr.dataset.gidx=gi;
+    htr.innerHTML='<td colspan="2"><span class="ptoggle">&#9656;</span><span class="pn '+cls+'">'+g.label+'</span>'+skuPill+lostHtml+'</td>'+
       '<td colspan="2" style="text-align:right">'+badge+'</td>'+
-      '<td style="text-align:right;color:#888;font-size:11px">'+p.ords.length+' orders</td>';
+      '<td style="text-align:right;color:#888;font-size:11px">'+g.ordCount+' orders &bull; '+fmt(g.tot)+'</td>';
     pb.appendChild(htr);
-    p.ords.forEach(function(o,i){
-      var prev=i>0?p.ords[i-1].ep:null,gap=prev!==null?(o.ep-prev)+' days':'\u2014';
-      var otr=document.createElement('tr');otr.className='orow'+(rc?' '+rc:'');
-      otr.innerHTML='<td style="color:#888;font-size:11px">'+(o.yr+2020)+'</td><td></td>'+
-        '<td style="text-align:right;color:#555;white-space:nowrap">'+epDate(o.ep)+'</td>'+
-        '<td style="text-align:right;font-weight:500">'+fmt(o.rev)+'</td>'+
-        '<td style="text-align:right"><span class="dgap">'+gap+'</span></td>';
-      pb.appendChild(otr);
+    // SKU rows (hidden by default)
+    g.skus.forEach(function(sku,si){
+      var sbadge;
+      if(sku.stat==='act')sbadge='<span class="skustat act">Active</span>';
+      else if(sku.stat==='stp')sbadge='<span class="skustat stp">Stopped</span>';
+      else sbadge='<span class="skustat pst">Past only</span>';
+      var str=document.createElement('tr');str.className='psku psku-hidden'+(rc?' '+rc:'');str.dataset.gidx=gi;str.dataset.sidx=si;
+      str.innerHTML='<td colspan="2"><span class="skuname">'+sku.name+'</span>'+sbadge+'</td>'+
+        '<td colspan="2" style="text-align:right;color:#888">'+sku.ords.length+' orders</td>'+
+        '<td style="text-align:right;color:#555;font-weight:500">'+fmt(sku.tot)+'</td>';
+      pb.appendChild(str);
+      // Individual order rows (hidden by default, also hidden until SKU expands)
+      sku.ords.forEach(function(o,i){
+        var prev=i>0?sku.ords[i-1].ep:null,gap=prev!==null?(o.ep-prev)+' days':'\u2014';
+        var otr=document.createElement('tr');otr.className='orow orow-hidden'+(rc?' '+rc:'');otr.dataset.gidx=gi;otr.dataset.sidx=si;
+        otr.innerHTML='<td style="color:#888;font-size:11px">'+(o.yr+2020)+'</td><td></td>'+
+          '<td style="text-align:right;color:#555;white-space:nowrap">'+epDate(o.ep)+'</td>'+
+          '<td style="text-align:right;font-weight:500">'+fmt(o.rev)+'</td>'+
+          '<td style="text-align:right"><span class="dgap">'+gap+'</span></td>';
+        pb.appendChild(otr);
+      });
     });
   });
-  document.getElementById('ppc').textContent=pl.length+' products';
+  document.getElementById('ppc').textContent=rlist.length+' products';
 
   // Pitch
   var xb=document.getElementById('pxb');xb.innerHTML='';var rk=1;
@@ -1180,17 +1332,81 @@ async function loadReps(){
   var sel2=document.getElementById('adm-np-rep');
   sel2.innerHTML='<option value="">All reps</option>';
   ALLREPS.forEach(function(r){var o=document.createElement('option');o.value=r.username;o.textContent=r.name;sel2.appendChild(o);});
+
+  // Render rep-picker checkboxes for Add Rep form
+  renderRepPicker('nr-box',[]);
+
   if(!ALLREPS.length){rl.innerHTML='<div style="color:#aaa;font-size:13px;padding:8px 0">No reps yet</div>';return;}
   ALLREPS.forEach(function(r){
     var d=document.createElement('div');d.className='rrow';
+    var assignedNames=Array.isArray(r.rep_names)?r.rep_names:[];
+    var assignedLabel=assignedNames.length?assignedNames.join(', '):(r.role==='admin'?'<em style="color:#aaa">admin \u2014 sees all</em>':'<em style="color:#dc2626">no territory assigned</em>');
     d.innerHTML='<span class="rn">'+r.name+'</span><span class="ru">@'+r.username+'</span>'+
+      '<span style="font-size:11px;color:#666;flex:2;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+assignedNames.join(', ')+'">'+assignedLabel+'</span>'+
+      '<button class="drep" data-edit="'+r.id+'" title="Edit territories" style="color:#888">&#9998;</button>'+
       '<span class="rr'+(r.role==='admin'?' adm':'')+'">'+r.role+'</span>'+
       (r.role!=='admin'?'<button class="drep" data-id="'+r.id+'" title="Delete rep">&#128465;</button>':'');
     rl.appendChild(d);
   });
 }
+
+function renderRepPicker(containerId,selected){
+  var box=document.getElementById(containerId);
+  if(!box)return;
+  var sel=new Set(selected||[]);
+  box.innerHTML='';
+  if(!REPS||!REPS.length){box.innerHTML='<em style="color:#aaa">Loading rep list...</em>';return;}
+  REPS.forEach(function(rep){
+    var id=containerId+'-'+rep.replace(/[^a-z0-9]/gi,'_');
+    var row=document.createElement('label');
+    row.style.cssText='display:flex;align-items:center;gap:6px;padding:3px 2px;cursor:pointer;font-size:12px';
+    row.innerHTML='<input type="checkbox" value="'+rep.replace(/"/g,'&quot;')+'"'+(sel.has(rep)?' checked':'')+' style="margin:0;cursor:pointer"> <span>'+rep+'</span>';
+    box.appendChild(row);
+  });
+}
+
+function getRepPickerValues(containerId){
+  var box=document.getElementById(containerId);
+  if(!box)return [];
+  var picked=[];
+  box.querySelectorAll('input[type=checkbox]:checked').forEach(function(cb){picked.push(cb.value);});
+  return picked;
+}
+
+// Edit dialog for an existing rep
+async function openEditRep(id){
+  var rep=ALLREPS.find(function(r){return r.id==id;});
+  if(!rep)return;
+  var existing=Array.isArray(rep.rep_names)?rep.rep_names:[];
+  // Build a simple modal
+  var old=document.getElementById('edit-rep-modal');if(old)old.remove();
+  var modal=document.createElement('div');
+  modal.id='edit-rep-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1100;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML='<div style="background:#fff;border-radius:12px;padding:24px;width:min(480px,100%);box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto">'+
+    '<div style="font-size:15px;font-weight:700;color:#1a2035;margin-bottom:4px">Edit User</div>'+
+    '<div style="font-size:13px;color:#666;margin-bottom:16px">'+rep.name+' &middot; @'+rep.username+'</div>'+
+    '<div class="lbl" style="margin-bottom:6px">Assigned Territories</div>'+
+    '<div id="er-box" style="padding:8px;border:1.5px solid #e0e3ea;border-radius:8px;max-height:260px;overflow-y:auto;background:#fafbfc;font-size:12px;margin-bottom:16px"></div>'+
+    '<div style="display:flex;gap:8px;justify-content:flex-end">'+
+      '<button class="abtn" id="er-cancel" style="background:#e8eaed;color:#1a2035">Cancel</button>'+
+      '<button class="abtn" id="er-save">Save</button>'+
+    '</div></div>';
+  document.body.appendChild(modal);
+  renderRepPicker('er-box',existing);
+  document.getElementById('er-cancel').addEventListener('click',function(){modal.remove();});
+  document.getElementById('er-save').addEventListener('click',async function(){
+    var picked=getRepPickerValues('er-box');
+    await SB.from('reps').update({rep_names:picked}).eq('id',id);
+    modal.remove();
+    loadReps();
+  });
+  modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
+}
 document.getElementById('rl2').addEventListener('click',async function(e){
-  var b=e.target.closest('.drep');if(!b)return;
+  var editBtn=e.target.closest('[data-edit]');
+  if(editBtn){openEditRep(editBtn.getAttribute('data-edit'));return;}
+  var b=e.target.closest('.drep[data-id]');if(!b)return;
   if(!confirm('Delete this rep? This cannot be undone.'))return;
   await SB.from('reps').delete().eq('id',b.getAttribute('data-id'));
   loadReps();
@@ -1199,11 +1415,13 @@ document.getElementById('arb2').addEventListener('click',async function(){
   var n=document.getElementById('nn').value.trim(),u=document.getElementById('nu').value.trim(),p=document.getElementById('np').value.trim();
   var msg=document.getElementById('amsg');
   if(!n||!u||!p){msg.className='smsg2 er';msg.textContent='All fields required';return;}
-  var {error}=await SB.from('reps').insert({name:n,username:u,password:p,role:'rep'});
+  var picked=getRepPickerValues('nr-box');
+  var {error}=await SB.from('reps').insert({name:n,username:u,password:p,role:'rep',rep_names:picked});
   if(error){msg.className='smsg2 er';msg.textContent='Username already taken';return;}
-  msg.className='smsg2 ok';msg.textContent='Rep added successfully!';
+  msg.className='smsg2 ok';msg.textContent='Rep added successfully'+(picked.length?' with '+picked.length+' assigned territor'+(picked.length===1?'y':'ies'):' \u2014 no territory assigned yet, edit to add')+'!';
   document.getElementById('nn').value='';document.getElementById('nu').value='';document.getElementById('np').value='';
-  loadReps();setTimeout(function(){msg.textContent='';},3000);
+  renderRepPicker('nr-box',[]);
+  loadReps();setTimeout(function(){msg.textContent='';},4000);
 });
 
 async function loadActivity(){
@@ -1317,33 +1535,33 @@ var CH_CHART_RISK=null;
 var CH_DATA=null;
 
 function churnInit(){
-  // Populate rep dropdown (admin only)
+  // Populate rep dropdown based on user role
   var sel=document.getElementById('ch-rep');
   sel.innerHTML='';
   if(ME&&ME.role==='admin'){
     sel.innerHTML='<option value="__all">All Reps (Company-wide)</option>';
     REPS.forEach(function(r){var o=document.createElement('option');o.value=r;o.textContent=r;sel.appendChild(o);});
+    sel.disabled=false;
   }else{
-    // Reps: locked to their own territory
-    var myRep=findRepForMe();
-    sel.innerHTML='<option value="'+(myRep||'__mine')+'">My Territory'+(myRep?' ('+myRep+')':'')+'</option>';
-    sel.disabled=true;
+    // Reps: locked to their assigned territories
+    var mine=getMyAssignedReps();
+    if(mine.length===0){
+      sel.innerHTML='<option value="__none">No territory assigned \u2014 ask admin</option>';
+    }else if(mine.length===1){
+      sel.innerHTML='<option value="'+mine[0]+'">'+mine[0]+'</option>';
+    }else{
+      sel.innerHTML='<option value="__mine">My Territories ('+mine.length+' reps)</option>';
+      mine.forEach(function(r){var o=document.createElement('option');o.value=r;o.textContent=r;sel.appendChild(o);});
+    }
+    sel.disabled=false;
   }
 }
 
-function findRepForMe(){
-  // Best-effort: match ME.name against REPS[] by case-insensitive equality or first-name
-  if(!ME)return null;
-  var mn=ME.name.toLowerCase();
-  for(var i=0;i<REPS.length;i++){
-    if(REPS[i].toLowerCase()===mn)return REPS[i];
-  }
-  // Try first name only
-  var mFirst=mn.split(' ')[0];
-  for(var i=0;i<REPS.length;i++){
-    if(REPS[i].toLowerCase().split(' ')[0]===mFirst)return REPS[i];
-  }
-  return null;
+function getMyAssignedReps(){
+  // Returns array of rep names this user can see
+  if(!ME)return [];
+  if(Array.isArray(ME.rep_names))return ME.rep_names;
+  return [];
 }
 
 function calcChurnForClinic(idx){
@@ -1448,27 +1666,51 @@ function calcChurnForClinic(idx){
 }
 
 async function loadChurn(){
-  if(!CH_DATA)churnInit();
+  // Re-init selector every time in case admin changed the user's assignments recently
+  churnInit();
   var sel=document.getElementById('ch-rep');
   var repFilter=sel.value;
   var minRev=parseFloat(document.getElementById('ch-minrev').value)||0;
   var tierFilter=document.getElementById('ch-tier').value;
 
-  // Determine rep index to filter by
-  var repIdx=null;
+  // Determine set of rep indices to include
+  var allowedRepIdxs=null; // null = no filter (admin all)
   if(ME&&ME.role==='admin'){
-    if(repFilter==='__all')repIdx=null;
-    else repIdx=REPS.indexOf(repFilter);
+    if(repFilter==='__all'){
+      allowedRepIdxs=null;
+    }else{
+      var idx=REPS.indexOf(repFilter);
+      allowedRepIdxs=idx>=0?new Set([idx]):new Set();
+    }
   }else{
-    var myRep=findRepForMe();
-    repIdx=myRep?REPS.indexOf(myRep):-999; // -999 = nothing matches
+    // Rep: build from their assigned territories
+    var mine=getMyAssignedReps();
+    if(repFilter==='__mine'||repFilter==='__none'){
+      allowedRepIdxs=new Set(mine.map(function(r){return REPS.indexOf(r);}).filter(function(i){return i>=0;}));
+    }else{
+      // Rep picked one of their specific territories
+      var singleIdx=REPS.indexOf(repFilter);
+      allowedRepIdxs=singleIdx>=0?new Set([singleIdx]):new Set();
+    }
+  }
+
+  // Empty set? Show friendly empty state
+  if(allowedRepIdxs&&allowedRepIdxs.size===0){
+    document.getElementById('ch-hero').innerHTML='<div class="ch-empty" style="grid-column:1/-1"><div class="ei">&#128269;</div><p style="font-size:14px">No territory assigned to your account yet. Ask your admin to assign reps to your user.</p></div>';
+    document.getElementById('ch-tbody').innerHTML='';
+    document.getElementById('ch-count').textContent='0';
+    if(CH_CHART_RISK){CH_CHART_RISK.destroy();CH_CHART_RISK=null;}
+    document.getElementById('ch-tier-bar').innerHTML='';
+    document.getElementById('ch-tier-legend').innerHTML='';
+    document.getElementById('ch-summary-text').innerHTML='';
+    return;
   }
 
   // Compute churn for every clinic in scope
   var all=[];
   for(var i=0;i<C.length;i++){
     var ka=KA[i]||[];
-    if(repIdx!==null&&ka[0]!==repIdx)continue;
+    if(allowedRepIdxs&&!allowedRepIdxs.has(ka[0]))continue;
     var c=calcChurnForClinic(i);
     if(!c)continue;
     if(c.baselineAnnual<minRev)continue;
@@ -1512,7 +1754,13 @@ async function loadChurn(){
 
   // Summary narrative
   var pctAtRisk=total?Math.round((totalAtRisk/total)*100):0;
-  var whichScope=(ME&&ME.role==='admin'&&repFilter==='__all')?'across all territories':'in this territory';
+  var whichScope;
+  if(ME&&ME.role==='admin'){
+    whichScope=(repFilter==='__all')?'across all territories':'in '+repFilter+"'s territory";
+  }else{
+    var mine=getMyAssignedReps();
+    whichScope=(repFilter==='__mine'&&mine.length>1)?'across your '+mine.length+' territories':'in your territory';
+  }
   document.getElementById('ch-summary-text').innerHTML=
     '<strong>'+totalAtRisk.toLocaleString()+'</strong> of <strong>'+total.toLocaleString()+'</strong> clinics '+whichScope+' ('+pctAtRisk+'%) are showing warning signs. '+
     (critLoss>0?'The <strong style="color:#dc2626">Critical</strong> tier alone represents <strong style="color:#dc2626">~$'+Math.round(critLoss).toLocaleString()+'/year</strong> at risk if not recovered. ':'')+
@@ -1646,7 +1894,25 @@ function init(){
   for(var i=0;i<C.length;i++){var k=KA[i]||[];var r=k[0]>=0?REPS[k[0]]:'';SI.push([C[i],r,k[1]||'',k[2]||'',k[3]||'',k[4]||'',k[5]||'',k[6]||''].join(' ').toLowerCase());}
   document.getElementById('smsg').textContent=C.length.toLocaleString()+' clinics loaded.';
   var sel=document.getElementById('rsel');
-  REPS.forEach(function(r){var o=document.createElement('option');o.value=r;o.textContent=r;sel.appendChild(o);});
+  sel.innerHTML='<option value="">— Select a rep —</option>';
+  var repsVisibleToMe;
+  if(ME&&ME.role==='admin'){
+    repsVisibleToMe=REPS;
+  }else{
+    repsVisibleToMe=getMyAssignedReps();
+    if(repsVisibleToMe.length===0){
+      sel.innerHTML='<option value="">No territory assigned — ask admin</option>';
+      sel.disabled=true;
+    }
+  }
+  repsVisibleToMe.forEach(function(r){var o=document.createElement('option');o.value=r;o.textContent=r;sel.appendChild(o);});
+  // Auto-select if only one territory assigned
+  if(!ME||ME.role!=='admin'){
+    if(repsVisibleToMe.length===1){
+      sel.value=repsVisibleToMe[0];
+      sel.dispatchEvent(new Event('change'));
+    }
+  }
   for(var i=0;i<C.length;i++){
     var rows=D[C[i]]||[];if(!rows.length)continue;
     var r24=0,r25=0,r26=0;rows.forEach(function(r){if(r[0]===4)r24+=r[2];else if(r[0]===5)r25+=r[2];else r26+=r[2];});
@@ -1704,9 +1970,16 @@ document.getElementById('rsel').addEventListener('change',function(){
   for(var i=0;i<C.length;i++){
     var k=KA[i]||[];if(k[0]!==ri)continue;
     var rows=D[C[i]]||[];var r25=0,r26=0,hs=false;
-    var s4={},s5={},s6={};
-    rows.forEach(function(r){if(r[0]===4)s4[r[1]]=1;else if(r[0]===5){r25+=r[2];s5[r[1]]=1;}else{r26+=r[2];s6[r[1]]=1;}});
-    Object.keys(s4).forEach(function(p){if(!s6[p])hs=true;});Object.keys(s5).forEach(function(p){if(!s6[p])hs=true;});
+    // Rollup-based stopped detection: a clinic "has stopped product" only if an entire ingredient+strength+form group was ordered in 2024/2025 but not in 2026
+    var rk4={},rk5={},rk6={};
+    rows.forEach(function(r){
+      var rk=rollupFor(r[1]).key;
+      if(r[0]===4)rk4[rk]=1;
+      else if(r[0]===5){r25+=r[2];rk5[rk]=1;}
+      else{r26+=r[2];rk6[rk]=1;}
+    });
+    Object.keys(rk4).forEach(function(p){if(!rk6[p])hs=true;});
+    Object.keys(rk5).forEach(function(p){if(!rk6[p])hs=true;});
     cc++;tv26+=r26;tv25+=r25;if(hs)sc++;
     var tr=document.createElement('tr');
     tr.innerHTML='<td class="pn">'+C[i]+'</td><td style="color:#666">'+(k[3]||'\u2014')+'</td>'+
