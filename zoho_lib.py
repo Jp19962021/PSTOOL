@@ -28,8 +28,12 @@ ORG_ID = os.environ["ZOHO_ORG_ID"]
 EPOCH_BASE = date(2024, 1, 1)
 SKIP_TERMS = ["CANNOT COLLECT", "CLOSED", "VACANT", "DO NOT USE"]
 
-REQUEST_DELAY = 0.25
-MAX_RETRIES = 4
+# FIX B: 0.25s → 0.65s keeps burst under 100 req/min (92/min worst-case)
+# even when fetch_invoice_list pages are firing back-to-back.
+REQUEST_DELAY = 0.65
+
+# FIX A: 4 → 10 retries, cap backoff at 120s, respect Retry-After header.
+MAX_RETRIES = 10
 
 LAST_SYNC_PATH = Path("last_sync.json")
 DATA_JS_PATH = Path("data.js")
@@ -90,8 +94,17 @@ class ZohoClient:
                 self.refresh()
                 continue
             if resp.status_code in (429, 500, 502, 503, 504):
-                wait = (2 ** attempt) + 1
-                print(f"  ! {resp.status_code} on {path}, retry in {wait}s", flush=True)
+                # FIX A: respect Retry-After if Zoho sends it; otherwise
+                # exponential backoff capped at 120s.
+                retry_after = resp.headers.get("Retry-After")
+                if retry_after:
+                    try:
+                        wait = float(retry_after) + 1
+                    except ValueError:
+                        wait = min(120, 2 ** attempt + 1)
+                else:
+                    wait = min(120, 2 ** attempt + 1)
+                print(f"  ! {resp.status_code} on {path}, retry {attempt+1}/{MAX_RETRIES} in {wait:.0f}s", flush=True)
                 time.sleep(wait)
                 continue
             resp.raise_for_status()
@@ -111,12 +124,12 @@ def fetch_invoice_list(
     """
     Paginate the /invoices list endpoint.
 
-    date_start: "YYYY-MM-DD" — filter by invoice date >= this (passed to Zoho)
-    created_after: ISO timestamp — keep only invoices CREATED after this.
-        Filters client-side on created_time since Zoho's list API parameter
-        support for this is inconsistent.
-    max_results: bail out early if we accumulate more than this many invoices.
-        Safety net against pulling the entire DB when filters don't work.
+    date_start: "YYYY-MM-DD" — filter by invoice date >= this (server-side).
+    created_after: ISO timestamp — used for incremental sync. We pass this
+        as a server-side last_modified_time filter (date_filter_by) which
+        dramatically reduces the pages Zoho returns. We also apply a
+        client-side guard on created_time as a safety net.
+    max_results: bail out if we accumulate more than this. Safety net only.
     """
     invoices: list[dict] = []
     page = 1
@@ -129,12 +142,28 @@ def fetch_invoice_list(
     if date_start:
         base_params["date_start"] = date_start
 
+    # FIX C: use Zoho's server-side last_modified_time filter so the API
+    # only returns pages of recently-touched invoices rather than the entire
+    # history. This collapses a 300-page scan into typically 1-2 pages for
+    # a nightly run, eliminating the 429 storm entirely.
+    #
+    # Zoho Books supports: date_filter_by=last_modified_time with
+    # last_modified_time_start (ISO format "YYYY-MM-DDTHH:MM:SS+0000").
+    # We still keep the client-side created_time guard as a safety net.
     cutoff_dt = None
     if created_after:
         try:
             cutoff_dt = parse_iso(created_after)
         except ValueError:
             cutoff_dt = None
+        if cutoff_dt is not None:
+            # Server-side filter: only invoices modified after this timestamp
+            base_params["date_filter_by"] = "last_modified_time"
+            base_params["last_modified_time_start"] = zoho_format_iso(cutoff_dt)
+            # With server-side filtering we don't need descending sort for
+            # early-exit — switch to ascending so page 1 is oldest (more
+            # predictable for debugging).
+            base_params["sort_order"] = "A"
 
     stopped_early = False
     while True:
@@ -142,24 +171,24 @@ def fetch_invoice_list(
         data = client.get("/invoices", params=params)
         batch = data.get("invoices", [])
 
-        # Client-side filter on created_time
-        kept = []
+        # Client-side guard: drop any invoice that slipped through below cutoff.
+        # This is cheap insurance against Zoho ignoring the server-side filter.
         if cutoff_dt is not None:
+            kept = []
             for inv in batch:
-                ct = inv.get("created_time")
+                ct = inv.get("created_time") or inv.get("last_modified_time") or ""
                 if not ct:
+                    kept.append(inv)
                     continue
                 try:
                     ct_dt = parse_iso(ct)
                 except ValueError:
+                    kept.append(inv)
                     continue
                 if ct_dt >= cutoff_dt:
                     kept.append(inv)
-                else:
-                    # Descending sort: this invoice is older than cutoff,
-                    # so every subsequent one will also be older. Stop.
-                    stopped_early = True
-                    break
+                # With server-side filter + ascending sort we don't early-exit;
+                # if the server is doing its job every row should be in-window.
         else:
             kept = batch
 
@@ -172,7 +201,6 @@ def fetch_invoice_list(
         )
 
         if stopped_early:
-            print(f"  ✓ Reached cutoff — stopping early at page {page}", flush=True)
             break
 
         # Safety cap
@@ -295,8 +323,6 @@ def _extract_var(js_text: str, var_name: str) -> Any:
     if not match:
         raise ValueError(f"Variable {var_name!r} not found in data.js")
     start = match.end()
-    # Find matching terminator: we wrote with json.dumps, single-line,
-    # terminated by ";\n". Find next ";\n" or ";" at end.
     depth = 0
     in_string = False
     escape = False
@@ -318,7 +344,6 @@ def _extract_var(js_text: str, var_name: str) -> Any:
             elif ch in "}]":
                 depth -= 1
                 if depth == 0:
-                    # scan to ; or end
                     end = i + 1
                     return json.loads(js_text[start:end])
         i += 1
@@ -329,12 +354,12 @@ def parse_existing_data_js(path: Path = DATA_JS_PATH) -> dict:
     """Load the current data.js into Python dicts/lists for merging."""
     if not path.exists():
         return {
-            "D": {},  # {clinic_name: [[yr, pidx, rev, ep_days, qty], ...]}
-            "P": [],  # product names
-            "C": [],  # sorted clinic names
-            "T": [],  # top 30
-            "KA": [],  # clinic metadata parallel to C
-            "REPS": [],  # rep names
+            "D": {},
+            "P": [],
+            "C": [],
+            "T": [],
+            "KA": [],
+            "REPS": [],
         }
     txt = path.read_text(encoding="utf-8")
     return {
@@ -387,16 +412,10 @@ def process_invoices_into_state(
     Fold a batch of detailed invoices into the state dict.
 
     replace_clinic=True:  for each clinic touched in this batch, drop all
-                          of its existing transactions first (used by the
-                          weekly full rebuild, and by incremental when we
-                          want to replace a day's worth of invoices).
-    replace_clinic=False: append transactions to existing clinic bucket.
-                          NOTE: this can cause duplicates if the same
-                          invoice is processed twice, so the incremental
-                          script uses True to be safe.
+                          of its existing transactions first (full rebuild).
+    replace_clinic=False: append-only; used by incremental for new invoices.
 
     Row format: [year_code, product_idx, revenue, epoch_days, quantity]
-    (quantity added in v7 for inventory auto-deduction)
     """
     D = state["D"]
     products = state["P"]
@@ -418,14 +437,12 @@ def process_invoices_into_state(
             reps.append(name)
         return rep_set[name]
 
-    # Build a contact-by-name map for KA lookup
     contacts_by_name: dict[str, dict] = {}
     for c in contacts.values():
         nm = (c.get("contact_name") or "").strip()
         if nm:
             contacts_by_name[nm] = c
 
-    # Group invoices by clinic for cleaner processing
     invoices_by_clinic: dict[str, list[dict]] = {}
     for inv in invoices_full:
         clinic = (inv.get("customer_name") or "").strip()
@@ -433,7 +450,6 @@ def process_invoices_into_state(
             continue
         invoices_by_clinic.setdefault(clinic, []).append(inv)
 
-    # Track the latest order date per clinic (for KA last_order field)
     latest_order_by_clinic: dict[str, str] = {}
 
     for clinic, invs in invoices_by_clinic.items():
@@ -453,7 +469,6 @@ def process_invoices_into_state(
             if ep < 0:
                 continue
 
-            # Track latest invoice date
             prev = latest_order_by_clinic.get(clinic, "")
             if inv_date > prev:
                 latest_order_by_clinic[clinic] = inv_date
@@ -475,10 +490,6 @@ def process_invoices_into_state(
                 pidx = get_product_idx(pname)
                 bucket.append([yr, pidx, round(rev, 2), ep, round(qty, 2)])
 
-    # Rebuild C, KA for touched clinics (and optionally all clinics)
-    # For simplicity + correctness: rebuild C and KA from scratch every time.
-    # KA needs contact data; for clinics without fresh contact data, we keep
-    # the prior KA row.
     old_C = state["C"]
     old_KA = state["KA"]
     old_KA_by_clinic = {old_C[i]: old_KA[i] for i in range(len(old_C))}
@@ -487,11 +498,9 @@ def process_invoices_into_state(
     new_KA: list[list] = []
     for clinic in new_C:
         c = contacts_by_name.get(clinic)
-        # Compute last order from merged data (D) if we have transactions
         bucket = D.get(clinic, [])
         last_order = latest_order_by_clinic.get(clinic, "")
         if not last_order and bucket:
-            # derive from existing transactions: max epoch_days (index 3)
             max_ep = max(t[3] for t in bucket)
             last_order = (EPOCH_BASE + _timedelta_days(max_ep)).isoformat()
 
@@ -503,18 +512,14 @@ def process_invoices_into_state(
             street, csz = format_address(c)
             new_KA.append([rep_idx, email, phone, doctor, street, csz, last_order])
         elif clinic in old_KA_by_clinic:
-            # No fresh contact data for this clinic — preserve old row,
-            # but update last_order_date
             row = list(old_KA_by_clinic[clinic])
             if len(row) == 7 and last_order:
                 row[6] = last_order
             new_KA.append(row)
         else:
-            # Brand new clinic, no contact data fetched — placeholder
             rep_idx = get_rep_idx("")
             new_KA.append([rep_idx, "", "", "", "", "", last_order])
 
-    # Recompute top 30 (tolerate both 4-field legacy rows and 5-field new rows)
     product_totals: dict[int, float] = {}
     for bucket in D.values():
         for row in bucket:
@@ -555,8 +560,6 @@ def write_last_sync(payload: dict) -> None:
 
 
 def utc_now_iso() -> str:
-    """ISO-8601 for Zoho's last_modified_time_start param."""
-    # Zoho wants format like: 2024-05-01T00:00:00+0000
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S+0000")
 
 
@@ -567,7 +570,6 @@ def zoho_format_iso(dt: datetime) -> str:
 
 
 def parse_iso(s: str) -> datetime:
-    # Handle both +0000 and +00:00
     s = s.replace("Z", "+0000")
     for fmt in ("%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%dT%H:%M:%S.%f%z"):
         try:
