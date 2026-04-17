@@ -2391,7 +2391,20 @@ function init(){
       sel.dispatchEvent(new Event('change'));
     }
   }
+  // Build allowed-clinic filter — admins see everything; reps only see their own assigned territories
+  var allowedClinicIdx=null; // null = no filter (admin)
+  if(ME&&ME.role!=='admin'){
+    var myReps=getMyAssignedReps();
+    var myRepIdx={};
+    myReps.forEach(function(rn){var i=REPS.indexOf(rn);if(i>=0)myRepIdx[i]=1;});
+    allowedClinicIdx={};
+    for(var ci=0;ci<C.length;ci++){
+      var ka=KA[ci]||[-1];
+      if(myRepIdx[ka[0]])allowedClinicIdx[ci]=1;
+    }
+  }
   for(var i=0;i<C.length;i++){
+    if(allowedClinicIdx&&!allowedClinicIdx[i])continue;
     var rows=D[C[i]]||[];if(!rows.length)continue;
     var r24=0,r25=0,r26=0;rows.forEach(function(r){if(r[0]===4)r24+=r[2];else if(r[0]===5)r25+=r[2];else r26+=r[2];});
     if((r24>0||r25>0)&&r26===0)WBL.push([i,r24+r25]);
