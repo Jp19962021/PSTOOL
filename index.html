@@ -2634,6 +2634,7 @@ var CH_CHART_RISK=null;
 var CH_DATA=null;
 
 function churnInit(){
+  var _kb=document.getElementById('ch-klaviyo-btn');if(_kb)_kb.style.display=(ME&&ME.role==='admin')?'':'none';
   // Populate rep dropdown based on user role — preserve current selection across re-inits
   var sel=document.getElementById('ch-rep');
   var prevValue=sel.value; // save what user had picked
@@ -2771,6 +2772,52 @@ function calcChurnForClinic(idx){
   };
 }
 
+async function pushToKlaviyo(){
+  if(!ME||ME.role!=='admin'){alert('Admin only.');return;}
+  if(!CHURN_BY_TIER){
+    alert('Load the Churn Predictor first (click Refresh), then push to Klaviyo.');
+    return;
+  }
+  var toPush=[];
+  ['critical','slipping','watch'].forEach(function(tier){
+    (CHURN_BY_TIER[tier]||[]).forEach(function(c){
+      var ka=KA[c.idx]||[];
+      var email=(ka[1]||'').trim();
+      if(!email)return;
+      toPush.push({
+        name:c.clinic,email:email,tier:tier,
+        score:c.score,estLoss:Math.round(c.estLoss||0),
+        lastOrder:ka[6]||'',avgGap:c.avgGap||0,
+        rep:c.rep||''
+      });
+    });
+  });
+  if(!toPush.length){
+    alert('No at-risk clinics with email addresses found. Emails come from Zoho contacts — run a sync if coverage is low.');
+    return;
+  }
+  var btn=document.getElementById('ch-klaviyo-btn');
+  btn.disabled=true;btn.textContent='Pushing…';
+  try{
+    var resp=await fetch(WORKER+'/klaviyo',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({clinics:toPush})
+    });
+    var j=await resp.json();
+    if(j.success||!j.errors||!j.errors.length){
+      var p=j.pushed||{};
+      alert('✓ Pushed to Klaviyo!\n\nCritical: '+(p.critical||0)+'\nSlipping: '+(p.slipping||0)+'\nWatch: '+(p.watch||0)+'\n\nLists created/updated in your Klaviyo account (PetScript Inc).');
+    }else{
+      alert('Klaviyo push had errors:\n'+(j.errors||[]).slice(0,3).join('\n'));
+    }
+  }catch(e){
+    alert('Push failed: '+e.message);
+  }finally{
+    btn.disabled=false;btn.textContent='✉ Push to Klaviyo';
+  }
+}
+
 async function loadChurn(){
   // Re-init selector every time in case admin changed the user's assignments recently
   churnInit();
@@ -2824,7 +2871,7 @@ async function loadChurn(){
   }
 
   // Hero KPIs
-  var byTier={critical:[],slipping:[],watch:[],healthy:[]};
+  CHURN_BY_TIER={critical:[],slipping:[],watch:[],healthy:[]};var byTier=CHURN_BY_TIER;
   all.forEach(function(c){byTier[c.tier].push(c);});
 
   var totalAtRisk=byTier.critical.length+byTier.slipping.length+byTier.watch.length;
@@ -2986,6 +3033,7 @@ document.getElementById('ch-rep').addEventListener('change',loadChurn);
 document.getElementById('ch-minrev').addEventListener('change',loadChurn);
 document.getElementById('ch-tier').addEventListener('change',loadChurn);
 document.getElementById('ch-refresh').addEventListener('click',loadChurn);
+document.getElementById('ch-klaviyo-btn').addEventListener('click',pushToKlaviyo);
 document.getElementById('ch-tbody').addEventListener('click',function(e){
   var btn=e.target.closest('.vbtn');
   if(btn){openPanel(parseInt(btn.dataset.idx));return;}
@@ -3924,6 +3972,7 @@ document.getElementById('tp-export').addEventListener('click',function(){
 // suggested actions and a "Mark contacted" button that logs to Supabase.
 // Caches results in Supabase for 24h so it doesn't hammer Zoho every page load.
 // ============================================================
+var CHURN_BY_TIER=null; // populated by loadChurn, read by pushToKlaviyo
 var AP_STATE={
   loading:false,
   data:null,      // {rescue:[], expand:[], pitch:[], generated_at:timestamp}
