@@ -23,7 +23,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .lbtn:hover{background:#2a3550}
 .lerr{color:#dc2626;font-size:12px;text-align:center;margin-top:10px;min-height:18px}
 #app{display:none}
-.topbar{background:#1a2035;padding:0 28px;display:flex;align-items:center;position:sticky;top:0;z-index:200;overflow-x:auto}
+.topbar{background:#1a2035;padding:0 16px 0 20px;display:flex;align-items:center;position:sticky;top:0;z-index:200;gap:0;min-height:52px}
+.tab-row{display:flex;align-items:center;flex:1;overflow-x:auto;scrollbar-width:none}
+.tab-row::-webkit-scrollbar{display:none}
+.hamburger{display:none;background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:6px 8px;margin-left:4px;line-height:1}
+.mob-nav{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none}
+.mob-nav.open{display:block}
+.mob-nav-inner{position:absolute;top:0;right:0;bottom:0;width:260px;background:#1a2035;display:flex;flex-direction:column;padding:16px 0;overflow-y:auto;transform:translateX(100%);transition:transform .25s ease}
+.mob-nav.open .mob-nav-inner{transform:translateX(0)}
+.mob-nav-tab{padding:14px 24px;font-size:14px;font-weight:600;color:rgba(255,255,255,.75);cursor:pointer;border-left:3px solid transparent}
+.mob-nav-tab:hover{background:rgba(255,255,255,.08);color:#fff}
+.mob-nav-tab.active{color:#fff;border-left-color:#4ade9a;background:rgba(255,255,255,.06)}
+.mob-nav-sep{padding:10px 24px 4px;font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em}
+@media(max-width:780px){
+  .tab-row{display:none}
+  .hamburger{display:block}
+  .topbar{padding:0 12px 0 16px}
+  .logo{font-size:13px;padding:14px 12px 14px 0}
+  .rbadge{display:none}
+}
 .logo{font-size:15px;font-weight:700;color:#fff;padding:16px 24px 16px 0;margin-right:12px;border-right:1px solid rgba(255,255,255,.15);white-space:nowrap;flex-shrink:0}
 .logo span{color:#4ade9a}
 .tab{padding:16px 14px;font-size:12px;font-weight:600;cursor:pointer;color:rgba(255,255,255,.5);border-bottom:3px solid transparent;white-space:nowrap;user-select:none;flex-shrink:0}
@@ -520,7 +538,28 @@ table.ptbl tr:last-child td{border-bottom:none}
 .tft{padding:6px 14px;border:1.5px solid #d8dce3;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;color:#666;background:#fff}
 .tft.active{background:#1a2035;color:#fff;border-color:#1a2035}
 @media print{.topbar,.filter-bar,.prtbtn,.tab,#sw,.search-card,.spills,.overlay,.panel,#login-screen,.ninpw,.tkform,.cltabs{display:none!important}.page{display:block!important}.clpane{display:block!important}body{background:#fff}}
-@media(max-width:700px){.psg{grid-template-columns:1fr}.container{padding:16px}.tab{padding:14px 8px;font-size:11px}.tkform{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){
+  .psg{grid-template-columns:1fr}
+  .container{padding:12px}
+  .tab{padding:14px 8px;font-size:11px}
+  .tkform{grid-template-columns:1fr 1fr}
+  /* Hide heavy desktop tables on mobile, show cards instead */
+  .mob-hide{display:none!important}
+  .mob-cards{display:flex;flex-direction:column;gap:10px}
+}
+@media(min-width:701px){
+  .mob-cards{display:none!important}
+}
+/* Mobile clinic card */
+.mob-card{background:#fff;border-radius:12px;border:1px solid #e8eaed;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.mob-card-name{font-size:15px;font-weight:700;color:#1a2035;margin-bottom:4px}
+.mob-card-meta{font-size:12px;color:#888;margin-bottom:8px}
+.mob-card-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.mob-card-stat{background:#f7f8fa;border-radius:8px;padding:8px 10px}
+.mob-card-stat-v{font-size:15px;font-weight:700;color:#1a2035}
+.mob-card-stat-l{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+.mob-card-btn{width:100%;padding:10px;background:#1a2035;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+.mob-card-btn:hover{background:#2a3550}
 /* CHURN PREDICTOR */
 .ch-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px}
 .ch-hero-card{background:#fff;border-radius:12px;padding:18px 20px;border:1px solid #e8eaed;box-shadow:0 1px 4px rgba(0,0,0,.05);position:relative;overflow:hidden}
@@ -810,28 +849,50 @@ table.ptbl tr:last-child td{border-bottom:none}
   </div>
 </div>
 
-<div class="topbar">
+<div class="topbar" id="topbar">
   <div class="logo">Clinic <span>Intelligence</span></div>
-  <div class="tab active" data-page="search">&#128269; Search</div>
-  <div class="tab" data-page="territory">&#128205; Territory</div>
-  <div class="tab" data-page="winback">&#128257; Win-Back</div>
-  <div class="tab" data-page="atrisk">&#9888; At-Risk</div>
-  <div class="tab" data-page="churn">&#128302; Churn Predictor</div>
-  <div class="tab admin-tab" data-page="trends" id="trtab" style="display:none">&#128200; Trends</div>
-  <div class="tab admin-tab" data-page="actionplan" id="aptab" style="display:none">&#127919; Action Plan</div>
-  <div class="tab admin-tab" data-page="drugsearch" id="dstab" style="display:none">&#128269; Drug Search</div>
-  <div class="tab admin-tab" data-page="inventory" id="invtab" style="display:none">&#128230; Drug Inventory</div>
-  <div class="tab admin-tab" data-page="ar" id="artab" style="display:none">&#128185; Receivables</div>
-  <div class="tab" data-page="notestasks">&#128221; My Notes &amp; Tasks</div>
-  <div class="tab admin-tab" data-page="admin" id="atab" style="display:none">&#9881; Admin</div>
-  <div class="tab admin-tab" data-page="chatbot" id="cbtab" style="display:none">&#129302; Chat Bot</div>
+  <div class="tab-row" id="tab-row">
+    <div class="tab" data-page="territory">&#128205; Territory</div>
+    <div class="tab" data-page="search">&#128269; Search</div>
+    <div class="tab" data-page="winback">&#128257; Win-Back</div>
+    <div class="tab" data-page="atrisk">&#9888; At-Risk</div>
+    <div class="tab" data-page="churn">&#128302; Churn</div>
+    <div class="tab admin-tab" data-page="trends" id="trtab" style="display:none">&#128200; Trends</div>
+    <div class="tab admin-tab" data-page="actionplan" id="aptab" style="display:none">&#127919; Action Plan</div>
+    <div class="tab admin-tab" data-page="drugsearch" id="dstab" style="display:none">&#128269; Drug Search</div>
+    <div class="tab admin-tab" data-page="inventory" id="invtab" style="display:none">&#128230; Inventory</div>
+    <div class="tab admin-tab" data-page="ar" id="artab" style="display:none">&#128185; AR</div>
+    <div class="tab" data-page="notestasks">&#128221; Notes &amp; Tasks</div>
+    <div class="tab admin-tab" data-page="admin" id="atab" style="display:none">&#9881; Admin</div>
+    <div class="tab admin-tab" data-page="chatbot" id="cbtab" style="display:none">&#129302; Chat</div>
+  </div>
   <div class="tbr">
     <span class="rbadge" id="rbadge"></span>
     <button class="lout" id="lout">Sign out</button>
+    <button class="hamburger" id="hamburger" aria-label="Menu">&#9776;</button>
+  </div>
+</div>
+<!-- Mobile nav drawer -->
+<div class="mob-nav" id="mob-nav">
+  <div class="mob-nav-inner" id="mob-nav-inner">
+    <div class="mob-nav-tab active" data-page="territory">&#128205; Territory</div>
+    <div class="mob-nav-tab" data-page="search">&#128269; Search</div>
+    <div class="mob-nav-tab" data-page="winback">&#128257; Win-Back</div>
+    <div class="mob-nav-tab" data-page="atrisk">&#9888; At-Risk</div>
+    <div class="mob-nav-tab" data-page="churn">&#128302; Churn Predictor</div>
+    <div class="mob-nav-tab" data-page="notestasks">&#128221; Notes &amp; Tasks</div>
+    <div class="mob-nav-sep admin-tab" style="display:none">— Admin —</div>
+    <div class="mob-nav-tab admin-tab" data-page="trends" style="display:none">&#128200; Trends</div>
+    <div class="mob-nav-tab admin-tab" data-page="actionplan" style="display:none">&#127919; Action Plan</div>
+    <div class="mob-nav-tab admin-tab" data-page="drugsearch" style="display:none">&#128269; Drug Search</div>
+    <div class="mob-nav-tab admin-tab" data-page="inventory" style="display:none">&#128230; Drug Inventory</div>
+    <div class="mob-nav-tab admin-tab" data-page="ar" style="display:none">&#128185; Receivables</div>
+    <div class="mob-nav-tab admin-tab" data-page="admin" style="display:none">&#9881; Admin</div>
+    <div class="mob-nav-tab admin-tab" data-page="chatbot" style="display:none">&#129302; Chat Bot</div>
   </div>
 </div>
 
-<div id="page-search" class="page active"><div class="container">
+<div id="page-search" class="page"><div class="container">
   <div class="search-card">
     <div class="lbl">Search Clinic</div>
     <div class="hint">Search by clinic name, doctor, phone, or address</div>
@@ -841,7 +902,7 @@ table.ptbl tr:last-child td{border-bottom:none}
   <div class="esearch" id="se"><div class="ei">&#128300;</div><p style="font-size:14px">Search for a clinic above</p></div>
 </div></div>
 
-<div id="page-territory" class="page"><div class="container">
+<div id="page-territory" class="page active"><div class="container">
   <div class="filter-bar"><div><div class="lbl" style="margin-bottom:6px">Sales Rep</div><select id="rsel"><option value="">— Select a rep —</option></select></div></div>
   <div class="spills" id="tst" style="display:none">
     <div class="sp"><div class="spv" id="tc">0</div><div class="spl">Clinics</div></div>
@@ -849,10 +910,12 @@ table.ptbl tr:last-child td{border-bottom:none}
     <div class="sp"><div class="spv" id="tr25">$0</div><div class="spl">2025 Revenue</div></div>
     <div class="sp"><div class="spv" id="tsc">0</div><div class="spl">Have Stopped Prods</div></div>
   </div>
-  <div class="section-card" id="ttbl" style="display:none">
+  <div class="section-card mob-hide" id="ttbl" style="display:none">
     <div class="sh">Clinics in Territory <span class="shc" id="tct"></span></div>
     <div style="overflow-x:auto"><table class="mt"><thead><tr><th>Clinic</th><th>Doctor</th><th>Last Order</th><th>Phone</th><th style="text-align:right">2026 YTD</th><th style="text-align:right">2025</th><th style="text-align:right">YOY</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>
   </div>
+  <!-- Mobile card view for territory -->
+  <div class="mob-cards" id="tb-cards" style="display:none"></div>
   <div class="estate" id="te"><div class="ei">&#128205;</div><p>Select a rep above</p></div>
 </div></div>
 
@@ -1685,6 +1748,14 @@ function applyTabVisibility(){
     var key=t.dataset.page;
     t.style.display=canSee(key)?'':'none';
   });
+  // Mirror visibility to mobile nav tabs
+  document.querySelectorAll('.mob-nav-tab[data-page]').forEach(function(t){
+    var key=t.dataset.page;
+    t.style.display=canSee(key)?'':'none';
+  });
+  document.querySelectorAll('.mob-nav-sep.admin-tab').forEach(function(t){
+    t.style.display=(ME&&ME.role==='admin')?'':'none';
+  });
 }
 document.getElementById('lout').addEventListener('click',function(){
   ME=null;
@@ -1698,13 +1769,20 @@ document.getElementById('lout').addEventListener('click',function(){
   SI=[];WBL=[];ARL=[];
 });
 
-document.querySelectorAll('.tab').forEach(function(t){
+document.querySelectorAll('.tab,.mob-nav-tab').forEach(function(t){
   t.addEventListener('click',function(){
-    if(!canSee(t.dataset.page))return;
+    var page=t.dataset.page;
+    if(!page)return;
+    if(!canSee(page))return;
+    // Close mobile nav
+    document.getElementById('mob-nav').classList.remove('open');
+    document.body.style.overflow='';
+    // Update active states on both desktop + mobile nav
     document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
+    document.querySelectorAll('.mob-nav-tab').forEach(function(x){x.classList.remove('active');});
     document.querySelectorAll('.page').forEach(function(x){x.classList.remove('active');});
-    t.classList.add('active');
-    document.getElementById('page-'+t.dataset.page).classList.add('active');
+    document.querySelectorAll('[data-page="'+page+'"]').forEach(function(x){x.classList.add('active');});
+    document.getElementById('page-'+page).classList.add('active');
     if(t.dataset.page==='admin'){loadReps();loadActivity();loadScorecards(7);loadAdminNP();loadPermissionsMatrix();}
     if(t.dataset.page==='chatbot'){
       if(aiPageChat&&aiPageChat.msgs.length===0)aiPageChat.renderStarters();
@@ -5790,6 +5868,21 @@ function _rebuildAR(){
   });
 }
 
+
+// ── Hamburger menu ─────────────────────────────────────────
+document.getElementById('hamburger').addEventListener('click',function(){
+  var nav=document.getElementById('mob-nav');
+  nav.classList.add('open');
+  document.body.style.overflow='hidden';
+});
+document.getElementById('mob-nav').addEventListener('click',function(e){
+  // Close if clicking the backdrop (not the drawer)
+  if(e.target===document.getElementById('mob-nav')){
+    document.getElementById('mob-nav').classList.remove('open');
+    document.body.style.overflow='';
+  }
+});
+// ── End hamburger ──────────────────────────────────────────
 function init(){
   for(var i=0;i<C.length;i++){var k=KA[i]||[];var r=k[0]>=0?REPS[k[0]]:'';SI.push([C[i],r,k[1]||'',k[2]||'',k[3]||'',k[4]||'',k[5]||'',k[6]||''].join(' ').toLowerCase());}
   document.getElementById('smsg').textContent=C.length.toLocaleString()+' clinics loaded.';
@@ -5843,6 +5936,12 @@ function init(){
   document.getElementById('arc').textContent=ARL.length.toLocaleString();
   buildWB();buildAR();setupSearch();
   initAiChats();
+  // Default to territory page and auto-load it
+  document.querySelectorAll('.page').forEach(function(x){x.classList.remove('active');});
+  document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
+  document.querySelectorAll('.mob-nav-tab').forEach(function(x){x.classList.remove('active');});
+  document.getElementById('page-territory').classList.add('active');
+  document.querySelectorAll('[data-page="territory"]').forEach(function(x){x.classList.add('active');});
 }
 
 var inp=document.getElementById('si'),dd=document.getElementById('dd');
@@ -5876,9 +5975,13 @@ document.getElementById('rsel').addEventListener('change',function(){
   document.getElementById('te').style.display=rep?'none':'block';
   document.getElementById('ttbl').style.display=rep?'block':'none';
   document.getElementById('tst').style.display=rep?'flex':'none';
+  var cardsEl=document.getElementById('tb-cards');
+  if(cardsEl)cardsEl.style.display=rep?'flex':'none';
   if(!rep)return;
   var tb=document.getElementById('tb');tb.innerHTML='';
+  if(cardsEl)cardsEl.innerHTML='';
   var tv26=0,tv25=0,sc=0,cc=0;
+  var cardRows=[];
   for(var i=0;i<C.length;i++){
     var k=KA[i]||[];if(k[0]!==ri)continue;
     var rows=D[C[i]]||[];var r25=0,r26=0,hs=false;
@@ -5901,11 +6004,35 @@ document.getElementById('rsel').addEventListener('change',function(){
       '<td style="text-align:right">'+yoy(r25,r26)+'</td>'+
       '<td><button class="vbtn" data-idx="'+i+'">View &#8594;</button></td>';
     tb.appendChild(tr);
+    cardRows.push({idx:i,name:C[i],doctor:k[3]||'',phone:k[2]||'',last:k[6]||'',r25:r25,r26:r26});
   }
   document.getElementById('tct').textContent=cc;document.getElementById('tc').textContent=cc;
   document.getElementById('tr26').textContent='$'+Math.round(tv26).toLocaleString();
   document.getElementById('tr25').textContent='$'+Math.round(tv25).toLocaleString();
   document.getElementById('tsc').textContent=sc;
+  // Build mobile cards
+  if(cardsEl){
+    cardRows.forEach(function(r){
+      var card=document.createElement('div');card.className='mob-card';
+      var yoyHtml=r.r25>0?yoy(r.r25,r.r26):'<span style="color:#aaa">—</span>';
+      card.innerHTML=
+        '<div class="mob-card-name">'+escapeHtml(r.name)+'</div>'+
+        '<div class="mob-card-meta">'+(r.doctor?'Dr. '+escapeHtml(r.doctor)+' · ':'')+
+          (r.last?'Last order: '+r.last:'No orders')+'</div>'+
+        '<div class="mob-card-stats">'+
+          '<div class="mob-card-stat"><div class="mob-card-stat-v">'+fmt(r.r26)+'</div><div class="mob-card-stat-l">2026 YTD</div></div>'+
+          '<div class="mob-card-stat"><div class="mob-card-stat-v">'+fmt(r.r25)+'</div><div class="mob-card-stat-l">2025</div></div>'+
+        '</div>'+
+        '<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">'+yoyHtml+
+          (r.phone?'<a href="tel:'+r.phone+'" style="margin-left:auto;font-size:13px;color:#1a2035;font-weight:600">📞 Call</a>':'')+'</div>'+
+        '<button class="mob-card-btn" data-idx="'+r.idx+'">View Profile →</button>';
+      cardsEl.appendChild(card);
+    });
+    cardsEl.addEventListener('click',function(e){
+      var btn=e.target.closest('.mob-card-btn');
+      if(btn)openPanel(parseInt(btn.dataset.idx));
+    });
+  }
 });
 document.getElementById('tb').addEventListener('click',function(e){var b=e.target.closest('.vbtn');if(b)openPanel(parseInt(b.dataset.idx));});
 
