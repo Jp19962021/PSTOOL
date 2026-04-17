@@ -317,7 +317,7 @@ table.ptbl tr:last-child td{border-bottom:none}
 .time-filter{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
 .tft{padding:6px 14px;border:1.5px solid #d8dce3;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;color:#666;background:#fff}
 .tft.active{background:#1a2035;color:#fff;border-color:#1a2035}
-@media print{.topbar,.filter-bar,.prtbtn,.tab,#sw,.search-card,.spills,.overlay,.panel,#login-screen,.ninpw,#ai-fab,#ai-chat,.tkform,.cltabs{display:none!important}.page{display:block!important}.clpane{display:block!important}body{background:#fff}}
+@media print{.topbar,.filter-bar,.prtbtn,.tab,#sw,.search-card,.spills,.overlay,.panel,#login-screen,.ninpw,.tkform,.cltabs{display:none!important}.page{display:block!important}.clpane{display:block!important}body{background:#fff}}
 @media(max-width:700px){.psg{grid-template-columns:1fr}.container{padding:16px}.tab{padding:14px 8px;font-size:11px}.tkform{grid-template-columns:1fr 1fr}}
 /* CHURN PREDICTOR */
 .ch-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px}
@@ -404,26 +404,14 @@ table.ptbl tr:last-child td{border-bottom:none}
 .ai-ctx{font-size:10px;color:#888;padding:6px 12px;background:#f7f8fa;border-bottom:1px solid #e8eaed;display:none}
 .ai-ctx.show{display:block}
 .ai-ctx strong{color:#1a2035}
-/* AI CHAT — bubble */
-#ai-fab{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:#1a2035;color:#fff;border:none;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.25);z-index:400;display:flex;align-items:center;justify-content:center;font-size:22px;transition:transform .15s}
-#ai-fab:hover{transform:scale(1.08);background:#2a3550}
-#ai-fab.hidden{display:none}
-#ai-chat{position:fixed;bottom:24px;right:24px;width:min(440px,calc(100vw - 32px));height:min(620px,calc(100vh - 80px));background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);z-index:401;display:none;flex-direction:column;overflow:hidden;border:1px solid #e8eaed}
-#ai-chat.open{display:flex}
+/* AI CHAT — inline shared controls */
 .aichdr{background:#1a2035;color:#fff;padding:14px 18px;display:flex;align-items:center;gap:10px;flex-shrink:0}
 .aichdr-title{font-size:14px;font-weight:700;flex:1}
 .aichdr-title span{color:#4ade9a}
 .aichdr-sub{font-size:11px;color:rgba(255,255,255,.6);font-weight:400;margin-top:1px}
 .aichdr-btn{background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:16px;padding:4px 8px;border-radius:4px}
 .aichdr-btn:hover{background:rgba(255,255,255,.1);color:#fff}
-#ai-msgs{flex:1;overflow-y:auto;padding:16px;background:#f7f8fa;display:flex;flex-direction:column;gap:12px}
-#ai-inp-wrap{padding:12px;border-top:1px solid #e8eaed;background:#fff;display:flex;gap:8px;flex-shrink:0}
-#ai-inp{flex:1;padding:10px 14px;border:1.5px solid #e0e3ea;border-radius:10px;font-size:13px;outline:none;font-family:inherit;resize:none;max-height:120px}
-#ai-inp:focus{border-color:#1a2035}
-#ai-send{padding:0 18px;background:#1a2035;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
-#ai-send:hover{background:#2a3550}
-#ai-send:disabled{background:#ccc;cursor:not-allowed}
-/* chat history overlay */
+/* chat history overlay (shared with admin full-page chat) */
 .ch-hist{position:absolute;top:50px;right:8px;width:280px;max-height:360px;background:#fff;border:1px solid #d0d4dc;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);z-index:410;display:none;overflow:hidden;flex-direction:column}
 .ch-hist.open{display:flex}
 .ch-hist-hdr{padding:10px 14px;background:#f7f8fa;border-bottom:1px solid #e8eaed;font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.06em}
@@ -436,7 +424,23 @@ table.ptbl tr:last-child td{border-bottom:none}
 .ch-item .ch-del{background:none;border:none;color:#ddd;cursor:pointer;font-size:12px;padding:0;flex-shrink:0}
 .ch-item .ch-del:hover{color:#dc2626}
 .ch-hist-empty{padding:18px 12px;text-align:center;color:#aaa;font-size:12px}
-@media(max-width:500px){#ai-chat{bottom:0;right:0;left:0;width:100%;height:100%;border-radius:0}#ai-fab{bottom:16px;right:16px}.ch-hist{right:0;left:0;width:auto;top:52px;border-radius:0}}
+/* Inline per-record chat (inside clinic profile + drug detail) */
+.inchat{display:flex;flex-direction:column;height:420px;background:#f7f8fa;border-radius:10px;border:1px solid #e8eaed;overflow:hidden}
+.inchat-ctx{font-size:10px;color:#666;padding:7px 12px;background:#eef0f5;border-bottom:1px solid #e8eaed}
+.inchat-ctx strong{color:#1a2035}
+.inchat-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.inchat-inp-wrap{display:flex;gap:6px;padding:10px;border-top:1px solid #e8eaed;background:#fff;flex-shrink:0}
+.inchat-inp{flex:1;padding:9px 12px;border:1.5px solid #e0e3ea;border-radius:8px;font-size:13px;outline:none;font-family:inherit;resize:none;max-height:100px}
+.inchat-inp:focus{border-color:#1a2035}
+.inchat-send{padding:0 14px;background:#1a2035;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.inchat-send:hover{background:#2a3550}
+.inchat-send:disabled{background:#ccc;cursor:not-allowed}
+.inchat-clear{background:none;border:none;color:#888;font-size:11px;cursor:pointer;padding:4px 8px;margin-left:4px}
+.inchat-clear:hover{color:#dc2626}
+/* Back button for slide-out panels */
+.pnl-back{background:rgba(255,255,255,.12);border:none;color:#fff;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:500;display:inline-flex;align-items:center;gap:4px;margin-right:6px}
+.pnl-back:hover{background:rgba(255,255,255,.22)}
+.pnl-back[hidden]{display:none}
 /* AI CHAT — full page */
 .ai-page-wrap{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.07);border:1px solid #e8eaed;overflow:hidden;display:flex;flex-direction:row;height:calc(100vh - 140px);min-height:520px;position:relative}
 .ai-page-side{width:240px;border-right:1px solid #edf0f5;background:#fafbfc;display:flex;flex-direction:column;flex-shrink:0}
@@ -478,7 +482,10 @@ table.ptbl tr:last-child td{border-bottom:none}
 <div class="panel" id="panel">
   <div class="phdr">
     <div style="flex:1">
-      <div class="pcname" id="pn"></div>
+      <div style="display:flex;align-items:flex-start;gap:4px">
+        <button class="pnl-back" id="pn-back" hidden title="Back" style="background:#eef0f5;color:#1a2035;margin-top:2px">&#8592; Back</button>
+        <div style="flex:1;min-width:0"><div class="pcname" id="pn"></div></div>
+      </div>
       <div class="paddr" id="pa"></div>
       <div class="plast" id="pl"></div>
       <div class="pmeta" id="pm"></div>
@@ -499,6 +506,7 @@ table.ptbl tr:last-child td{border-bottom:none}
       <div class="cltab" data-pane="shared">&#128172; Shared Notes <span class="badge" id="nc">0</span></div>
       <div class="cltab" data-pane="orders">&#128230; Orders</div>
       <div class="cltab" data-pane="pitch">&#11088; Pitch</div>
+      <div class="cltab" data-pane="askai">&#129302; Ask AI</div>
     </div>
 
     <!-- Overview pane = stats + recent activity -->
@@ -565,6 +573,20 @@ table.ptbl tr:last-child td{border-bottom:none}
     <div class="clpane" data-pane="pitch">
       <div class="sechd">&#11088; Pitch Opportunities <span class="shc" id="pxc"></span></div>
       <table class="ptbl"><thead><tr><th>Product</th><th style="text-align:right">Our Revenue</th><th style="text-align:right">Rank</th></tr></thead><tbody id="pxb"></tbody></table>
+    </div>
+
+    <!-- Ask AI (inline chat scoped to this clinic) -->
+    <div class="clpane" data-pane="askai">
+      <div class="sechd">&#129302; Ask AI about this clinic <button class="inchat-clear" id="cl-chat-clear" title="Start new conversation">Clear</button></div>
+      <p class="fnote" style="margin-bottom:10px">The AI knows you're viewing this clinic. You can also ask broader questions \u2014 it won't refuse.</p>
+      <div class="inchat">
+        <div class="inchat-ctx" id="cl-chat-ctx">Viewing: <strong id="cl-chat-name">\u2014</strong></div>
+        <div class="inchat-msgs" id="cl-chat-msgs"></div>
+        <div class="inchat-inp-wrap">
+          <textarea class="inchat-inp" id="cl-chat-inp" rows="1" placeholder="Ask about this clinic..."></textarea>
+          <button class="inchat-send" id="cl-chat-send">Send</button>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -800,9 +822,12 @@ table.ptbl tr:last-child td{border-bottom:none}
 <div class="dd-panel" id="dd-panel">
   <div class="dd-handle" title="Drag handle"></div>
   <div class="dd-header">
-    <div>
-      <div style="font-size:11px;color:#a4adc7;text-transform:uppercase;letter-spacing:.08em;font-weight:600">Drug Detail</div>
-      <div id="dd-title" style="font-size:22px;font-weight:700;color:#fff;margin-top:2px"></div>
+    <div style="display:flex;align-items:center;flex:1;min-width:0">
+      <button class="pnl-back" id="dd-back" hidden title="Back">&#8592; Back</button>
+      <div style="min-width:0">
+        <div style="font-size:11px;color:#a4adc7;text-transform:uppercase;letter-spacing:.08em;font-weight:600">Drug Detail</div>
+        <div id="dd-title" style="font-size:22px;font-weight:700;color:#fff;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+      </div>
     </div>
     <button id="dd-close" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px">×</button>
   </div>
@@ -820,6 +845,7 @@ table.ptbl tr:last-child td{border-bottom:none}
       <div class="dd-tabs">
         <div class="dd-tab" data-tab="stopped">⚠ Stopped Buying <span class="dd-tab-count" id="dd-stopped-count">0</span></div>
         <div class="dd-tab" data-tab="active">✓ Currently Buying <span class="dd-tab-count" id="dd-active-count">0</span></div>
+        <div class="dd-tab" data-tab="askai">&#129302; Ask AI</div>
       </div>
       <div class="dd-pane" data-pane="stopped">
         <div style="font-size:12px;color:#dc2626;font-weight:600;margin-bottom:8px">Estimated lost revenue: <span id="dd-stopped-loss">$0</span></div>
@@ -833,6 +859,20 @@ table.ptbl tr:last-child td{border-bottom:none}
           <thead><tr><th>Clinic</th><th>Rep</th><th style="text-align:right">2025 Rev</th><th style="text-align:right">2026 Rev</th><th>Last Order</th><th></th></tr></thead>
           <tbody></tbody>
         </table></div>
+      </div>
+      <div class="dd-pane" data-pane="askai">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap">
+          <p class="fnote" style="margin:0;flex:1;min-width:180px">The AI knows you're viewing this drug. Ask broader questions anytime.</p>
+          <button class="inchat-clear" id="dd-chat-clear" title="Start new conversation">Clear</button>
+        </div>
+        <div class="inchat">
+          <div class="inchat-ctx" id="dd-chat-ctx">Viewing drug: <strong id="dd-chat-name">\u2014</strong></div>
+          <div class="inchat-msgs" id="dd-chat-msgs"></div>
+          <div class="inchat-inp-wrap">
+            <textarea class="inchat-inp" id="dd-chat-inp" rows="1" placeholder="Ask about this drug..."></textarea>
+            <button class="inchat-send" id="dd-chat-send">Send</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -999,27 +1039,6 @@ table.ptbl tr:last-child td{border-bottom:none}
   </div>
 </div></div>
 
-<!-- BUBBLE -->
-<button id="ai-fab" title="Ask AI Assistant">&#128172;</button>
-<div id="ai-chat">
-  <div class="aichdr">
-    <div class="aichdr-title">AI <span>Assistant</span><div class="aichdr-sub" id="ai-sub">Ask anything about your clinics</div></div>
-    <button class="aichdr-btn" id="ai-hist-btn" title="Chat history">&#128196;</button>
-    <button class="aichdr-btn" id="ai-new" title="New conversation">&#43;</button>
-    <button class="aichdr-btn" id="ai-close" title="Close">&#10005;</button>
-  </div>
-  <div class="ai-ctx" id="ai-ctx"></div>
-  <div id="ai-msgs"></div>
-  <div id="ai-inp-wrap">
-    <textarea id="ai-inp" rows="1" placeholder="Ask a question..."></textarea>
-    <button id="ai-send">Send</button>
-  </div>
-  <div class="ch-hist" id="ai-hist">
-    <div class="ch-hist-hdr">Recent conversations</div>
-    <div class="ch-hist-list" id="ai-hist-list"></div>
-  </div>
-</div>
-
 </div>
 
 <script>
@@ -1028,7 +1047,16 @@ var ME=null,CUR=null,ALLREPS=[];
 var EP0=new Date(Date.UTC(2024,0,1)).getTime();
 var SI=[],WBL=[],ARL=[];
 var WORKER='https://fragrant-cloud-6ef2.jp-d4e.workers.dev';
-var aiBubbleChat=null,aiPageChat=null;
+var aiClinicChat=null,aiDrugChat=null,aiPageChat=null;
+var CUR_DRUG=null;
+// Navigation history stack for Back button (capped at 3 levels)
+var NAV_HISTORY=[];
+function navPush(entry){
+  NAV_HISTORY.push(entry);
+  while(NAV_HISTORY.length>3)NAV_HISTORY.shift();
+}
+function navPop(){return NAV_HISTORY.pop();}
+function navHasHistory(){return NAV_HISTORY.length>0;}
 
 function epDate(e){var d=new Date(EP0+e*86400000);return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
 function fmt(n){return n?'$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'\u2014';}
@@ -1094,10 +1122,40 @@ document.querySelectorAll('.tab').forEach(function(t){
   });
 });
 
-function openPanel(i){fillPanel(i);document.getElementById('overlay').classList.add('open');document.getElementById('panel').classList.add('open');document.body.style.overflow='hidden';}
-function closePanel(){document.getElementById('overlay').classList.remove('open');document.getElementById('panel').classList.remove('open');document.body.style.overflow='';CUR=null;if(aiBubbleChat)aiBubbleChat.updateContext();}
+function openPanel(i){
+  fillPanel(i);
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('panel').classList.add('open');
+  document.body.style.overflow='hidden';
+  // Back button visibility
+  var backBtn=document.getElementById('pn-back');
+  if(backBtn)backBtn.hidden=!navHasHistory();
+  // Reset clinic chat for fresh conversation on new clinic
+  if(aiClinicChat){aiClinicChat.newConversation();aiClinicChat.updateContext();}
+}
+function closePanel(){
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('panel').classList.remove('open');
+  document.body.style.overflow='';
+  CUR=null;
+  // Clear nav history so reopening from home doesn't show stale Back
+  NAV_HISTORY=[];
+  if(aiClinicChat)aiClinicChat.updateContext();
+}
 document.getElementById('overlay').addEventListener('click',closePanel);
 document.getElementById('pcl').addEventListener('click',closePanel);
+// Back button from clinic panel — pop history, close clinic, re-open previous
+document.getElementById('pn-back').addEventListener('click',function(){
+  var prev=navPop();
+  if(!prev){closePanel();return;}
+  // Close clinic panel (but DO NOT wipe history)
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('panel').classList.remove('open');
+  CUR=null;
+  if(aiClinicChat)aiClinicChat.updateContext();
+  if(prev.type==='drug'){openDrugDetail(prev.id,true);}
+  else if(prev.type==='clinic'){openPanel(prev.id,true);}
+});
 document.getElementById('pprt').addEventListener('click',function(){window.print();});
 
 // Products table: click rollup row -> toggle SKU rows; click SKU row -> toggle order rows
@@ -1200,6 +1258,9 @@ document.querySelectorAll('.cltab').forEach(function(ct){
     if(ct.dataset.pane==='mynotes')loadPrivateClinicNotes();
     if(ct.dataset.pane==='mytasks')loadPrivateClinicTasks();
     if(ct.dataset.pane==='shared')loadNotes(CUR);
+    if(ct.dataset.pane==='askai'){
+      setTimeout(function(){var inp=document.getElementById('cl-chat-inp');if(inp)inp.focus();},150);
+    }
   });
 });
 
@@ -1352,7 +1413,7 @@ function fillPanel(idx){
   loadPrivateClinicTasks();
   loadNotes(name);
 
-  if(aiBubbleChat)aiBubbleChat.updateContext();
+  if(aiClinicChat)aiClinicChat.updateContext();
 }
 
 // =========================================================
@@ -2576,29 +2637,57 @@ if(trRepEl)trRepEl.addEventListener('change',function(){TR_REP_FILTER=trRepEl.va
 // Drug detail panel close + tab switching
 document.getElementById('dd-close').addEventListener('click',closeDrugDetail);
 document.getElementById('dd-overlay').addEventListener('click',closeDrugDetail);
-document.querySelectorAll('.dd-tab').forEach(function(t){
+// Back button from drug panel — pop and re-open previous record
+document.getElementById('dd-back').addEventListener('click',function(){
+  var prev=navPop();
+  if(!prev){closeDrugDetail();return;}
+  // Close drug panel visually without wiping history
+  document.getElementById('dd-overlay').classList.remove('open');
+  document.getElementById('dd-panel').classList.remove('open');
+  CUR_DRUG=null;
+  if(aiDrugChat)aiDrugChat.updateContext();
+  if(TR_CHARTS['dd-12mo']){TR_CHARTS['dd-12mo'].destroy();delete TR_CHARTS['dd-12mo'];}
+  if(prev.type==='clinic')openPanel(prev.id,true);
+  else if(prev.type==='drug')openDrugDetail(prev.id,true);
+});
+// Scope tab switching to drug-detail tabs only (the .dd-tabs container)
+document.querySelectorAll('#dd-panel .dd-tab').forEach(function(t){
   t.addEventListener('click',function(){
-    document.querySelectorAll('.dd-tab').forEach(function(x){x.classList.remove('active');});
-    document.querySelectorAll('.dd-pane').forEach(function(x){x.classList.remove('active');});
+    document.querySelectorAll('#dd-panel .dd-tab').forEach(function(x){x.classList.remove('active');});
+    document.querySelectorAll('#dd-panel .dd-pane').forEach(function(x){x.classList.remove('active');});
     t.classList.add('active');
-    document.querySelector('.dd-pane[data-pane="'+t.dataset.tab+'"]').classList.add('active');
+    document.querySelector('#dd-panel .dd-pane[data-pane="'+t.dataset.tab+'"]').classList.add('active');
+    // When switching TO Ask AI, focus the input for fast typing
+    if(t.dataset.tab==='askai'){
+      setTimeout(function(){var inp=document.getElementById('dd-chat-inp');if(inp)inp.focus();},150);
+    }
   });
 });
 
 // =========================================================
 // DRUG DETAIL slide-out panel
 // =========================================================
-function openDrugDetail(ingredient){
+function openDrugDetail(ingredient, isNavBack){
+  CUR_DRUG=ingredient;
   document.getElementById('dd-title').textContent=ingredient;
   document.getElementById('dd-overlay').classList.add('open');
   document.getElementById('dd-panel').classList.add('open');
   document.body.style.overflow='hidden';
+  // Back button
+  var backBtn=document.getElementById('dd-back');
+  if(backBtn)backBtn.hidden=!navHasHistory();
+  // Fresh drug chat on new drug
+  if(aiDrugChat&&!isNavBack){aiDrugChat.newConversation();aiDrugChat.updateContext();}
+  else if(aiDrugChat)aiDrugChat.updateContext();
   renderDrugDetail(ingredient);
 }
 function closeDrugDetail(){
   document.getElementById('dd-overlay').classList.remove('open');
   document.getElementById('dd-panel').classList.remove('open');
   document.body.style.overflow='';
+  CUR_DRUG=null;
+  NAV_HISTORY=[];
+  if(aiDrugChat)aiDrugChat.updateContext();
   if(TR_CHARTS['dd-12mo']){TR_CHARTS['dd-12mo'].destroy();delete TR_CHARTS['dd-12mo'];}
 }
 function renderDrugDetail(ingredient){
@@ -2713,10 +2802,10 @@ function renderDrugDetail(ingredient){
   ddRenderClinicList('stopped',stoppedList);
   ddRenderClinicList('active',activeList);
   // Show stopped tab by default
-  document.querySelectorAll('.dd-tab').forEach(function(t){t.classList.remove('active');});
-  document.querySelector('.dd-tab[data-tab="stopped"]').classList.add('active');
-  document.querySelectorAll('.dd-pane').forEach(function(p){p.classList.remove('active');});
-  document.querySelector('.dd-pane[data-pane="stopped"]').classList.add('active');
+  document.querySelectorAll('#dd-panel .dd-tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelector('#dd-panel .dd-tab[data-tab="stopped"]').classList.add('active');
+  document.querySelectorAll('#dd-panel .dd-pane').forEach(function(p){p.classList.remove('active');});
+  document.querySelector('#dd-panel .dd-pane[data-pane="stopped"]').classList.add('active');
 
   // Save current ingredient for "open chat about this drug" button
   document.getElementById('dd-panel').dataset.ing=ingredient;
@@ -2746,11 +2835,26 @@ function ddRenderClinicList(which,list){
     }
     tbody.appendChild(tr);
   });
-  // Open clinic when View is clicked (button OR row body)
+  // Open clinic when View is clicked (button OR row body) — push drug into history first
   tbody.onclick=function(e){
     var btn=e.target.closest('.dd-view-btn');
-    if(btn){closeDrugDetail();openPanel(parseInt(btn.dataset.idx));return;}
-    var tr=e.target.closest('tr');if(tr&&tr.dataset.idx){closeDrugDetail();openPanel(parseInt(tr.dataset.idx));}
+    if(btn){
+      if(CUR_DRUG)navPush({type:'drug',id:CUR_DRUG});
+      // Close drug panel visually (do NOT reset history)
+      document.getElementById('dd-overlay').classList.remove('open');
+      document.getElementById('dd-panel').classList.remove('open');
+      if(TR_CHARTS['dd-12mo']){TR_CHARTS['dd-12mo'].destroy();delete TR_CHARTS['dd-12mo'];}
+      openPanel(parseInt(btn.dataset.idx));
+      return;
+    }
+    var tr=e.target.closest('tr');
+    if(tr&&tr.dataset.idx){
+      if(CUR_DRUG)navPush({type:'drug',id:CUR_DRUG});
+      document.getElementById('dd-overlay').classList.remove('open');
+      document.getElementById('dd-panel').classList.remove('open');
+      if(TR_CHARTS['dd-12mo']){TR_CHARTS['dd-12mo'].destroy();delete TR_CHARTS['dd-12mo'];}
+      openPanel(parseInt(tr.dataset.idx));
+    }
   };
 }
 
@@ -2829,7 +2933,6 @@ function init(){
   document.getElementById('arc').textContent=ARL.length.toLocaleString();
   buildWB();buildAR();setupSearch();
   initAiChats();
-  loadBubbleHistory();
 }
 
 var inp=document.getElementById('si'),dd=document.getElementById('dd');
@@ -3032,9 +3135,16 @@ function makeChat(opts){
   function renderStarters(){
     msgsEl.innerHTML='';
     var firstName=ME?ME.name.split(' ')[0]:'there';
-    var intro=opts.surface==='page'
-      ?'Hi '+firstName+'. This is the admin chat — full-territory visibility. Say things like "export the top 50 clinics as a CSV" or "put that analysis in a Word doc".'
-      :'Hi '+firstName+'! Ask me anything about your clinics, products, or territory. A few ideas:';
+    var intro;
+    if(opts.surface==='page'){
+      intro='Hi '+firstName+'. This is the admin chat \u2014 full-territory visibility. Say things like "export the top 50 clinics as a CSV" or "put that analysis in a Word doc".';
+    } else if(opts.surface==='inline-clinic'){
+      intro='I know you\'re viewing this clinic. Ask about their orders, pitch opportunities, or anything else \u2014 I\'ll default to this clinic but happy to answer broader questions too.';
+    } else if(opts.surface==='inline-drug'){
+      intro='I know you\'re viewing this drug. Ask about who buys it, who stopped, rep performance on it \u2014 or anything else.';
+    } else {
+      intro='Hi '+firstName+'! Ask me anything about your clinics, products, or territory. A few ideas:';
+    }
     var wrap=document.createElement('div');wrap.className='ai-msg bot';wrap.innerHTML=intro;
     msgsEl.appendChild(wrap);
     var s=document.createElement('div');s.className='ai-starters';
@@ -3047,8 +3157,20 @@ function makeChat(opts){
   }
   function updateContext(){
     if(!ctxEl)return;
-    if(CUR&&opts.surface==='bubble'){ctxEl.innerHTML='Viewing: <strong>'+escapeHtml(CUR)+'</strong>';ctxEl.classList.add('show');}
-    else{ctxEl.classList.remove('show');}
+    if(opts.surface==='inline-clinic'){
+      var name=CUR||'\u2014';
+      var nameEl=document.getElementById('cl-chat-name');
+      if(nameEl)nameEl.textContent=name;
+    } else if(opts.surface==='inline-drug'){
+      var drug=CUR_DRUG||'\u2014';
+      var nameEl2=document.getElementById('dd-chat-name');
+      if(nameEl2)nameEl2.textContent=drug;
+    } else if(CUR&&opts.surface==='bubble'){
+      ctxEl.innerHTML='Viewing: <strong>'+escapeHtml(CUR)+'</strong>';
+      ctxEl.classList.add('show');
+    } else {
+      ctxEl.classList.remove('show');
+    }
   }
   function renderFromSaved(msgs){
     msgsEl.innerHTML='';
@@ -3084,13 +3206,18 @@ function makeChat(opts){
     state.msgs.push({role:'user',content:text});
     state.busy=true;sendEl.disabled=true;appendTyping();
     try{
+      // Determine context to send to Worker based on surface
+      var payloadViewingClinic=null, payloadViewingDrug=null;
+      if(opts.surface==='bubble'||opts.surface==='inline-clinic') payloadViewingClinic=CUR||null;
+      if(opts.surface==='inline-drug') payloadViewingDrug=CUR_DRUG||null;
       var res=await fetch(WORKER+'/ai-chat',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
           messages:state.msgs,
           rep_username:ME?ME.name:null,
-          viewing_clinic:(opts.surface==='bubble'?CUR:null)||null,
+          viewing_clinic:payloadViewingClinic,
+          viewing_drug:payloadViewingDrug,
           admin_mode:(opts.surface==='page'&&ME&&ME.role==='admin')
         })
       });
@@ -3114,33 +3241,14 @@ function makeChat(opts){
 
   sendEl.addEventListener('click',send);
   inpEl.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
-  inpEl.addEventListener('input',function(){inpEl.style.height='auto';inpEl.style.height=Math.min(opts.surface==='page'?140:120,inpEl.scrollHeight)+'px';});
+  inpEl.addEventListener('input',function(){
+    inpEl.style.height='auto';
+    var max=opts.surface==='page'?140:(opts.surface==='inline-clinic'||opts.surface==='inline-drug'?100:120);
+    inpEl.style.height=Math.min(max,inpEl.scrollHeight)+'px';
+  });
 
   return {state:state,get msgs(){return state.msgs;},renderStarters:renderStarters,updateContext:updateContext,newConversation:newConversation,loadConversation:loadConversation,send:send};
 }
-
-// Bubble history
-async function loadBubbleHistory(){
-  if(!ME)return;
-  var list=document.getElementById('ai-hist-list');
-  var {data}=await SB.from('chat_conversations').select('id,title,updated_at').eq('rep_username',ME.username).eq('surface','bubble').order('updated_at',{ascending:false}).limit(30);
-  var convs=data||[];
-  if(!convs.length){list.innerHTML='<div class="ch-hist-empty">No saved conversations yet</div>';return;}
-  list.innerHTML='';
-  convs.forEach(function(c){
-    var d=document.createElement('div');d.className='ch-item';d.dataset.id=c.id;
-    d.innerHTML='<div class="ct"><div class="ct-title">'+escapeHtml(c.title||'Untitled')+'</div><div class="ct-time">'+ago(c.updated_at)+'</div></div><button class="ch-del" data-id="'+c.id+'" title="Delete">&#10005;</button>';
-    list.appendChild(d);
-  });
-}
-document.getElementById('ai-hist-list').addEventListener('click',async function(e){
-  var del=e.target.closest('.ch-del');
-  if(del){e.stopPropagation();if(!confirm('Delete this conversation?'))return;await SB.from('chat_conversations').delete().eq('id',del.dataset.id);loadBubbleHistory();return;}
-  var item=e.target.closest('.ch-item');
-  if(!item)return;
-  var {data}=await SB.from('chat_conversations').select('*').eq('id',item.dataset.id).single();
-  if(data&&aiBubbleChat){aiBubbleChat.loadConversation(data);document.getElementById('ai-hist').classList.remove('open');}
-});
 
 // Page history
 async function loadPageChatHistory(){
@@ -3166,37 +3274,33 @@ document.getElementById('ai-page-hist').addEventListener('click',async function(
 });
 
 function initAiChats(){
-  aiBubbleChat=makeChat({
-    surface:'bubble',
-    msgsId:'ai-msgs',inpId:'ai-inp',sendId:'ai-send',ctxId:'ai-ctx',
+  // Inline chat scoped to the currently-open clinic
+  aiClinicChat=makeChat({
+    surface:'inline-clinic',
+    msgsId:'cl-chat-msgs',inpId:'cl-chat-inp',sendId:'cl-chat-send',ctxId:'cl-chat-ctx',
     starters:[
-      'Compare my Pimobendan sales this month vs last month',
-      'How did my territory do this week vs last week?',
-      'Show me my top 10 clinics by 2026 revenue',
-      'Which of my clinics haven\'t ordered in 60+ days?'
-    ],
-    onHistoryChange:loadBubbleHistory
+      'Summarize this clinic\'s buying pattern',
+      'What are the best pitch opportunities here?',
+      'Why did they stop ordering Pimobendan?',
+      'Compare this clinic\'s 2025 vs 2026 revenue'
+    ]
   });
-  aiBubbleChat.renderStarters();
-  aiBubbleChat.updateContext();
-  document.getElementById('ai-fab').addEventListener('click',function(){
-    document.getElementById('ai-chat').classList.add('open');
-    document.getElementById('ai-fab').classList.add('hidden');
-    aiBubbleChat.updateContext();
-    loadBubbleHistory();
-    setTimeout(function(){document.getElementById('ai-inp').focus();},150);
+  aiClinicChat.renderStarters();
+  document.getElementById('cl-chat-clear').addEventListener('click',aiClinicChat.newConversation);
+
+  // Inline chat scoped to the currently-open drug
+  aiDrugChat=makeChat({
+    surface:'inline-drug',
+    msgsId:'dd-chat-msgs',inpId:'dd-chat-inp',sendId:'dd-chat-send',ctxId:'dd-chat-ctx',
+    starters:[
+      'Which of my clinics stopped buying this in 2026?',
+      'What\'s the biggest clinic still buying this?',
+      'Compare this drug\'s performance YoY',
+      'Who should I pitch this to?'
+    ]
   });
-  document.getElementById('ai-close').addEventListener('click',function(){
-    document.getElementById('ai-chat').classList.remove('open');
-    document.getElementById('ai-fab').classList.remove('hidden');
-    document.getElementById('ai-hist').classList.remove('open');
-  });
-  document.getElementById('ai-new').addEventListener('click',aiBubbleChat.newConversation);
-  document.getElementById('ai-hist-btn').addEventListener('click',function(){
-    var h=document.getElementById('ai-hist');
-    h.classList.toggle('open');
-    if(h.classList.contains('open'))loadBubbleHistory();
-  });
+  aiDrugChat.renderStarters();
+  document.getElementById('dd-chat-clear').addEventListener('click',aiDrugChat.newConversation);
 
   if(ME&&ME.role==='admin'){
     aiPageChat=makeChat({
