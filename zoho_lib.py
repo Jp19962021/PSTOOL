@@ -329,7 +329,7 @@ def parse_existing_data_js(path: Path = DATA_JS_PATH) -> dict:
     """Load the current data.js into Python dicts/lists for merging."""
     if not path.exists():
         return {
-            "D": {},  # {clinic_name: [[yr, pidx, rev, ep_days], ...]}
+            "D": {},  # {clinic_name: [[yr, pidx, rev, ep_days, qty], ...]}
             "P": [],  # product names
             "C": [],  # sorted clinic names
             "T": [],  # top 30
@@ -394,6 +394,9 @@ def process_invoices_into_state(
                           NOTE: this can cause duplicates if the same
                           invoice is processed twice, so the incremental
                           script uses True to be safe.
+
+    Row format: [year_code, product_idx, revenue, epoch_days, quantity]
+    (quantity added in v7 for inventory auto-deduction)
     """
     D = state["D"]
     products = state["P"]
@@ -465,8 +468,12 @@ def process_invoices_into_state(
                     rev = 0.0
                 if rev == 0:
                     continue
+                try:
+                    qty = float(li.get("quantity") or 0)
+                except (TypeError, ValueError):
+                    qty = 0.0
                 pidx = get_product_idx(pname)
-                bucket.append([yr, pidx, round(rev, 2), ep])
+                bucket.append([yr, pidx, round(rev, 2), ep, round(qty, 2)])
 
     # Rebuild C, KA for touched clinics (and optionally all clinics)
     # For simplicity + correctness: rebuild C and KA from scratch every time.
@@ -484,7 +491,7 @@ def process_invoices_into_state(
         bucket = D.get(clinic, [])
         last_order = latest_order_by_clinic.get(clinic, "")
         if not last_order and bucket:
-            # derive from existing transactions: max epoch_days
+            # derive from existing transactions: max epoch_days (index 3)
             max_ep = max(t[3] for t in bucket)
             last_order = (EPOCH_BASE + _timedelta_days(max_ep)).isoformat()
 
@@ -507,10 +514,12 @@ def process_invoices_into_state(
             rep_idx = get_rep_idx("")
             new_KA.append([rep_idx, "", "", "", "", "", last_order])
 
-    # Recompute top 30
+    # Recompute top 30 (tolerate both 4-field legacy rows and 5-field new rows)
     product_totals: dict[int, float] = {}
     for bucket in D.values():
-        for _, pidx, rev, _ in bucket:
+        for row in bucket:
+            pidx = row[1]
+            rev = row[2]
             product_totals[pidx] = product_totals.get(pidx, 0.0) + rev
     top_sorted = sorted(product_totals.items(), key=lambda kv: -kv[1])[:30]
     T = [[pidx, products[pidx], round(rev, 2)] for pidx, rev in top_sorted]
