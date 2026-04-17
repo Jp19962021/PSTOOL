@@ -325,6 +325,23 @@ table.ptbl tr:last-child td{border-bottom:none}
 .dd-export-btn:hover{background:#15803d}
 .dd-export-btn:disabled{background:#9ca3af;cursor:wait}
 
+/* Top Products tile (v9) */
+.tp-controls{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;margin-bottom:12px}
+.tp-lbl{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.04em}
+.tp-lbl select,.tp-lbl input[type=date]{padding:7px 10px;border:1.5px solid #d8dce3;border-radius:7px;font-size:12px;color:#111;background:#fff;outline:none;font-weight:500;text-transform:none;letter-spacing:0}
+.tp-lbl select:focus,.tp-lbl input:focus{border-color:#1a2035}
+.tp-meta{font-size:12px;color:#666;margin-bottom:10px;padding:8px 12px;background:#f7f8fa;border-radius:8px;display:none}
+.tp-meta.on{display:block}
+.tp-meta b{color:#1a2035}
+.tp-table{width:100%;border-collapse:separate;border-spacing:0;font-size:12px}
+.tp-table th,.tp-table td{padding:9px 12px;border-bottom:1px solid #edf0f5;text-align:left;white-space:nowrap}
+.tp-table thead th{background:#f7f8fa;font-weight:700;color:#1a2035;font-size:10px;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #d8dce3}
+.tp-table tbody tr:hover{background:#fafbfc}
+.tp-rank{display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;border-radius:50%;background:#1a2035;color:#fff;font-weight:700;font-size:11px}
+.tp-rank.gold{background:#fbbf24;color:#78350f}
+.tp-rank.silver{background:#d1d5db;color:#374151}
+.tp-rank.bronze{background:#fbbf24;background:#d97706;color:#fff}
+
 /* Drug Inventory (v7) */
 .inv-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
 .inv-table th,.inv-table td{padding:10px 12px;border-bottom:1px solid #edf0f5;text-align:left;white-space:nowrap}
@@ -913,6 +930,60 @@ table.ptbl tr:last-child td{border-bottom:none}
   <div class="tr-section">
     <div class="tr-section-title">&#128200; Revenue Heartbeat <span class="tr-sub">Last 12 months · YoY overlay</span></div>
     <div class="tr-card"><div class="tr-chart-wrap tall"><canvas id="tr-heartbeat"></canvas></div></div>
+  </div>
+
+  <!-- Top Products (v9) -->
+  <div class="tr-section">
+    <div class="tr-section-title">&#127974; Top Products <span class="tr-sub">Rank by revenue or units sold, any date or range, filterable by rep</span></div>
+    <div class="tr-card" style="padding:14px 18px">
+      <div class="tp-controls">
+        <label class="tp-lbl">Date
+          <select id="tp-range">
+            <option value="today" selected>Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="last7">Last 7 days</option>
+            <option value="last30">Last 30 days</option>
+            <option value="mtd">Month to date</option>
+            <option value="ytd">Year to date</option>
+            <option value="custom">Custom range...</option>
+          </select>
+        </label>
+        <label class="tp-lbl" id="tp-custom-wrap" style="display:none">From
+          <input type="date" id="tp-from">
+        </label>
+        <label class="tp-lbl" id="tp-custom-wrap2" style="display:none">To
+          <input type="date" id="tp-to">
+        </label>
+        <label class="tp-lbl">Rank by
+          <select id="tp-metric">
+            <option value="revenue" selected>Revenue ($)</option>
+            <option value="qty">Units sold</option>
+          </select>
+        </label>
+        <label class="tp-lbl">Rep
+          <select id="tp-rep">
+            <option value="">All Reps</option>
+          </select>
+        </label>
+        <label class="tp-lbl">Show top
+          <select id="tp-count">
+            <option value="5" selected>5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+          </select>
+        </label>
+        <label class="tp-lbl">Rollup
+          <select id="tp-rollup">
+            <option value="sku" selected>SKU</option>
+            <option value="ingredient_form">Ingredient + Form + Strength</option>
+          </select>
+        </label>
+        <button class="abtn" id="tp-export" style="background:#16a34a">&#128196; Export CSV</button>
+      </div>
+      <div id="tp-meta" class="tp-meta"></div>
+      <div id="tp-wrap" style="overflow-x:auto"><div id="tp-table-wrap">Select filters to see top products.</div></div>
+    </div>
   </div>
 
   <!-- Top Drug Trends -->
@@ -3259,8 +3330,9 @@ async function loadTrends(){
     mtdYoyVal+=dayRev[yKey]||0;
   }
   var mtdDelta=mtdYoyVal>0?((mtdVal-mtdYoyVal)/mtdYoyVal)*100:(mtdVal>0?100:0);
-  var mtdLabel=todayDate.toLocaleDateString('en-US',{month:'long',timeZone:'UTC'})+' MTD';
-  var mtdYoyDayLabel=todayDate.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
+  var monShort=todayDate.toLocaleDateString('en-US',{month:'short',timeZone:'UTC'});
+  var mtdLabel=monShort+' 1\u2013'+dayOfMonth+' '+thisYear; // e.g. "Apr 1–16 2026"
+  var mtdYoyDayLabel=monShort+' 1\u2013'+dayOfMonth+' '+(thisYear-1);
 
   // On-Pace Forecast: use the trailing 3 completed months × 4 (annualized run rate),
   // not naive YTD × (365/dayOfYear) which spikes early in the year.
@@ -3301,7 +3373,7 @@ async function loadTrends(){
   var mtdCls=mtdDelta>=5?'up':(mtdDelta<=-5?'down':'flat');
   var mtdSym=mtdDelta>=0?'▲':'▼';
   mtdDeltaEl.className='tr-delta-line '+mtdCls;
-  mtdDeltaEl.textContent=mtdSym+' '+(mtdDelta>=0?'+':'')+Math.round(mtdDelta)+'% vs '+mtdYoyDayLabel+' '+(thisYear-1);
+  mtdDeltaEl.textContent=mtdSym+' '+(mtdDelta>=0?'+':'')+Math.round(mtdDelta)+'% vs '+mtdYoyDayLabel;
 
   document.getElementById('tr-pace-val').textContent=trFmtUSD(pace);
   var paceEl=document.getElementById('tr-pace-status');
@@ -3507,6 +3579,10 @@ async function loadTrends(){
     radGr.appendChild(item);
   });
   if(!growers.length)radGr.innerHTML='<div class="tr-empty">No growth signals yet.</div>';
+
+  // Top Products tile (v9) — refresh on any trends reload
+  _tpPopulateRepFilter();
+  _tpRender();
 }
 
 // Click a radar item -> open the clinic
@@ -3529,6 +3605,219 @@ document.getElementById('tr-drugs').addEventListener('click',function(e){
 // Rep filter on Trends tab — auto-applies on change
 var trRepEl=document.getElementById('tr-rep');
 if(trRepEl)trRepEl.addEventListener('change',function(){TR_REP_FILTER=trRepEl.value;loadTrends();});
+
+// ============================================================
+// v9: Top Products tile (Trends tab)
+// Reads data.js, filters by date range + rep + metric, groups by SKU
+// or ingredient-rollup, ranks, renders a table. CSV export included.
+// ============================================================
+var TP_LAST_ROWS=[]; // cache for CSV export
+
+function _tpPopulateRepFilter(){
+  var sel=document.getElementById('tp-rep');
+  if(!sel)return;
+  var prev=sel.value;
+  sel.innerHTML='<option value="">All Reps</option>';
+  if(typeof REPS!=='undefined'){
+    REPS.forEach(function(r){
+      var o=document.createElement('option');
+      o.value=r;o.textContent=r;
+      sel.appendChild(o);
+    });
+  }
+  sel.value=prev||'';
+}
+
+function _tpResolveDateRange(){
+  var rng=document.getElementById('tp-range').value;
+  var today=new Date();
+  var thisY=today.getUTCFullYear(),thisM=today.getUTCMonth(),thisD=today.getUTCDate();
+  // today helper in epoch days
+  function epOf(y,m,d){return Math.floor((Date.UTC(y,m,d)-EP0)/86400000);}
+  var todayEp=epOf(thisY,thisM,thisD);
+  if(rng==='today')return {from:todayEp,to:todayEp,label:'Today ('+new Date(Date.UTC(thisY,thisM,thisD)).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'})+')'};
+  if(rng==='yesterday'){
+    var y=epOf(thisY,thisM,thisD-1);
+    return {from:y,to:y,label:'Yesterday'};
+  }
+  if(rng==='last7')return {from:todayEp-6,to:todayEp,label:'Last 7 days'};
+  if(rng==='last30')return {from:todayEp-29,to:todayEp,label:'Last 30 days'};
+  if(rng==='mtd')return {from:epOf(thisY,thisM,1),to:todayEp,label:new Date(Date.UTC(thisY,thisM,1)).toLocaleDateString('en-US',{month:'short',timeZone:'UTC'})+' 1\u2013'+thisD+' '+thisY};
+  if(rng==='ytd')return {from:epOf(thisY,0,1),to:todayEp,label:'YTD ('+thisY+')'};
+  if(rng==='custom'){
+    var fEl=document.getElementById('tp-from'),tEl=document.getElementById('tp-to');
+    var f=fEl.value,t=tEl.value;
+    if(!f||!t)return null;
+    var fa=f.split('-'),ta=t.split('-');
+    var fEp=epOf(parseInt(fa[0]),parseInt(fa[1])-1,parseInt(fa[2]));
+    var tEp=epOf(parseInt(ta[0]),parseInt(ta[1])-1,parseInt(ta[2]));
+    if(fEp>tEp){var tmp=fEp;fEp=tEp;tEp=tmp;}
+    return {from:fEp,to:tEp,label:f+' \u2192 '+t};
+  }
+  return {from:todayEp,to:todayEp,label:'Today'};
+}
+
+function _tpRender(){
+  var wrap=document.getElementById('tp-table-wrap');
+  if(!wrap)return;
+  if(typeof D==='undefined'||typeof C==='undefined'||typeof P==='undefined'){
+    wrap.innerHTML='<div style="color:#aaa;padding:12px">Data not loaded yet.</div>';
+    return;
+  }
+  var range=_tpResolveDateRange();
+  if(!range){wrap.innerHTML='<div style="color:#aaa;padding:12px">Pick From and To dates.</div>';return;}
+  var metric=document.getElementById('tp-metric').value;
+  var rep=document.getElementById('tp-rep').value||'';
+  var count=parseInt(document.getElementById('tp-count').value)||5;
+  var rollup=document.getElementById('tp-rollup').value;
+
+  // Build allowed clinic set based on rep filter
+  var allowedClinic=null;
+  if(rep){
+    var ridx=(typeof REPS!=='undefined')?REPS.indexOf(rep):-1;
+    if(ridx>=0){
+      allowedClinic={};
+      for(var ci0=0;ci0<C.length;ci0++){
+        var ka=KA[ci0]||[-1];
+        if(ka[0]===ridx)allowedClinic[ci0]=1;
+      }
+    }
+  }
+
+  // Aggregate across all clinics/rows that match filters
+  // groupKey: either SKU (P[pidx]) or ingredient-rollup key
+  var agg={}; // key -> {label, revenue, qty, orders, clinicSet}
+  var hasQtyRowsSeen=0, totalRowsSeen=0;
+  for(var ci=0;ci<C.length;ci++){
+    if(allowedClinic&&!allowedClinic[ci])continue;
+    var rows=D[C[ci]]||[];
+    for(var ri=0;ri<rows.length;ri++){
+      var r=rows[ri];
+      var ep=r[3];
+      if(ep<range.from||ep>range.to)continue;
+      totalRowsSeen++;
+      var pidx=r[1];
+      var rev=r[2]||0;
+      var qty=(r.length>=5&&typeof r[4]==='number')?r[4]:0;
+      if(qty>0)hasQtyRowsSeen++;
+      var key,label;
+      if(rollup==='sku'){
+        key='sku:'+pidx;
+        label=P[pidx]||'(unknown)';
+      } else {
+        if(typeof rollupFor!=='function'){key='sku:'+pidx;label=P[pidx]||'(unknown)';}
+        else {
+          var ro=rollupFor(pidx);
+          key='rlp:'+ro.key;
+          label=ro.label;
+        }
+      }
+      if(!agg[key])agg[key]={label:label,revenue:0,qty:0,orders:0,clinicSet:{}};
+      agg[key].revenue+=rev;
+      agg[key].qty+=qty;
+      agg[key].orders++;
+      agg[key].clinicSet[ci]=1;
+    }
+  }
+  var keys=Object.keys(agg);
+  // Sort
+  keys.sort(function(a,b){
+    if(metric==='qty')return agg[b].qty-agg[a].qty;
+    return agg[b].revenue-agg[a].revenue;
+  });
+  var topKeys=keys.slice(0,count);
+
+  // Meta bar
+  var metaEl=document.getElementById('tp-meta');
+  if(keys.length){
+    var qtyNote='';
+    if(metric==='qty'){
+      var pct=totalRowsSeen>0?Math.round(100*hasQtyRowsSeen/totalRowsSeen):0;
+      if(pct<95){
+        qtyNote=' <span style="color:#b45309">(qty data available on '+pct+'% of rows in this window)</span>';
+      }
+    }
+    metaEl.className='tp-meta on';
+    metaEl.innerHTML='<b>'+_esc(range.label)+'</b> \u00b7 '+(rep?_esc(rep):'All reps')+' \u00b7 '+keys.length+' product'+(keys.length===1?'':'s')+' with activity \u00b7 showing top '+topKeys.length+qtyNote;
+  } else {
+    metaEl.className='tp-meta on';
+    metaEl.innerHTML='<b>'+_esc(range.label)+'</b> \u00b7 no activity found';
+  }
+
+  // Cache for CSV
+  TP_LAST_ROWS={range:range,metric:metric,rep:rep,rollup:rollup,rows:topKeys.map(function(k,i){
+    var a=agg[k];
+    return {rank:i+1,label:a.label,revenue:a.revenue,qty:a.qty,orders:a.orders,clinics:Object.keys(a.clinicSet).length};
+  })};
+
+  if(!topKeys.length){wrap.innerHTML='<div style="color:#aaa;padding:12px">No sales in this window.</div>';return;}
+
+  var html='<table class="tp-table"><thead><tr>'+
+    '<th style="width:32px">#</th>'+
+    '<th>Product</th>'+
+    '<th style="text-align:right">Revenue</th>'+
+    '<th style="text-align:right">Units (Qty)</th>'+
+    '<th style="text-align:right">Orders</th>'+
+    '<th style="text-align:right">Clinics</th>'+
+    '</tr></thead><tbody>';
+  topKeys.forEach(function(k,i){
+    var a=agg[k];
+    var rankCls=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    var unitsDisp=a.qty>0?Math.round(a.qty).toLocaleString():'\u2014';
+    html+='<tr>'+
+      '<td><span class="tp-rank'+(rankCls?' '+rankCls:'')+'">'+(i+1)+'</span></td>'+
+      '<td style="white-space:normal;font-weight:600;color:#1a2035">'+_esc(a.label)+'</td>'+
+      '<td style="text-align:right;font-weight:'+(metric==='revenue'?'700':'500')+';font-variant-numeric:tabular-nums">'+trFmtUSD(a.revenue)+'</td>'+
+      '<td style="text-align:right;font-weight:'+(metric==='qty'?'700':'500')+';color:'+(a.qty>0?'#1a2035':'#aaa')+';font-variant-numeric:tabular-nums">'+unitsDisp+'</td>'+
+      '<td style="text-align:right;color:#666;font-variant-numeric:tabular-nums">'+a.orders+'</td>'+
+      '<td style="text-align:right;color:#666;font-variant-numeric:tabular-nums">'+Object.keys(a.clinicSet).length+'</td>'+
+    '</tr>';
+  });
+  html+='</tbody></table>';
+  wrap.innerHTML=html;
+}
+
+// Wire up controls — re-render on any change
+['tp-range','tp-metric','tp-rep','tp-count','tp-rollup','tp-from','tp-to'].forEach(function(id){
+  var el=document.getElementById(id);
+  if(el)el.addEventListener('change',function(){
+    // Show/hide custom date inputs
+    if(id==='tp-range'){
+      var show=document.getElementById('tp-range').value==='custom';
+      document.getElementById('tp-custom-wrap').style.display=show?'':'none';
+      document.getElementById('tp-custom-wrap2').style.display=show?'':'none';
+      if(show&&!document.getElementById('tp-from').value){
+        // Default custom range: last 7 days
+        var today=new Date();
+        var from=new Date(today.getTime()-6*86400000);
+        document.getElementById('tp-from').value=from.toISOString().slice(0,10);
+        document.getElementById('tp-to').value=today.toISOString().slice(0,10);
+      }
+    }
+    _tpRender();
+  });
+});
+
+// CSV export
+document.getElementById('tp-export').addEventListener('click',function(){
+  if(!TP_LAST_ROWS||!TP_LAST_ROWS.rows||!TP_LAST_ROWS.rows.length){
+    alert('No data to export.');return;
+  }
+  var d=TP_LAST_ROWS;
+  var headers=['Rank','Product','Revenue','Units (Qty)','Orders','Clinics','Date Range','Rep Filter','Ranked By','Rollup'];
+  var rows=d.rows.map(function(r){
+    return [r.rank,r.label,r.revenue,r.qty,r.orders,r.clinics,d.range.label,d.rep||'All reps',d.metric==='qty'?'Units':'Revenue',d.rollup==='sku'?'SKU':'Ingredient+Form+Strength'];
+  });
+  // CSV util (reusing from the drug-detail export)
+  var csv=_csvFormatRows(headers,rows);
+  var today=new Date();
+  var dateStr=today.getUTCFullYear()+'-'+String(today.getUTCMonth()+1).padStart(2,'0')+'-'+String(today.getUTCDate()).padStart(2,'0');
+  var safeRange=(d.range.label||'range').replace(/[^a-z0-9_-]/gi,'_').slice(0,40);
+  _csvDownload('top_products_'+safeRange+'_'+dateStr+'.csv',csv);
+});
+// ============================================================
+// END v9: Top Products
+// ============================================================
 
 // Drug detail panel close + tab switching
 document.getElementById('dd-close').addEventListener('click',closeDrugDetail);
@@ -3976,18 +4265,22 @@ function invRollupKey(prodIdx){
 }
 
 // Detect whether data.js carries invoice quantity as the 5th element of each row
+// Detect whether data.js carries invoice quantity.
+// Option B: as long as ANY rows have qty, process them and ignore the rest.
+// Returns {anyQty:bool, coveragePct:number} so UI can report coverage.
 function invDetectSyncQty(){
-  if(typeof D==='undefined'||typeof C==='undefined')return false;
+  if(typeof D==='undefined'||typeof C==='undefined')return {anyQty:false,coveragePct:0};
   var sampled=0,hasQty=0;
-  for(var ci=0;ci<C.length&&sampled<500;ci++){
+  for(var ci=0;ci<C.length&&sampled<2000;ci++){
     var rows=D[C[ci]]||[];
-    for(var ri=0;ri<rows.length&&sampled<500;ri++){
+    for(var ri=0;ri<rows.length&&sampled<2000;ri++){
       sampled++;
       var r=rows[ri];
       if(r.length>=5&&typeof r[4]==='number'&&r[4]>0)hasQty++;
     }
   }
-  return sampled>0 && (hasQty/sampled)>0.5;
+  var pct=sampled>0?Math.round(100*hasQty/sampled):0;
+  return {anyQty:hasQty>0,coveragePct:pct};
 }
 
 // ---------- Main loader ----------
@@ -4008,10 +4301,11 @@ async function loadInventory(){
     return;
   }
   INV_STATE.products=prodData||[];
-  // Detect sync qty status
-  INV_STATE.syncHasQty=invDetectSyncQty();
+  // Detect sync qty status (Option B — any qty rows = live, coverage is informational)
+  INV_STATE.syncStatus=invDetectSyncQty();
+  INV_STATE.syncHasQty=INV_STATE.syncStatus.anyQty; // compat
   _invRenderStats();
-  // Apply auto-deductions for any products
+  // Apply auto-deductions if ANY qty rows exist
   if(INV_STATE.products.length&&INV_STATE.syncHasQty){
     await _invApplyAutoDeductions();
   }
@@ -4025,15 +4319,23 @@ function _invRenderStats(){
   document.getElementById('inv-stat-unmapped').textContent=INV_STATE.unmapped.length;
   var syncEl=document.getElementById('inv-stat-sync');
   var warn=document.getElementById('inv-warn');
-  if(INV_STATE.syncHasQty){
-    syncEl.textContent='live';
+  var st=INV_STATE.syncStatus||{anyQty:false,coveragePct:0};
+  if(st.anyQty){
+    syncEl.textContent='live ('+st.coveragePct+'% of rows)';
     syncEl.style.color='#16a34a';
-    warn.style.display='none';
+    if(st.coveragePct<50){
+      warn.style.display='';
+      warn.textContent='\u2139 Partial historical coverage: only '+st.coveragePct+'% of sales rows have invoice quantity so far. Every new nightly sync adds more. Inventory math uses only rows that have qty \u2014 unaffected rows are ignored, not incorrect.';
+      warn.style.color='#2563eb';
+    } else {
+      warn.style.display='none';
+    }
   } else {
     syncEl.textContent='qty missing';
     syncEl.style.color='#dc2626';
     warn.style.display='';
-    warn.textContent='\u26A0 data.js has no invoice quantities \u2014 auto-deduction is paused. Update the Zoho sync to include qty as the 5th field per transaction row.';
+    warn.style.color='#b45309';
+    warn.textContent='\u26A0 data.js has no invoice quantities yet. Auto-deduction will activate after the next nightly sync.';
   }
 }
 
