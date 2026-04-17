@@ -325,6 +325,49 @@ table.ptbl tr:last-child td{border-bottom:none}
 .dd-export-btn:hover{background:#15803d}
 .dd-export-btn:disabled{background:#9ca3af;cursor:wait}
 
+/* Action Plan (v10) */
+.ap-gap-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:#e8eaed;border-radius:14px;overflow:hidden;margin-bottom:18px;border:1px solid #e8eaed}
+@media (max-width:900px){.ap-gap-bar{grid-template-columns:repeat(2,1fr)}}
+.ap-gap-item{background:#fff;padding:14px 18px}
+.ap-gap-lbl{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.ap-gap-val{font-size:22px;font-weight:800;color:#1a2035;line-height:1.1;font-variant-numeric:tabular-nums}
+.ap-gap-sub{font-size:11px;color:#888;margin-top:2px}
+.ap-controls{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.ap-refresh-info{font-size:12px;color:#666}
+.ap-refresh-info b{color:#1a2035}
+.ap-blocks{display:grid;grid-template-columns:1fr;gap:18px}
+.ap-block{background:#fff;border-radius:14px;border:1px solid #e8eaed;box-shadow:0 1px 4px rgba(0,0,0,.05);overflow:hidden}
+.ap-block.ap-rescue{border-left:4px solid #dc2626}
+.ap-block.ap-expand{border-left:4px solid #f59e0b}
+.ap-block.ap-pitch{border-left:4px solid #16a34a}
+.ap-block-hdr{padding:14px 20px;border-bottom:1px solid #edf0f5;display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;background:#fafbfc}
+.ap-block-title{font-size:15px;font-weight:700;color:#1a2035}
+.ap-block-sub{font-size:12px;color:#666;flex:1;min-width:240px}
+.ap-block-potential{font-size:14px;font-weight:700;color:#16a34a;font-variant-numeric:tabular-nums;margin-left:auto}
+.ap-block-body{padding:6px 0}
+.ap-row{display:grid;grid-template-columns:auto 2fr 120px 120px 140px 90px;gap:12px;align-items:center;padding:12px 20px;border-bottom:1px solid #edf0f5;font-size:13px;transition:opacity .2s}
+.ap-row:last-child{border-bottom:none}
+.ap-row:hover{background:#fafbfc}
+.ap-row.done{opacity:.5;background:#f0fdf4}
+.ap-row.done .ap-row-name{text-decoration:line-through;color:#666}
+@media (max-width:900px){.ap-row{grid-template-columns:1fr;gap:6px}}
+.ap-rank{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#1a2035;color:#fff;font-weight:700;font-size:12px}
+.ap-rescue .ap-rank{background:#dc2626}
+.ap-expand .ap-rank{background:#f59e0b}
+.ap-pitch .ap-rank{background:#16a34a}
+.ap-row-name{font-weight:600;color:#1a2035;cursor:pointer}
+.ap-row-name:hover{text-decoration:underline}
+.ap-row-sub{font-size:11px;color:#888;margin-top:2px;font-weight:400}
+.ap-row-metric{font-variant-numeric:tabular-nums;font-weight:600;font-size:13px}
+.ap-row-metric .ap-row-metric-lbl{font-size:10px;color:#888;font-weight:500;text-transform:uppercase;letter-spacing:.04em;display:block}
+.ap-action{font-size:12px;color:#374151;line-height:1.35}
+.ap-action b{color:#1a2035}
+.ap-row-btn{background:#1a2035;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap}
+.ap-row-btn:hover{background:#2a3550}
+.ap-row-btn.done{background:#16a34a}
+.ap-row-btn.done:hover{background:#15803d}
+.ap-empty{padding:28px 20px;text-align:center;color:#888;font-size:13px}
+
 /* Top Products tile (v9) */
 .tp-controls{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;margin-bottom:12px}
 .tp-lbl{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.04em}
@@ -759,6 +802,7 @@ table.ptbl tr:last-child td{border-bottom:none}
   <div class="tab" data-page="atrisk">&#9888; At-Risk</div>
   <div class="tab" data-page="churn">&#128302; Churn Predictor</div>
   <div class="tab admin-tab" data-page="trends" id="trtab" style="display:none">&#128200; Trends</div>
+  <div class="tab admin-tab" data-page="actionplan" id="aptab" style="display:none">&#127919; Action Plan</div>
   <div class="tab admin-tab" data-page="drugsearch" id="dstab" style="display:none">&#128269; Drug Search</div>
   <div class="tab admin-tab" data-page="inventory" id="invtab" style="display:none">&#128230; Drug Inventory</div>
   <div class="tab" data-page="notestasks">&#128221; My Notes &amp; Tasks</div>
@@ -1302,6 +1346,58 @@ table.ptbl tr:last-child td{border-bottom:none}
   </div>
 </div></div>
 
+<!-- ACTION PLAN TAB (v10) - Admin-only CRO dashboard -->
+<div id="page-actionplan" class="page"><div class="container">
+  <!-- Gap tracker strip -->
+  <div class="ap-gap-bar">
+    <div class="ap-gap-item"><div class="ap-gap-lbl">2026 Goal</div><div class="ap-gap-val" id="ap-goal">$6.00M</div></div>
+    <div class="ap-gap-item"><div class="ap-gap-lbl">YTD Actual</div><div class="ap-gap-val" id="ap-ytd">—</div><div class="ap-gap-sub" id="ap-ytd-pct"></div></div>
+    <div class="ap-gap-item"><div class="ap-gap-lbl">On Pace</div><div class="ap-gap-val" id="ap-pace">—</div><div class="ap-gap-sub" id="ap-pace-pct"></div></div>
+    <div class="ap-gap-item"><div class="ap-gap-lbl">Gap to Goal</div><div class="ap-gap-val" id="ap-gap" style="color:#dc2626">—</div><div class="ap-gap-sub" id="ap-gap-need"></div></div>
+    <div class="ap-gap-item"><div class="ap-gap-lbl">This Week's Potential</div><div class="ap-gap-val" id="ap-potential" style="color:#16a34a">$0</div><div class="ap-gap-sub">if all 15 executed</div></div>
+  </div>
+
+  <div class="ap-controls">
+    <div class="ap-refresh-info" id="ap-refresh-info">Loading...</div>
+    <button class="abtn" id="ap-refresh" style="margin-left:auto">&#8635; Refresh Now</button>
+  </div>
+
+  <div id="ap-msg" class="smsg2" style="margin:8px 0"></div>
+
+  <!-- Three action blocks -->
+  <div class="ap-blocks">
+    <!-- RESCUE -->
+    <div class="ap-block ap-rescue">
+      <div class="ap-block-hdr">
+        <div class="ap-block-title">🚨 Rescue This Week</div>
+        <div class="ap-block-sub">Clinics with 2025 revenue but $0 in 2026 — highest loss first</div>
+        <div class="ap-block-potential" id="ap-rescue-potential">—</div>
+      </div>
+      <div class="ap-block-body" id="ap-rescue-body">Loading...</div>
+    </div>
+
+    <!-- EXPAND -->
+    <div class="ap-block ap-expand">
+      <div class="ap-block-hdr">
+        <div class="ap-block-title">📈 Expand This Week</div>
+        <div class="ap-block-sub">Active in 2026 but down 30%+ YoY — pitch more volume</div>
+        <div class="ap-block-potential" id="ap-expand-potential">—</div>
+      </div>
+      <div class="ap-block-body" id="ap-expand-body">Loading...</div>
+    </div>
+
+    <!-- PITCH -->
+    <div class="ap-block ap-pitch">
+      <div class="ap-block-hdr">
+        <div class="ap-block-title">🎯 Pitch This Week</div>
+        <div class="ap-block-sub">Big 2026 clinics not buying Pimobendan — clear upsell opportunity</div>
+        <div class="ap-block-potential" id="ap-pitch-potential">—</div>
+      </div>
+      <div class="ap-block-body" id="ap-pitch-body">Loading...</div>
+    </div>
+  </div>
+</div></div>
+
 <!-- DRUG INVENTORY TAB (v7) -->
 <div id="page-inventory" class="page"><div class="container">
   <div class="section-card" style="margin-bottom:16px">
@@ -1445,6 +1541,7 @@ var TAB_CATALOG=[
   {key:'atrisk',      label:'At-Risk',           adminOnly:false},
   {key:'churn',       label:'Churn Predictor',   adminOnly:false},
   {key:'trends',      label:'Trends',            adminOnly:true},
+  {key:'actionplan',  label:'Action Plan',       adminOnly:true},
   {key:'drugsearch',  label:'Drug Search',       adminOnly:true},
   {key:'inventory',   label:'Drug Inventory',    adminOnly:true},
   {key:'notestasks',  label:'My Notes & Tasks',  adminOnly:false},
@@ -1548,6 +1645,7 @@ document.querySelectorAll('.tab').forEach(function(t){
     if(t.dataset.page==='notestasks'){loadMyTasks();loadMyNotes();}
     if(t.dataset.page==='churn'){loadChurn();}
     if(t.dataset.page==='trends'){loadTrends();}
+    if(t.dataset.page==='actionplan'){loadActionPlan();}
     if(t.dataset.page==='drugsearch'){loadDrugSearch();}
     if(t.dataset.page==='inventory'){loadInventory();}
   });
@@ -3817,6 +3915,362 @@ document.getElementById('tp-export').addEventListener('click',function(){
 });
 // ============================================================
 // END v9: Top Products
+// ============================================================
+
+// ============================================================
+// v10: ACTION PLAN (Admin-only CRO dashboard)
+// Pulls via Zoho Analytics through the worker's query_zoho_analytics tool.
+// Shows 3 action blocks (Rescue/Expand/Pitch), 5 clinics each, with
+// suggested actions and a "Mark contacted" button that logs to Supabase.
+// Caches results in Supabase for 24h so it doesn't hammer Zoho every page load.
+// ============================================================
+var AP_STATE={
+  loading:false,
+  data:null,      // {rescue:[], expand:[], pitch:[], generated_at:timestamp}
+  doneClinics:new Set() // clinic names contacted in last 30 days
+};
+
+// Channel partners / non-clinic customers to exclude from all lists
+var AP_EXCLUDE=[
+  'VETCOVE','Vetcove','Pet Parent','PetScript Direct','USC',
+  'Shelters United','VHA','VetHubRx','Mike Salsbury','Serena Patterson'
+];
+
+function _apExcludeSQL(){
+  return AP_EXCLUDE.map(function(n){return "'"+n.replace(/'/g,"''")+"'";}).join(',');
+}
+
+var WORKER_URL='https://fragrant-cloud-6ef2.jp-d4e.workers.dev';
+
+async function _apCallWorkerQuery(sql){
+  var resp=await fetch(WORKER_URL+'/ai-chat',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      tool:'query_zoho_analytics',
+      args:{sql:sql},
+      admin_mode:true
+    })
+  });
+  if(!resp.ok)throw new Error('Worker returned '+resp.status);
+  var j=await resp.json();
+  if(!j.success)throw new Error(j.error||'Worker error');
+  if(j.result&&j.result.error)throw new Error(j.result.error);
+  return j.result;
+}
+
+async function loadActionPlan(){
+  if(!canSee('actionplan'))return;
+  if(AP_STATE.loading)return;
+  AP_STATE.loading=true;
+  document.getElementById('ap-msg').textContent='';
+  document.getElementById('ap-refresh-info').innerHTML='<b>Loading fresh data from Zoho Analytics...</b> (first load takes 20-40 sec)';
+  try{
+    // Load already-contacted clinics from last 14 days so we don't re-surface them
+    await _apLoadDoneClinics();
+    // Check cache in Supabase (24h TTL) — otherwise run queries
+    var cached=await _apLoadCached();
+    if(cached&&_apIsCacheFresh(cached)){
+      AP_STATE.data=cached;
+      _apRender();
+      var age=Math.round((Date.now()-new Date(cached.generated_at).getTime())/3600000);
+      document.getElementById('ap-refresh-info').innerHTML='Data cached <b>'+age+'h ago</b>. Click refresh for latest.';
+    } else {
+      await _apRefreshFromZoho();
+    }
+  }catch(e){
+    console.error('[action plan] load error:',e);
+    document.getElementById('ap-msg').className='smsg2 er';
+    document.getElementById('ap-msg').innerHTML='Failed to load Action Plan: '+_esc(e.message||String(e))+'<br><span style="font-size:11px">If this mentions Zoho Analytics or OAuth, check Cloudflare worker secrets. If it mentions action_plan_log, run v10_actionplan_migration.sql in Supabase.</span>';
+    document.getElementById('ap-refresh-info').textContent='Error — see message above.';
+  }finally{
+    AP_STATE.loading=false;
+  }
+}
+
+async function _apLoadDoneClinics(){
+  var since=new Date(Date.now()-14*86400000).toISOString();
+  var {data}=await SB.from('action_plan_log').select('clinic_name').gte('created_at',since).in('action_taken',['contacted','won_back','not_now']);
+  AP_STATE.doneClinics=new Set((data||[]).map(function(r){return r.clinic_name;}));
+}
+
+async function _apLoadCached(){
+  // We store the latest snapshot as a single row with id=1 in a small table
+  // Reusing action_plan_log with a special marker won't work cleanly, so use a localStorage cache
+  // keyed by admin username. 24h TTL.
+  try{
+    var key='pstool_ap_cache_'+(ME?ME.username:'anon');
+    var raw=localStorage.getItem(key);
+    if(!raw)return null;
+    return JSON.parse(raw);
+  }catch(e){return null;}
+}
+
+function _apIsCacheFresh(cached){
+  if(!cached||!cached.generated_at)return false;
+  var ageMs=Date.now()-new Date(cached.generated_at).getTime();
+  return ageMs < 24*3600*1000;
+}
+
+function _apSaveCache(data){
+  try{
+    var key='pstool_ap_cache_'+(ME?ME.username:'anon');
+    localStorage.setItem(key,JSON.stringify(data));
+  }catch(e){}
+}
+
+async function _apRefreshFromZoho(){
+  document.getElementById('ap-refresh-info').innerHTML='<b>Querying Zoho Analytics...</b> (this takes 20-40 sec for 3 queries)';
+  var excludeList=_apExcludeSQL();
+
+  // Query 1: RESCUE — 2025 revenue > $500, zero 2026 revenue
+  var sqlRescue=
+    'SELECT "Customer ID", SUM(CASE WHEN "Invoice Date" >= \'2025-01-01\' AND "Invoice Date" < \'2026-01-01\' THEN "Total (BCY)" ELSE 0 END) AS rev2025, '+
+    'SUM(CASE WHEN "Invoice Date" >= \'2026-01-01\' THEN "Total (BCY)" ELSE 0 END) AS rev2026, '+
+    'MAX("Invoice Date") AS last_order '+
+    'FROM "Invoices" '+
+    'WHERE "Invoice Status" != \'Void\' AND "Invoice Date" >= \'2025-01-01\' '+
+    'GROUP BY "Customer ID" '+
+    'HAVING SUM(CASE WHEN "Invoice Date" >= \'2025-01-01\' AND "Invoice Date" < \'2026-01-01\' THEN "Total (BCY)" ELSE 0 END) >= 500 '+
+    'AND SUM(CASE WHEN "Invoice Date" >= \'2026-01-01\' THEN "Total (BCY)" ELSE 0 END) = 0 '+
+    'ORDER BY rev2025 DESC LIMIT 30';
+
+  // Query 2: EXPAND — active 2026, but annualized 2026 is down 30%+ vs 2025
+  var sqlExpand=
+    'SELECT "Customer ID", '+
+    'SUM(CASE WHEN "Invoice Date" >= \'2025-01-01\' AND "Invoice Date" < \'2026-01-01\' THEN "Total (BCY)" ELSE 0 END) AS rev2025, '+
+    'SUM(CASE WHEN "Invoice Date" >= \'2026-01-01\' THEN "Total (BCY)" ELSE 0 END) AS rev2026, '+
+    'MAX("Invoice Date") AS last_order '+
+    'FROM "Invoices" '+
+    'WHERE "Invoice Status" != \'Void\' AND "Invoice Date" >= \'2025-01-01\' '+
+    'GROUP BY "Customer ID" '+
+    'HAVING SUM(CASE WHEN "Invoice Date" >= \'2025-01-01\' AND "Invoice Date" < \'2026-01-01\' THEN "Total (BCY)" ELSE 0 END) >= 2000 '+
+    'AND SUM(CASE WHEN "Invoice Date" >= \'2026-01-01\' THEN "Total (BCY)" ELSE 0 END) > 0 '+
+    'ORDER BY rev2025 DESC LIMIT 100';
+
+  // Query 3: PITCH — top-50 2026 clinics who have NEVER bought Pimobendan
+  var sqlPitch=
+    'SELECT i."Customer ID", SUM(i."Total (BCY)") AS rev2026 '+
+    'FROM "Invoices" i '+
+    'WHERE i."Invoice Status" != \'Void\' AND i."Invoice Date" >= \'2026-01-01\' '+
+    'AND i."Customer ID" NOT IN ('+
+    '  SELECT DISTINCT inv."Customer ID" FROM "Invoices" inv '+
+    '  JOIN "Invoice Items" ii ON ii."Invoice ID" = inv."Invoice ID" '+
+    '  WHERE LOWER(ii."Name") LIKE \'%pimobendan%\''+
+    ') '+
+    'GROUP BY i."Customer ID" '+
+    'ORDER BY rev2026 DESC LIMIT 50';
+
+  // Also need customer names for the IDs we get back
+  var sqlCustomers='SELECT "Customer ID", "Display Name" AS name FROM "Customers"';
+
+  var [rescueR,expandR,pitchR,custR]=await Promise.all([
+    _apCallWorkerQuery(sqlRescue),
+    _apCallWorkerQuery(sqlExpand),
+    _apCallWorkerQuery(sqlPitch),
+    _apCallWorkerQuery(sqlCustomers)
+  ]);
+
+  // Build ID -> name map
+  var idToName={};
+  (custR.rows||[]).forEach(function(c){
+    var id=c['Customer ID'];
+    var nm=c.name||c['Display Name']||c['Name']||'';
+    if(id)idToName[String(id)]=nm;
+  });
+
+  function attachName(row){
+    var id=String(row['Customer ID']||'');
+    row.name=idToName[id]||('Customer '+id);
+    return row;
+  }
+  function notExcluded(row){
+    var nm=(row.name||'').trim();
+    for(var i=0;i<AP_EXCLUDE.length;i++){
+      if(nm.toLowerCase()===AP_EXCLUDE[i].toLowerCase())return false;
+    }
+    return true;
+  }
+  function notDone(row){return !AP_STATE.doneClinics.has(row.name);}
+
+  var rescue=(rescueR.rows||[]).map(attachName).filter(notExcluded).filter(notDone).slice(0,5);
+  var expand=(expandR.rows||[]).map(attachName).filter(notExcluded).filter(function(r){
+    // Annualize 2026 based on days elapsed in year
+    var today=new Date();
+    var dayOfYear=Math.floor((today-new Date(Date.UTC(today.getUTCFullYear(),0,1)))/86400000)+1;
+    var ann=(r.rev2026||0)*(365/Math.max(dayOfYear,1));
+    var dropPct=r.rev2025>0?((r.rev2025-ann)/r.rev2025)*100:0;
+    r.dropPct=Math.round(dropPct);
+    r.annualized=Math.round(ann);
+    return dropPct>=30;
+  }).filter(notDone).slice(0,5);
+  var pitch=(pitchR.rows||[]).map(attachName).filter(notExcluded).filter(notDone).slice(0,5);
+
+  AP_STATE.data={
+    rescue:rescue,expand:expand,pitch:pitch,
+    generated_at:new Date().toISOString()
+  };
+  _apSaveCache(AP_STATE.data);
+  _apRender();
+  document.getElementById('ap-refresh-info').innerHTML='Freshly generated just now. Cached for 24h.';
+}
+
+function _apRender(){
+  var d=AP_STATE.data;
+  if(!d){return;}
+
+  // Gap bar
+  var totalYtd=(d.rescue.concat(d.expand,d.pitch)).length?null:null;
+  // Compute gap from data.js (already-loaded) for speed
+  var ytd=0;
+  if(typeof D!=='undefined'&&typeof C!=='undefined'){
+    var tep=Math.floor((Date.now()-EP0)/86400000);
+    var yearStartEp=Math.floor((Date.UTC(new Date().getUTCFullYear(),0,1)-EP0)/86400000);
+    for(var ci=0;ci<C.length;ci++){
+      var rows=D[C[ci]]||[];
+      for(var ri=0;ri<rows.length;ri++){
+        if(rows[ri][3]>=yearStartEp)ytd+=rows[ri][2]||0;
+      }
+    }
+  }
+  var goal=(typeof TR_TARGETS!=='undefined'&&TR_TARGETS&&TR_TARGETS.year2026)?TR_TARGETS.year2026:6000000;
+  // On-pace = trailing 3 full months × 4
+  var pace=ytd*1.5; // fallback rough estimate
+  try{
+    var today=new Date();var tY=today.getUTCFullYear(),tM=today.getUTCMonth();
+    var monthly={};
+    if(typeof D!=='undefined'){
+      for(var c2=0;c2<C.length;c2++){
+        var r2=D[C[c2]]||[];
+        for(var j=0;j<r2.length;j++){
+          var ep=r2[j][3];var dd=new Date(EP0+ep*86400000);
+          var mk=dd.getUTCFullYear()+'-'+String(dd.getUTCMonth()+1).padStart(2,'0');
+          monthly[mk]=(monthly[mk]||0)+r2[j][2];
+        }
+      }
+    }
+    var t3=0,t3c=0;
+    for(var m=1;m<=3;m++){
+      var pd=new Date(Date.UTC(tY,tM-m,1));
+      var pkey=pd.getUTCFullYear()+'-'+String(pd.getUTCMonth()+1).padStart(2,'0');
+      if(monthly[pkey]!=null){t3+=monthly[pkey];t3c++;}
+    }
+    if(t3c>=2)pace=(t3/t3c)*12;
+  }catch(e){}
+
+  document.getElementById('ap-ytd').textContent=trFmtUSD(ytd);
+  document.getElementById('ap-ytd-pct').textContent=Math.round(ytd/goal*100)+'% of goal';
+  document.getElementById('ap-pace').textContent=trFmtUSD(pace);
+  document.getElementById('ap-pace-pct').textContent=Math.round(pace/goal*100)+'% of goal';
+  var gap=goal-pace;
+  document.getElementById('ap-gap').textContent=(gap>=0?'-':'+')+trFmtUSD(Math.abs(gap));
+  document.getElementById('ap-gap-need').textContent=gap>0?'Need +'+trFmtUSD(gap/Math.max(1,(12-new Date().getUTCMonth())))+'/month':'Ahead of pace';
+  document.getElementById('ap-goal').textContent=trFmtUSD(goal);
+
+  // Render each block
+  _apRenderBlock('rescue',d.rescue);
+  _apRenderBlock('expand',d.expand);
+  _apRenderBlock('pitch',d.pitch);
+
+  // Total potential
+  var totalPot=0;
+  d.rescue.forEach(function(r){totalPot+=r.rev2025||0;});
+  d.expand.forEach(function(r){totalPot+=(r.rev2025-r.annualized)||0;});
+  d.pitch.forEach(function(r){totalPot+=(r.rev2026||0)*0.15;}); // 15% upsell estimate
+  document.getElementById('ap-potential').textContent=trFmtUSD(totalPot);
+}
+
+function _apRenderBlock(block,items){
+  var body=document.getElementById('ap-'+block+'-body');
+  var potEl=document.getElementById('ap-'+block+'-potential');
+  if(!items||!items.length){
+    body.innerHTML='<div class="ap-empty">Nothing in this bucket this week. 🎉</div>';
+    potEl.textContent='—';
+    return;
+  }
+  var blockPot=0;
+  var html='';
+  items.forEach(function(it,i){
+    var metric1,metric2,action,potential;
+    if(block==='rescue'){
+      metric1='<div class="ap-row-metric"><span class="ap-row-metric-lbl">2025 revenue</span>'+trFmtUSD(it.rev2025)+'</div>';
+      metric2='<div class="ap-row-metric" style="color:#dc2626"><span class="ap-row-metric-lbl">2026 YTD</span>$0</div>';
+      action='<div class="ap-action"><b>Reach out now.</b> They spent '+trFmtUSD(it.rev2025)+' in 2025 and nothing this year. Ask what changed.</div>';
+      potential=it.rev2025||0;
+    } else if(block==='expand'){
+      metric1='<div class="ap-row-metric"><span class="ap-row-metric-lbl">2025 revenue</span>'+trFmtUSD(it.rev2025)+'</div>';
+      metric2='<div class="ap-row-metric" style="color:#f59e0b"><span class="ap-row-metric-lbl">2026 pace</span>'+trFmtUSD(it.annualized)+' <span style="font-size:10px">(-'+it.dropPct+'%)</span></div>';
+      var gap=(it.rev2025-it.annualized)||0;
+      action='<div class="ap-action"><b>Pitch more volume.</b> Down '+it.dropPct+'% vs 2025. Recovery opportunity: <b>'+trFmtUSD(gap)+'</b>.</div>';
+      potential=gap;
+    } else { // pitch
+      metric1='<div class="ap-row-metric"><span class="ap-row-metric-lbl">2026 YTD</span>'+trFmtUSD(it.rev2026)+'</div>';
+      metric2='<div class="ap-row-metric" style="color:#16a34a"><span class="ap-row-metric-lbl">Pimobendan</span>Never bought</div>';
+      var upsell=(it.rev2026||0)*0.15;
+      action='<div class="ap-action"><b>Pitch Pimobendan.</b> Big account not buying your #1 product. Est. upsell: <b>'+trFmtUSD(upsell)+'</b>.</div>';
+      potential=upsell;
+    }
+    blockPot+=potential;
+    html+='<div class="ap-row" data-clinic="'+_esc(it.name).replace(/"/g,'&quot;')+'" data-block="'+block+'" data-potential="'+Math.round(potential)+'">'+
+      '<div><span class="ap-rank">'+(i+1)+'</span></div>'+
+      '<div><div class="ap-row-name" data-open-clinic="'+_esc(it.name).replace(/"/g,'&quot;')+'">'+_esc(it.name)+'</div><div class="ap-row-sub">Last order: '+_esc(it.last_order||'—')+'</div></div>'+
+      metric1+metric2+
+      action+
+      '<div><button class="ap-row-btn" data-ap-action="contacted">Mark Contacted</button></div>'+
+    '</div>';
+  });
+  body.innerHTML=html;
+  potEl.textContent='Potential: '+trFmtUSD(blockPot);
+}
+
+// Click handler
+document.addEventListener('click',async function(e){
+  var btn=e.target.closest('[data-ap-action]');
+  var openLink=e.target.closest('[data-open-clinic]');
+  if(openLink){
+    var clinic=openLink.getAttribute('data-open-clinic');
+    var idx=(typeof C!=='undefined')?C.indexOf(clinic):-1;
+    if(idx>=0)openPanel(idx);
+    else alert('Clinic "'+clinic+'" not found in the local data cache. It exists in Zoho — may need a fresh data.js sync.');
+    return;
+  }
+  if(!btn)return;
+  var row=btn.closest('.ap-row');
+  if(!row)return;
+  var clinic=row.getAttribute('data-clinic');
+  var block=row.getAttribute('data-block');
+  var pot=parseFloat(row.getAttribute('data-potential'))||0;
+  btn.disabled=true;btn.textContent='Saving...';
+  try{
+    var {error}=await SB.from('action_plan_log').insert({
+      clinic_name:clinic,block_type:block,action_taken:'contacted',
+      potential_value:pot,actor:ME?ME.username:null
+    });
+    if(error){throw error;}
+    row.classList.add('done');
+    btn.className='ap-row-btn done';
+    btn.disabled=false;btn.textContent='✓ Contacted';
+    AP_STATE.doneClinics.add(clinic);
+    // Log to activity_log too
+    try{await logAction('ap_'+block,'Contacted: '+clinic+' (est. '+trFmtUSD(pot)+')');}catch(e){}
+  }catch(err){
+    console.error('[ap contact] error:',err);
+    btn.disabled=false;btn.textContent='Mark Contacted';
+    alert('Save failed: '+(err.message||err)+'\n\nRun v10_actionplan_migration.sql in Supabase if the table is missing.');
+  }
+});
+
+// Refresh button
+document.getElementById('ap-refresh').addEventListener('click',async function(){
+  if(AP_STATE.loading)return;
+  // Clear cache and reload
+  try{localStorage.removeItem('pstool_ap_cache_'+(ME?ME.username:'anon'));}catch(e){}
+  AP_STATE.data=null;
+  loadActionPlan();
+});
+
+// ============================================================
+// END v10: ACTION PLAN
 // ============================================================
 
 // Drug detail panel close + tab switching
