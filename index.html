@@ -3964,7 +3964,7 @@ async function loadActionPlan(){
   if(AP_STATE.loading)return;
   AP_STATE.loading=true;
   document.getElementById('ap-msg').textContent='';
-  document.getElementById('ap-refresh-info').innerHTML='<b>Loading fresh data from Zoho Analytics...</b> (async export mode — takes 60-90 seconds for 4 queries)';
+  document.getElementById('ap-refresh-info').innerHTML='<b>Building Action Plan...</b>';
   try{
     // Load already-contacted clinics from last 14 days so we don't re-surface them
     await _apLoadDoneClinics();
@@ -4020,99 +4020,111 @@ function _apSaveCache(data){
 }
 
 async function _apRefreshFromZoho(){
-  document.getElementById('ap-refresh-info').innerHTML='<b>Querying Zoho Analytics...</b> (async mode — 60-90 sec for 4 queries. Please wait.)';
-  var excludeList=_apExcludeSQL();
-
-  // Query 1: RESCUE — 2025 revenue > $500, zero 2026 revenue
-  var sqlRescue=
-    'SELECT "Customer ID", SUM(CASE WHEN "Invoice Date" >= \'2025-01-01\' AND "Invoice Date" < \'2026-01-01\' THEN "Total (BCY)" ELSE 0 END) AS rev2025, '+
-    'SUM(CASE WHEN "Invoice Date" >= \'2026-01-01\' THEN "Total (BCY)" ELSE 0 END) AS rev2026, '+
-    'MAX("Invoice Date") AS last_order '+
-    'FROM "Invoices" '+
-    'WHERE "Invoice Status" != \'Void\' AND "Invoice Date" >= \'2025-01-01\' '+
-    'GROUP BY "Customer ID" '+
-    'HAVING SUM(CASE WHEN "Invoice Date" >= \'2025-01-01\' AND "Invoice Date" < \'2026-01-01\' THEN "Total (BCY)" ELSE 0 END) >= 500 '+
-    'AND SUM(CASE WHEN "Invoice Date" >= \'2026-01-01\' THEN "Total (BCY)" ELSE 0 END) = 0 '+
-    'ORDER BY rev2025 DESC LIMIT 30';
-
-  // Query 2: EXPAND — active 2026, but annualized 2026 is down 30%+ vs 2025
-  var sqlExpand=
-    'SELECT "Customer ID", '+
-    'SUM(CASE WHEN "Invoice Date" >= \'2025-01-01\' AND "Invoice Date" < \'2026-01-01\' THEN "Total (BCY)" ELSE 0 END) AS rev2025, '+
-    'SUM(CASE WHEN "Invoice Date" >= \'2026-01-01\' THEN "Total (BCY)" ELSE 0 END) AS rev2026, '+
-    'MAX("Invoice Date") AS last_order '+
-    'FROM "Invoices" '+
-    'WHERE "Invoice Status" != \'Void\' AND "Invoice Date" >= \'2025-01-01\' '+
-    'GROUP BY "Customer ID" '+
-    'HAVING SUM(CASE WHEN "Invoice Date" >= \'2025-01-01\' AND "Invoice Date" < \'2026-01-01\' THEN "Total (BCY)" ELSE 0 END) >= 2000 '+
-    'AND SUM(CASE WHEN "Invoice Date" >= \'2026-01-01\' THEN "Total (BCY)" ELSE 0 END) > 0 '+
-    'ORDER BY rev2025 DESC LIMIT 100';
-
-  // Query 3: PITCH — top-50 2026 clinics who have NEVER bought Pimobendan
-  var sqlPitch=
-    'SELECT i."Customer ID", SUM(i."Total (BCY)") AS rev2026 '+
-    'FROM "Invoices" i '+
-    'WHERE i."Invoice Status" != \'Void\' AND i."Invoice Date" >= \'2026-01-01\' '+
-    'AND i."Customer ID" NOT IN ('+
-    '  SELECT DISTINCT inv."Customer ID" FROM "Invoices" inv '+
-    '  JOIN "Invoice Items" ii ON ii."Invoice ID" = inv."Invoice ID" '+
-    '  WHERE LOWER(ii."Name") LIKE \'%pimobendan%\''+
-    ') '+
-    'GROUP BY i."Customer ID" '+
-    'ORDER BY rev2026 DESC LIMIT 50';
-
-  // Also need customer names for the IDs we get back
-  var sqlCustomers='SELECT "Customer ID", "Display Name" AS name FROM "Customers"';
-
-  // Run queries SEQUENTIALLY (not Promise.all) to avoid hitting Zoho's OAuth rate limit.
-  // Zoho limits token refreshes to ~10/min; parallel calls from a cold worker fire 4 refreshes in 1 sec.
-  // First call primes the token cache; subsequent 3 reuse it.
-  document.getElementById('ap-refresh-info').innerHTML='<b>Querying Zoho Analytics...</b> Step 1/4: customer names';
-  var custR=await _apCallWorkerQuery(sqlCustomers);
-  document.getElementById('ap-refresh-info').innerHTML='<b>Querying Zoho Analytics...</b> Step 2/4: rescue candidates';
-  var rescueR=await _apCallWorkerQuery(sqlRescue);
-  document.getElementById('ap-refresh-info').innerHTML='<b>Querying Zoho Analytics...</b> Step 3/4: expand candidates';
-  var expandR=await _apCallWorkerQuery(sqlExpand);
-  document.getElementById('ap-refresh-info').innerHTML='<b>Querying Zoho Analytics...</b> Step 4/4: pitch candidates';
-  var pitchR=await _apCallWorkerQuery(sqlPitch);
-
-  // Build ID -> name map
-  var idToName={};
-  (custR.rows||[]).forEach(function(c){
-    var id=c['Customer ID'];
-    var nm=c.name||c['Display Name']||c['Name']||'';
-    if(id)idToName[String(id)]=nm;
-  });
-
-  function attachName(row){
-    var id=String(row['Customer ID']||'');
-    row.name=idToName[id]||('Customer '+id);
-    return row;
+  // Rebuilt to use data.js entirely — no Zoho Analytics SQL dependency.
+  // Rescue/Expand/Pitch logic mirrors the original query intent exactly.
+  document.getElementById('ap-refresh-info').innerHTML='<b>Building Action Plan from local data...</b>';
+  if(typeof D==='undefined'||typeof C==='undefined'||typeof KA==='undefined'){
+    throw new Error('data.js not loaded yet. Refresh the page.');
   }
-  function notExcluded(row){
-    var nm=(row.name||'').trim();
+
+  var today=new Date();
+  var tY=today.getUTCFullYear();
+  var dayOfYear=Math.floor((today-new Date(Date.UTC(tY,0,1)))/86400000)+1;
+  var yearStartEp=Math.floor((Date.UTC(tY,0,1)-EP0)/86400000);
+  var lastYearStartEp=Math.floor((Date.UTC(tY-1,0,1)-EP0)/86400000);
+  var lastYearEndEp=yearStartEp;
+
+  // Exclude channel partners by name substring match
+  function isExcluded(name){
+    var nl=name.toLowerCase();
     for(var i=0;i<AP_EXCLUDE.length;i++){
-      if(nm.toLowerCase()===AP_EXCLUDE[i].toLowerCase())return false;
+      if(nl.indexOf(AP_EXCLUDE[i].toLowerCase())>=0)return true;
     }
-    return true;
+    return false;
   }
-  function notDone(row){return !AP_STATE.doneClinics.has(row.name);}
+  function notDone(name){return !AP_STATE.doneClinics.has(name);}
 
-  var rescue=(rescueR.rows||[]).map(attachName).filter(notExcluded).filter(notDone).slice(0,5);
-  var expand=(expandR.rows||[]).map(attachName).filter(notExcluded).filter(function(r){
-    // Annualize 2026 based on days elapsed in year
-    var today=new Date();
-    var dayOfYear=Math.floor((today-new Date(Date.UTC(today.getUTCFullYear(),0,1)))/86400000)+1;
-    var ann=(r.rev2026||0)*(365/Math.max(dayOfYear,1));
-    var dropPct=r.rev2025>0?((r.rev2025-ann)/r.rev2025)*100:0;
-    r.dropPct=Math.round(dropPct);
-    r.annualized=Math.round(ann);
-    return dropPct>=30;
-  }).filter(notDone).slice(0,5);
-  var pitch=(pitchR.rows||[]).map(attachName).filter(notExcluded).filter(notDone).slice(0,5);
+  var rescueCandidates=[], expandCandidates=[], pitchCandidates=[];
+
+  // Find top product (by revenue) for pitch — use T[] top-30
+  var pitchIngredient='Pimobendan';
+  if(typeof T!=='undefined'&&T.length&&typeof P!=='undefined'){
+    // Use rollupFor to get the ingredient of the #1 product
+    var topPidx=T[0][0];
+    var topName=(P[topPidx]||'').split(/\s+/)[0];
+    if(topName)pitchIngredient=topName;
+  }
+
+  for(var ci=0;ci<C.length;ci++){
+    var name=C[ci];
+    if(isExcluded(name))continue;
+    if(!notDone(name))continue;
+
+    var rows=D[name]||[];
+    var rev2025=0, rev2026=0, lastEp=-1;
+    var hasPitchDrug=false;
+
+    for(var ri=0;ri<rows.length;ri++){
+      var r=rows[ri];
+      var ep=r[3], rev=r[2], pidx=r[1];
+      if(ep>=lastYearStartEp&&ep<lastYearEndEp) rev2025+=rev;
+      if(ep>=yearStartEp) rev2026+=rev;
+      if(ep>lastEp) lastEp=ep;
+      // Check if clinic has ever bought the pitch drug (any time)
+      if(!hasPitchDrug&&typeof P!=='undefined'){
+        var pname=(P[pidx]||'').toLowerCase();
+        if(pname.indexOf(pitchIngredient.toLowerCase())>=0) hasPitchDrug=true;
+      }
+    }
+
+    var ka=KA[ci]||[];
+    var repIdx=ka[0];
+    var repName=(typeof REPS!=='undefined'&&repIdx>=0)?REPS[repIdx]:'';
+    var lastOrderIso=ka[6]||'';
+
+    // RESCUE: had $500+ in 2025, zero in 2026
+    if(rev2025>=500&&rev2026===0){
+      rescueCandidates.push({
+        name:name, rep:repName, rev2025:rev2025, rev2026:0,
+        last_order:lastOrderIso
+      });
+    }
+
+    // EXPAND: active in 2026 and annualized 2026 is down 30%+ vs 2025, min $2000 in 2025
+    if(rev2025>=2000&&rev2026>0){
+      var ann=rev2026*(365/Math.max(dayOfYear,1));
+      var dropPct=rev2025>0?((rev2025-ann)/rev2025)*100:0;
+      if(dropPct>=30){
+        expandCandidates.push({
+          name:name, rep:repName, rev2025:rev2025, rev2026:rev2026,
+          annualized:Math.round(ann), dropPct:Math.round(dropPct),
+          last_order:lastOrderIso
+        });
+      }
+    }
+
+    // PITCH: active in 2026 ($500+), never bought the top drug
+    if(rev2026>=500&&!hasPitchDrug){
+      pitchCandidates.push({
+        name:name, rep:repName, rev2026:rev2026,
+        last_order:lastOrderIso
+      });
+    }
+  }
+
+  // Sort and slice to top 5 each
+  rescueCandidates.sort(function(a,b){return b.rev2025-a.rev2025;});
+  expandCandidates.sort(function(a,b){return b.dropPct-a.dropPct;});
+  pitchCandidates.sort(function(a,b){return b.rev2026-a.rev2026;});
+
+  // Attach pitch drug name for rendering
+  pitchCandidates=pitchCandidates.map(function(r){r.pitchDrug=pitchIngredient;return r;});
 
   AP_STATE.data={
-    rescue:rescue,expand:expand,pitch:pitch,
+    rescue:rescueCandidates.slice(0,5),
+    expand:expandCandidates.slice(0,5),
+    pitch:pitchCandidates.slice(0,5),
+    pitchIngredient:pitchIngredient,
     generated_at:new Date().toISOString()
   };
   _apSaveCache(AP_STATE.data);
@@ -4210,9 +4222,10 @@ function _apRenderBlock(block,items){
       potential=gap;
     } else { // pitch
       metric1='<div class="ap-row-metric"><span class="ap-row-metric-lbl">2026 YTD</span>'+trFmtUSD(it.rev2026)+'</div>';
-      metric2='<div class="ap-row-metric" style="color:#16a34a"><span class="ap-row-metric-lbl">Pimobendan</span>Never bought</div>';
+      var pd=it.pitchDrug||'top product';
+      metric2='<div class="ap-row-metric" style="color:#16a34a"><span class="ap-row-metric-lbl">'+_esc(pd)+'</span>Never bought</div>';
       var upsell=(it.rev2026||0)*0.15;
-      action='<div class="ap-action"><b>Pitch Pimobendan.</b> Big account not buying your #1 product. Est. upsell: <b>'+trFmtUSD(upsell)+'</b>.</div>';
+      action='<div class="ap-action"><b>Pitch '+_esc(pd)+'.</b> Big account not buying your #1 product. Est. upsell: <b>'+trFmtUSD(upsell)+'</b>.</div>';
       potential=upsell;
     }
     blockPot+=potential;
