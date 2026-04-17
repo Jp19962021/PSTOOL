@@ -200,6 +200,31 @@ table.ptbl tr:last-child td{border-bottom:none}
 .ds-buyer-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#1a2035;font-weight:500}
 .ds-buyer-rep{font-size:10px;color:#888;margin-left:8px;white-space:nowrap}
 .ds-buyer-rev{font-weight:600;color:#1a2035;margin-left:8px;font-size:12px;white-space:nowrap}
+/* Drug breakdown hierarchy */
+.ds-breakdown{border-top:1px solid #edf0f5;margin-top:12px;padding-top:10px}
+.ds-break-toggle{background:#f7f8fa;border:1px solid #e0e3ea;color:#1a2035;padding:7px 12px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;width:100%;text-align:left;display:flex;align-items:center;gap:6px}
+.ds-break-toggle:hover{background:#eef0f5}
+.ds-break-arrow{font-size:9px;color:#888}
+.ds-forms{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.ds-form-row{background:#fafbfc;border:1px solid #edf0f5;border-radius:8px;overflow:hidden}
+.ds-form-row.expanded{background:#fff;border-color:#cbd2e3}
+.ds-form-top{display:flex;align-items:center;gap:10px;padding:8px 10px;flex-wrap:wrap}
+.ds-form-toggle{background:none;border:none;color:#1a2035;font-size:12px;cursor:pointer;padding:3px 6px;border-radius:4px;display:flex;align-items:center;gap:6px;flex-shrink:0}
+.ds-form-toggle:hover{background:#eef0f5}
+.ds-form-toggle strong{font-weight:700}
+.ds-form-stats{display:flex;gap:10px;flex:1;flex-wrap:wrap;align-items:center;font-size:11px;color:#555;justify-content:flex-end}
+.ds-form-stat{display:inline-flex;align-items:baseline;gap:4px}
+.ds-form-stat-lbl{font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.ds-variant-open{background:#1a2035;color:#fff;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:10px;font-weight:600;margin-left:4px;white-space:nowrap}
+.ds-variant-open:hover{background:#2a3550}
+.ds-strengths{display:flex;flex-direction:column;background:#f7f8fa;border-top:1px solid #edf0f5}
+.ds-strength-row{display:flex;gap:10px;padding:7px 12px 7px 28px;font-size:11px;border-bottom:1px solid #edf0f5;align-items:center;flex-wrap:wrap}
+.ds-strength-row:last-child{border-bottom:none}
+.ds-strength-name{flex:1;min-width:140px;font-weight:600;color:#1a2035;font-size:12px}
+.ds-strength-stats{display:flex;gap:10px;flex-wrap:wrap;align-items:center;color:#555}
+.ds-view-toggle{display:inline-flex;background:#eef0f5;border-radius:8px;padding:3px;gap:2px;margin-left:12px}
+.ds-view-toggle button{background:none;border:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;color:#666;cursor:pointer}
+.ds-view-toggle button.active{background:#1a2035;color:#fff}
 .tr-card{background:#fff;border-radius:12px;padding:18px 20px;border:1px solid #e8eaed;box-shadow:0 1px 4px rgba(0,0,0,.05)}
 .tr-grid-4{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
 .tr-drug-card{background:#fff;border-radius:10px;padding:14px 16px;border:1px solid #e8eaed;box-shadow:0 1px 3px rgba(0,0,0,.04);cursor:pointer;transition:border-color .15s,box-shadow .15s}
@@ -862,7 +887,12 @@ table.ptbl tr:last-child td{border-bottom:none}
 
 <!-- DRUG SEARCH (admin only) -->
 <div id="page-drugsearch" class="page"><div class="container">
-  <div class="tr-section-title">&#128269; Drug Search <span class="tr-sub">Filter and compare ingredient performance across your entire territory</span></div>
+  <div class="tr-section-title">&#128269; Drug Search <span class="tr-sub">Filter and compare ingredient performance across your entire territory</span>
+    <div class="ds-view-toggle" id="ds-view-toggle">
+      <button data-view="rollup" class="active" title="Group variants by strength+form (Pimobendan 5mg Chewable)">Rollup</button>
+      <button data-view="sku" title="Show every individual SKU (including bottle sizes)">SKU</button>
+    </div>
+  </div>
   <div class="ds-layout">
     <!-- Left: excel-style filter -->
     <div class="ds-filter">
@@ -2384,16 +2414,17 @@ function loadDrugSearch(){
 }
 function dsBuildIndex(){
   // Build per-ingredient aggregate across ALL clinics (admins get full visibility)
+  // Three-level hierarchy: ingredient -> form -> strength+form (variant)
   var map={};
   for(var ci=0;ci<C.length;ci++){
     var rows=D[C[ci]]||[];
     var k=KA[ci]||[-1];var rep=k[0]>=0?REPS[k[0]]:'';
-    var seen={};
     for(var ri=0;ri<rows.length;ri++){
       var r=rows[ri];
-      var ing=rollupFor(r[1]).ingredient;
+      var ro=rollupFor(r[1]);
+      var ing=ro.ingredient;
       if(!ing||ing==='(unknown)')continue;
-      if(!map[ing])map[ing]={ing:ing,total:0,y24:0,y25:0,y26:0,lastEp:-1,byMonth:{},byDay:{},clinicTot:{},repByCi:{}};
+      if(!map[ing])map[ing]={ing:ing,total:0,y24:0,y25:0,y26:0,lastEp:-1,byMonth:{},byDay:{},clinicTot:{},repByCi:{},forms:{}};
       var m=map[ing];
       m.total+=r[2];
       if(r[0]===4)m.y24+=r[2];else if(r[0]===5)m.y25+=r[2];else m.y26+=r[2];
@@ -2404,15 +2435,57 @@ function dsBuildIndex(){
       m.byDay[dk]=(m.byDay[dk]||0)+r[2];
       m.clinicTot[ci]=(m.clinicTot[ci]||0)+r[2];
       m.repByCi[ci]=rep;
+      // Form-level aggregate
+      var formKey=ro.form||'Other';
+      if(!m.forms[formKey])m.forms[formKey]={form:formKey,total:0,y24:0,y25:0,y26:0,lastEp:-1,byMonth:{},byDay:{},clinicTot:{},repByCi:{},strengths:{},skus:{}};
+      var f=m.forms[formKey];
+      f.total+=r[2];
+      if(r[0]===4)f.y24+=r[2];else if(r[0]===5)f.y25+=r[2];else f.y26+=r[2];
+      if(r[3]>f.lastEp)f.lastEp=r[3];
+      f.byMonth[mk]=(f.byMonth[mk]||0)+r[2];
+      f.byDay[dk]=(f.byDay[dk]||0)+r[2];
+      f.clinicTot[ci]=(f.clinicTot[ci]||0)+r[2];
+      f.repByCi[ci]=rep;
+      // Strength+Form variant (within form)
+      var strKey=ro.strength||'unspec';
+      var vLabel=ro.label||(ing+' '+formKey);
+      if(!f.strengths[strKey])f.strengths[strKey]={strength:strKey,label:vLabel,total:0,y24:0,y25:0,y26:0,lastEp:-1,byMonth:{},byDay:{},clinicTot:{},repByCi:{}};
+      var s=f.strengths[strKey];
+      s.total+=r[2];
+      if(r[0]===4)s.y24+=r[2];else if(r[0]===5)s.y25+=r[2];else s.y26+=r[2];
+      if(r[3]>s.lastEp)s.lastEp=r[3];
+      s.byMonth[mk]=(s.byMonth[mk]||0)+r[2];
+      s.byDay[dk]=(s.byDay[dk]||0)+r[2];
+      s.clinicTot[ci]=(s.clinicTot[ci]||0)+r[2];
+      s.repByCi[ci]=rep;
+      // Raw SKU bucket (for the SKU toggle mode)
+      var skuName=P[r[1]]||'(unknown SKU)';
+      if(!f.skus[skuName])f.skus[skuName]={sku:skuName,total:0,y24:0,y25:0,y26:0,lastEp:-1,clinicTot:{}};
+      var sk=f.skus[skuName];
+      sk.total+=r[2];
+      if(r[0]===4)sk.y24+=r[2];else if(r[0]===5)sk.y25+=r[2];else sk.y26+=r[2];
+      if(r[3]>sk.lastEp)sk.lastEp=r[3];
+      sk.clinicTot[ci]=(sk.clinicTot[ci]||0)+r[2];
     }
   }
-  // Convert to array; build top buyers
+  // Convert to array + build top buyers
+  function buildBuyers(container){
+    var buyers=Object.keys(container.clinicTot).map(function(ci){return {ci:parseInt(ci),total:container.clinicTot[ci],rep:container.repByCi?container.repByCi[ci]:''};});
+    buyers.sort(function(a,b){return b.total-a.total;});
+    container.buyers=buyers;
+    container.clinicCount=buyers.length;
+  }
   DS_INGS=Object.keys(map).map(function(k){
     var m=map[k];
-    var buyers=Object.keys(m.clinicTot).map(function(ci){return {ci:parseInt(ci),total:m.clinicTot[ci],rep:m.repByCi[ci]};});
-    buyers.sort(function(a,b){return b.total-a.total;});
-    m.buyers=buyers;
-    m.clinicCount=buyers.length;
+    buildBuyers(m);
+    // Sort forms by revenue; process strengths + skus
+    m.formList=Object.values(m.forms).sort(function(a,b){return b.total-a.total;});
+    m.formList.forEach(function(f){
+      buildBuyers(f);
+      f.strengthList=Object.values(f.strengths).sort(function(a,b){return b.total-a.total;});
+      f.strengthList.forEach(buildBuyers);
+      f.skuList=Object.values(f.skus).sort(function(a,b){return b.total-a.total;});
+    });
     return m;
   }).sort(function(a,b){return b.total-a.total;});
 }
@@ -2435,6 +2508,10 @@ function dsRenderList(){
 function dsUpdateCount(){
   document.getElementById('ds-count').textContent=DS_SELECTED.size+' selected';
 }
+var DS_VIEW_MODE='rollup'; // 'rollup' or 'sku'
+var DS_EXPANDED_FORMS={}; // {ingredient::form: true}
+var DS_EXPANDED_INGS={}; // {ingredient: true}
+
 function dsRenderResults(){
   var wrap=document.getElementById('ds-results');
   // Destroy old charts
@@ -2447,21 +2524,27 @@ function dsRenderResults(){
   }
   var todayDate=new Date();var thisYear=todayDate.getUTCFullYear();var thisMonth=todayDate.getUTCMonth();var dayOfMonth=todayDate.getUTCDate();
   var selected=DS_INGS.filter(function(m){return DS_SELECTED.has(m.ing);});
-  selected.forEach(function(m,idx){
-    // MTD vs MTD YoY
+
+  // Helper: compute MTD numbers for any container with byDay
+  function computeMTD(container){
     var mtdCur=0,mtdYoy=0;
     for(var d=1;d<=dayOfMonth;d++){
       var k1=thisYear+'-'+String(thisMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
       var k2=(thisYear-1)+'-'+String(thisMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-      mtdCur+=m.byDay[k1]||0;mtdYoy+=m.byDay[k2]||0;
+      mtdCur+=(container.byDay||{})[k1]||0;
+      mtdYoy+=(container.byDay||{})[k2]||0;
     }
-    var yoyDelta=mtdYoy>0?((mtdCur-mtdYoy)/mtdYoy)*100:(mtdCur>0?100:0);
-    var yoyCls=yoyDelta>=5?'up':(yoyDelta<=-5?'down':'flat');
-    var yoySym=yoyDelta>=0?'▲':'▼';
-    var y2625Delta=m.y25>0?((m.y26-m.y25)/m.y25)*100:0;
-    var y2625Cls=y2625Delta>=5?'up':(y2625Delta<=-5?'down':'flat');
-    var y2625Sym=y2625Delta>=0?'▲':'▼';
-    // 12-month spark
+    return {mtdCur:mtdCur,mtdYoy:mtdYoy};
+  }
+  function deltaPill(cur,base,suffix){
+    var pct=base>0?((cur-base)/base)*100:(cur>0?100:0);
+    var cls=pct>=5?'up':(pct<=-5?'down':'flat');
+    var sym=pct>=0?'▲':'▼';
+    return '<span class="tr-delta '+cls+'">'+sym+' '+(pct>=0?'+':'')+Math.round(pct)+'% '+suffix+'</span>';
+  }
+
+  selected.forEach(function(m,idx){
+    var mt=computeMTD(m);
     var spark=[];
     for(var i=11;i>=0;i--){
       var dt=new Date(Date.UTC(thisYear,thisMonth-i,1));
@@ -2469,25 +2552,37 @@ function dsRenderResults(){
       spark.push(m.byMonth[mk]||0);
     }
     var card=document.createElement('div');card.className='ds-result-card';
+    card.dataset.ing=m.ing;
     var topBuyers=m.buyers.slice(0,5);
     var buyerRows=topBuyers.map(function(b){
       return '<div class="ds-buyer-row" data-ci="'+b.ci+'"><span class="ds-buyer-name">'+escapeHtml(C[b.ci])+'</span><span class="ds-buyer-rep">'+(b.rep||'\u2014')+'</span><span class="ds-buyer-rev">'+trFmtUSD(b.total)+'</span></div>';
     }).join('');
     var cardId='ds-chart-'+idx;
+    var ingExpanded=!!DS_EXPANDED_INGS[m.ing];
+    var expandedClass=ingExpanded?' expanded':'';
+
     card.innerHTML=
       '<div class="ds-card-top">'+
         '<div><div class="ds-card-name">'+escapeHtml(m.ing)+'</div>'+
-        '<div class="ds-card-meta">Last order: '+(m.lastEp>=0?epDate(m.lastEp):'never')+' \u00b7 '+m.clinicCount+' clinic'+(m.clinicCount===1?'':'s')+' bought ever</div></div>'+
-        '<button class="ds-card-open" data-ing="'+escapeHtml(m.ing)+'">Full detail &#8594;</button>'+
+        '<div class="ds-card-meta">Last order: '+(m.lastEp>=0?epDate(m.lastEp):'never')+' \u00b7 '+m.clinicCount+' clinic'+(m.clinicCount===1?'':'s')+' bought ever \u00b7 '+m.formList.length+' form'+(m.formList.length===1?'':'s')+'</div></div>'+
+        '<div style="display:flex;gap:6px">'+
+          '<button class="ds-card-open" data-ing="'+escapeHtml(m.ing)+'">Full detail &#8594;</button>'+
+        '</div>'+
       '</div>'+
       '<div class="ds-stats">'+
         '<div class="ds-stat"><div class="ds-stat-label">Total Revenue</div><div class="ds-stat-value">'+trFmtUSD(m.total)+'</div><div class="ds-stat-sub">all time</div></div>'+
-        '<div class="ds-stat"><div class="ds-stat-label">2026 YTD</div><div class="ds-stat-value">'+trFmtUSD(m.y26)+'</div><span class="tr-delta '+y2625Cls+'">'+y2625Sym+' '+(y2625Delta>=0?'+':'')+Math.round(y2625Delta)+'% vs 2025</span></div>'+
-        '<div class="ds-stat"><div class="ds-stat-label">'+todayDate.toLocaleDateString('en-US',{month:'short',timeZone:'UTC'})+' MTD</div><div class="ds-stat-value">'+trFmtUSD(mtdCur)+'</div><span class="tr-delta '+yoyCls+'">'+yoySym+' '+(yoyDelta>=0?'+':'')+Math.round(yoyDelta)+'% YoY</span></div>'+
+        '<div class="ds-stat"><div class="ds-stat-label">2026 YTD</div><div class="ds-stat-value">'+trFmtUSD(m.y26)+'</div>'+deltaPill(m.y26,m.y25,'vs 2025')+'</div>'+
+        '<div class="ds-stat"><div class="ds-stat-label">'+todayDate.toLocaleDateString('en-US',{month:'short',timeZone:'UTC'})+' MTD</div><div class="ds-stat-value">'+trFmtUSD(mt.mtdCur)+'</div>'+deltaPill(mt.mtdCur,mt.mtdYoy,'YoY')+'</div>'+
         '<div class="ds-stat"><div class="ds-stat-label">Active Clinics</div><div class="ds-stat-value">'+m.clinicCount+'</div><div class="ds-stat-sub">ever purchased</div></div>'+
       '</div>'+
       '<div class="ds-chart"><canvas id="'+cardId+'"></canvas></div>'+
-      '<div class="ds-buyers"><div class="ds-buyers-title">Top Buyers (click to open)</div><div class="ds-buyers-list">'+buyerRows+'</div></div>';
+      '<div class="ds-buyers"><div class="ds-buyers-title">Top Buyers (click to open)</div><div class="ds-buyers-list">'+buyerRows+'</div></div>'+
+      // Breakdown expander
+      '<div class="ds-breakdown'+expandedClass+'">'+
+        '<button class="ds-break-toggle" data-ing-exp="'+escapeHtml(m.ing)+'"><span class="ds-break-arrow">'+(ingExpanded?'\u25bc':'\u25b6')+'</span> '+(ingExpanded?'Hide':'Show')+' breakdown by form '+(DS_VIEW_MODE==='sku'?'+ SKU':'+ strength')+'</button>'+
+        (ingExpanded?dsRenderBreakdown(m,computeMTD,deltaPill):'')+
+      '</div>';
+
     wrap.appendChild(card);
     // Draw spark
     DS_CHARTS[cardId]=new Chart(document.getElementById(cardId),{
@@ -2496,6 +2591,78 @@ function dsRenderResults(){
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return trFmtFull(c.parsed.y);}}}},scales:{y:{display:false},x:{ticks:{font:{size:9}}}}},
     });
   });
+}
+
+// Render the form-level breakdown (nested inside an ingredient card)
+function dsRenderBreakdown(m,computeMTD,deltaPill){
+  var html='<div class="ds-forms">';
+  m.formList.forEach(function(f){
+    var fKey=m.ing+'::'+f.form;
+    var fExpanded=!!DS_EXPANDED_FORMS[fKey];
+    var mt=computeMTD(f);
+    var pctOfIng=m.total>0?(f.total/m.total)*100:0;
+    html+='<div class="ds-form-row'+(fExpanded?' expanded':'')+'" data-form-key="'+escapeHtml(fKey)+'">'+
+      '<div class="ds-form-top">'+
+        '<button class="ds-form-toggle" data-form-exp="'+escapeHtml(fKey)+'"><span class="ds-break-arrow">'+(fExpanded?'\u25bc':'\u25b6')+'</span> <strong>'+escapeHtml(f.form)+'</strong></button>'+
+        '<div class="ds-form-stats">'+
+          '<span class="ds-form-stat"><span class="ds-form-stat-lbl">Total</span> '+trFmtUSD(f.total)+' <span style="color:#aaa">('+Math.round(pctOfIng)+'%)</span></span>'+
+          '<span class="ds-form-stat"><span class="ds-form-stat-lbl">2026</span> '+trFmtUSD(f.y26)+' '+deltaPill(f.y26,f.y25,'')+'</span>'+
+          '<span class="ds-form-stat"><span class="ds-form-stat-lbl">MTD</span> '+trFmtUSD(mt.mtdCur)+' '+deltaPill(mt.mtdCur,mt.mtdYoy,'')+'</span>'+
+          '<span class="ds-form-stat"><span class="ds-form-stat-lbl">Clinics</span> '+f.clinicCount+'</span>'+
+          '<button class="ds-variant-open" data-ing="'+escapeHtml(m.ing)+'" data-form="'+escapeHtml(f.form)+'" title="Open full detail for '+escapeHtml(m.ing)+' '+escapeHtml(f.form)+'">Detail &#8594;</button>'+
+        '</div>'+
+      '</div>';
+    // Show strength-level or SKU-level breakdown when expanded
+    if(fExpanded){
+      if(DS_VIEW_MODE==='sku'){
+        // SKU mode: show individual products
+        html+='<div class="ds-strengths">';
+        if(!f.skuList.length){
+          html+='<div class="ds-empty" style="padding:12px">No SKUs.</div>';
+        } else {
+          f.skuList.forEach(function(sku){
+            var pctOfForm=f.total>0?(sku.total/f.total)*100:0;
+            var skuClinicCount=Object.keys(sku.clinicTot).length;
+            html+='<div class="ds-strength-row">'+
+              '<div class="ds-strength-name">'+escapeHtml(sku.sku)+'</div>'+
+              '<div class="ds-strength-stats">'+
+                '<span><span class="ds-form-stat-lbl">Total</span> '+trFmtUSD(sku.total)+' <span style="color:#aaa">('+Math.round(pctOfForm)+'%)</span></span>'+
+                '<span><span class="ds-form-stat-lbl">2026</span> '+trFmtUSD(sku.y26)+' '+deltaPill(sku.y26,sku.y25,'')+'</span>'+
+                '<span><span class="ds-form-stat-lbl">Clinics</span> '+skuClinicCount+'</span>'+
+              '</div>'+
+            '</div>';
+          });
+        }
+        html+='</div>';
+      } else {
+        // Rollup mode: show strength-level variants
+        html+='<div class="ds-strengths">';
+        if(!f.strengthList.length){
+          html+='<div class="ds-empty" style="padding:12px">No strength variants.</div>';
+        } else {
+          f.strengthList.forEach(function(s){
+            var mts=computeMTD(s);
+            var pctOfForm=f.total>0?(s.total/f.total)*100:0;
+            var variantLabel=m.ing+' '+(s.strength==='unspec'?'':s.strength+' ')+f.form;
+            html+='<div class="ds-strength-row">'+
+              '<div class="ds-strength-name">'+escapeHtml(s.strength==='unspec'?'(unspecified strength)':s.strength)+' '+escapeHtml(f.form)+'</div>'+
+              '<div class="ds-strength-stats">'+
+                '<span><span class="ds-form-stat-lbl">Total</span> '+trFmtUSD(s.total)+' <span style="color:#aaa">('+Math.round(pctOfForm)+'%)</span></span>'+
+                '<span><span class="ds-form-stat-lbl">2026</span> '+trFmtUSD(s.y26)+' '+deltaPill(s.y26,s.y25,'')+'</span>'+
+                '<span><span class="ds-form-stat-lbl">MTD</span> '+trFmtUSD(mts.mtdCur)+' '+deltaPill(mts.mtdCur,mts.mtdYoy,'')+'</span>'+
+                '<span><span class="ds-form-stat-lbl">Clinics</span> '+s.clinicCount+'</span>'+
+                '<button class="ds-variant-open" data-ing="'+escapeHtml(m.ing)+'" data-form="'+escapeHtml(f.form)+'" data-strength="'+escapeHtml(s.strength)+'" data-label="'+escapeHtml(variantLabel)+'">Detail &#8594;</button>'+
+              '</div>'+
+            '</div>';
+          });
+        }
+        html+='</div>';
+      }
+    }
+    html+='</div>';
+  });
+  html+='</div>';
+  return html;
 }
 
 // Wire drug search UI
@@ -2530,11 +2697,48 @@ document.addEventListener('DOMContentLoaded',function(){
     dsUpdateCount();dsRenderResults();
   });
   resultsEl.addEventListener('click',function(e){
+    // Ingredient-level full detail button
     var openBtn=e.target.closest('.ds-card-open');
     if(openBtn){openDrugDetail(openBtn.dataset.ing);return;}
+    // Variant-level detail button (form or form+strength)
+    var variantBtn=e.target.closest('.ds-variant-open');
+    if(variantBtn){
+      var ing=variantBtn.dataset.ing;
+      var form=variantBtn.dataset.form;
+      var strength=variantBtn.dataset.strength||null;
+      openDrugDetail(ing,false,{form:form,strength:strength});
+      return;
+    }
+    // Toggle ingredient breakdown
+    var ingExp=e.target.closest('[data-ing-exp]');
+    if(ingExp){
+      var ingKey=ingExp.dataset.ingExp;
+      DS_EXPANDED_INGS[ingKey]=!DS_EXPANDED_INGS[ingKey];
+      dsRenderResults();
+      return;
+    }
+    // Toggle form row
+    var formExp=e.target.closest('[data-form-exp]');
+    if(formExp){
+      var fKey=formExp.dataset.formExp;
+      DS_EXPANDED_FORMS[fKey]=!DS_EXPANDED_FORMS[fKey];
+      dsRenderResults();
+      return;
+    }
+    // Clinic row click
     var buyerRow=e.target.closest('.ds-buyer-row');
     if(buyerRow&&buyerRow.dataset.ci){openPanel(parseInt(buyerRow.dataset.ci));return;}
   });
+  // View mode toggle (Rollup vs SKU)
+  var viewToggle=document.getElementById('ds-view-toggle');
+  if(viewToggle){
+    viewToggle.addEventListener('click',function(e){
+      var btn=e.target.closest('button[data-view]');if(!btn)return;
+      DS_VIEW_MODE=btn.dataset.view;
+      viewToggle.querySelectorAll('button').forEach(function(x){x.classList.toggle('active',x===btn);});
+      dsRenderResults();
+    });
+  }
 });
 
 async function loadTrends(){
@@ -2905,9 +3109,18 @@ document.querySelectorAll('#dd-panel .dd-tab').forEach(function(t){
 // =========================================================
 // DRUG DETAIL slide-out panel
 // =========================================================
-function openDrugDetail(ingredient, isNavBack){
+var CUR_DRUG_FILTER=null; // null or {form:string, strength:string|null}
+
+function openDrugDetail(ingredient, isNavBack, variantFilter){
   CUR_DRUG=ingredient;
-  document.getElementById('dd-title').textContent=ingredient;
+  CUR_DRUG_FILTER=variantFilter||null;
+  // Compose display title to reflect filter
+  var displayTitle=ingredient;
+  if(CUR_DRUG_FILTER){
+    if(CUR_DRUG_FILTER.strength&&CUR_DRUG_FILTER.strength!=='unspec')displayTitle+=' \u00b7 '+CUR_DRUG_FILTER.strength;
+    if(CUR_DRUG_FILTER.form)displayTitle+=' '+CUR_DRUG_FILTER.form;
+  }
+  document.getElementById('dd-title').textContent=displayTitle;
   document.getElementById('dd-overlay').classList.add('open');
   document.getElementById('dd-panel').classList.add('open');
   document.body.style.overflow='hidden';
@@ -2924,6 +3137,7 @@ function closeDrugDetail(){
   document.getElementById('dd-panel').classList.remove('open');
   document.body.style.overflow='';
   CUR_DRUG=null;
+  CUR_DRUG_FILTER=null;
   NAV_HISTORY=[];
   if(aiDrugChat)aiDrugChat.updateContext();
   if(TR_CHARTS['dd-12mo']){TR_CHARTS['dd-12mo'].destroy();delete TR_CHARTS['dd-12mo'];}
@@ -2931,8 +3145,32 @@ function closeDrugDetail(){
 function renderDrugDetail(ingredient){
   if(!TR_INGREDIENT_CACHE){loadTrends();return;}
   var allowedClinicIdx=TR_INGREDIENT_CACHE.allowedClinicIdx;
-  var byMonth=TR_INGREDIENT_CACHE.ingByMonth[ingredient]||{};
-  var byDay=TR_INGREDIENT_CACHE.ingByDay[ingredient]||{};
+  var filter=CUR_DRUG_FILTER;
+
+  // Source byMonth/byDay based on filter depth
+  var byMonth, byDay;
+  if(filter){
+    if(!DS_INGS)dsBuildIndex();
+    // Dig into DS_INGS for the pre-computed form/strength buckets
+    var ingObj=DS_INGS.find(function(x){return x.ing===ingredient;});
+    var container=null;
+    if(ingObj){
+      var formObj=(ingObj.forms||{})[filter.form];
+      if(formObj){
+        if(filter.strength&&formObj.strengths[filter.strength]){
+          container=formObj.strengths[filter.strength];
+        } else {
+          container=formObj;
+        }
+      }
+    }
+    byMonth=container?container.byMonth:{};
+    byDay=container?container.byDay:{};
+  } else {
+    byMonth=TR_INGREDIENT_CACHE.ingByMonth[ingredient]||{};
+    byDay=TR_INGREDIENT_CACHE.ingByDay[ingredient]||{};
+  }
+
   var todayDate=new Date();var thisYear=todayDate.getUTCFullYear();var thisMonth=todayDate.getUTCMonth();var dayOfMonth=todayDate.getUTCDate();
 
   // Per-year totals
@@ -2999,7 +3237,7 @@ function renderDrugDetail(ingredient){
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+trFmtFull(c.parsed.y);}}}},scales:{y:{ticks:{callback:function(v){return trFmtUSD(v);},font:{size:10}}},x:{ticks:{font:{size:10}}}}},
   });
 
-  // Clinic-level breakdown — per ingredient, find clinics that bought + their status (Active in 2026 / Stopped / Past Only)
+  // Clinic-level breakdown — per ingredient (optionally filtered by form+strength), find clinics that bought + their status
   var clinicAgg={}; // ci -> {tot,y26,y25,y24,lastEp}
   for(var ci=0;ci<C.length;ci++){
     if(allowedClinicIdx&&!allowedClinicIdx[ci])continue;
@@ -3007,8 +3245,12 @@ function renderDrugDetail(ingredient){
     var saw=false;
     for(var ri2=0;ri2<rows.length;ri2++){
       var rr=rows[ri2];
-      var ing2=rollupFor(rr[1]).ingredient;
-      if(ing2!==ingredient)continue;
+      var ro2=rollupFor(rr[1]);
+      if(ro2.ingredient!==ingredient)continue;
+      if(filter){
+        if(filter.form && ro2.form!==filter.form)continue;
+        if(filter.strength && ro2.strength!==filter.strength)continue;
+      }
       saw=true;
       if(!clinicAgg[ci])clinicAgg[ci]={tot:0,y24:0,y25:0,y26:0,lastEp:-1,ordCount:0};
       clinicAgg[ci].tot+=rr[2];
