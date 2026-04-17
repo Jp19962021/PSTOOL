@@ -1138,7 +1138,10 @@ table.ptbl tr:last-child td{border-bottom:none}
       <div class="dd-pane" data-pane="stopped">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap">
           <div style="font-size:12px;color:#dc2626;font-weight:600">Estimated lost revenue: <span id="dd-stopped-loss">$0</span></div>
-          <button class="dd-export-btn" data-bucket="stopped" style="margin-left:auto">&#128196; Export CSV (all rows)</button>
+          <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="dd-export-btn" id="dd-kl-stopped-btn" style="background:#f59e0b">&#9993; Push to Klaviyo</button>
+            <button class="dd-export-btn" data-bucket="stopped">&#128196; Export CSV (all rows)</button>
+          </div>
         </div>
         <div style="overflow-x:auto"><table class="tr-rep-tbl dd-tbl">
           <thead><tr><th>Clinic</th><th>Rep</th><th style="text-align:right">2025 Rev</th><th style="text-align:right">Lost</th><th>Last Order</th><th></th></tr></thead>
@@ -5378,6 +5381,46 @@ document.getElementById('inv-unm-body').addEventListener('click',async function(
 document.getElementById('inv-refresh').addEventListener('click',loadInventory);
 // ============================================================
 // END v7: DRUG INVENTORY
+
+// ============================================================
+// Drug Detail — Push Stopped Buyers to Klaviyo
+// ============================================================
+async function pushDrugStoppedToKlaviyo(){
+  if(!ME||ME.role!=='admin'){alert('Admin only.');return;}
+  if(!DD_EXPORT_DATA||!DD_EXPORT_DATA.stopped||!DD_EXPORT_DATA.stopped.length){
+    alert('No stopped clinics to push. Open a drug detail first.');return;
+  }
+  var drug=DD_EXPORT_DATA.ingredient;
+  if(DD_EXPORT_DATA.filter&&DD_EXPORT_DATA.filter.form){
+    var f=DD_EXPORT_DATA.filter;
+    drug+=(f.strength&&f.strength!=='unspec'?' '+f.strength:'')+(f.form?' '+f.form:'');
+  }
+  var toPush=[];
+  DD_EXPORT_DATA.stopped.forEach(function(c){
+    var ka=KA[c.idx]||[];
+    var email=(ka[1]||'').trim();
+    if(!email)return;
+    toPush.push({name:c.name,email:email,lostRevenue:Math.round(c.y25||c.y24||0),lastOrder:c.lastEp>=0?epDate(c.lastEp):'',rep:c.rep||''});
+  });
+  if(!toPush.length){
+    alert('No stopped clinics have email addresses on file.\nEmails come from Zoho contacts — run a sync to improve coverage.');
+    return;
+  }
+  var btn=document.getElementById('dd-kl-stopped-btn');
+  btn.disabled=true;btn.textContent='Pushing…';
+  try{
+    var resp=await fetch(WORKER+'/klaviyo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'drug_stopped',drug:drug,clinics:toPush})});
+    var j=await resp.json();
+    if(j.success||!j.errors||!j.errors.length){
+      var pushed=Object.values(j.pushed||{})[0]||toPush.length;
+      alert('\u2713 Pushed to Klaviyo!\n\n'+pushed+' clinic'+(pushed===1?'':'s')+' added to list:\n"'+j.list_name+'"');
+    }else{
+      alert('Klaviyo push had errors:\n'+(j.errors||[]).slice(0,3).join('\n'));
+    }
+  }catch(e){alert('Push failed: '+e.message);}
+  finally{btn.disabled=false;btn.textContent='\u9993 Push to Klaviyo';}
+}
+document.getElementById('dd-kl-stopped-btn').addEventListener('click',pushDrugStoppedToKlaviyo);
 // ============================================================
 
 // Edit Targets modal
