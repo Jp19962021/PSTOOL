@@ -216,6 +216,22 @@ table.ptbl tr:last-child td{border-bottom:none}
 .dd-tab.active .dd-tab-count{background:#1a2035;color:#fff}
 .dd-pane{display:none}
 .dd-pane.active{display:block}
+.dd-view-btn{background:#1a2035;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap}
+.dd-view-btn:hover{background:#0b1f44}
+.dd-tbl tr{cursor:pointer}
+.dd-tbl tr:hover td{background:#fafbfc}
+.dd-handle{position:absolute;left:0;top:50%;transform:translateY(-50%);width:5px;height:60px;background:rgba(255,255,255,.6);border-radius:0 6px 6px 0;cursor:ew-resize;display:none}
+@media(min-width:781px){.dd-handle{display:block}}
+@media(max-width:780px){
+  .dd-panel{width:100%;border-radius:0}
+  .dd-header{padding:14px 16px}
+  .dd-body{padding:14px 16px}
+  .dd-chart-wrap{height:200px}
+  .dd-tab{padding:7px 10px;font-size:11px}
+  .dd-tabs{overflow-x:auto;flex-wrap:nowrap}
+  .dd-tbl th,.dd-tbl td{padding:6px 6px;font-size:11px}
+  .dd-view-btn{padding:4px 8px;font-size:10px}
+}
 .bdg{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600}
 .ba{background:#dcfce7;color:#16a34a}.bs{background:#fee2e2;color:#dc2626}.bp{background:#fef9c3;color:#854d0e}
 .dgap{font-size:10px;color:#aaa;margin-left:4px}
@@ -751,6 +767,7 @@ table.ptbl tr:last-child td{border-bottom:none}
           <th style="text-align:right">vs Same Mo Last Year</th>
           <th style="text-align:right">Active Clinics</th>
           <th style="text-align:right">At-Risk</th>
+          <th></th>
         </tr></thead>
         <tbody id="tr-rep-tbody"></tbody>
       </table></div>
@@ -781,6 +798,7 @@ table.ptbl tr:last-child td{border-bottom:none}
 <!-- DRUG DETAIL slide-out panel -->
 <div class="dd-overlay" id="dd-overlay"></div>
 <div class="dd-panel" id="dd-panel">
+  <div class="dd-handle" title="Drag handle"></div>
   <div class="dd-header">
     <div>
       <div style="font-size:11px;color:#a4adc7;text-transform:uppercase;letter-spacing:.08em;font-weight:600">Drug Detail</div>
@@ -805,14 +823,14 @@ table.ptbl tr:last-child td{border-bottom:none}
       </div>
       <div class="dd-pane" data-pane="stopped">
         <div style="font-size:12px;color:#dc2626;font-weight:600;margin-bottom:8px">Estimated lost revenue: <span id="dd-stopped-loss">$0</span></div>
-        <div style="overflow-x:auto"><table class="tr-rep-tbl">
-          <thead><tr><th>Clinic</th><th>Rep</th><th style="text-align:right">2025 Rev</th><th style="text-align:right">Lost</th><th style="text-align:right">Last Order</th></tr></thead>
+        <div style="overflow-x:auto"><table class="tr-rep-tbl dd-tbl">
+          <thead><tr><th>Clinic</th><th>Rep</th><th style="text-align:right">2025 Rev</th><th style="text-align:right">Lost</th><th>Last Order</th><th></th></tr></thead>
           <tbody></tbody>
         </table></div>
       </div>
       <div class="dd-pane" data-pane="active">
-        <div style="overflow-x:auto"><table class="tr-rep-tbl">
-          <thead><tr><th>Clinic</th><th>Rep</th><th style="text-align:right">2025 Rev</th><th style="text-align:right">2026 Rev</th><th style="text-align:right">Last Order</th></tr></thead>
+        <div style="overflow-x:auto"><table class="tr-rep-tbl dd-tbl">
+          <thead><tr><th>Clinic</th><th>Rep</th><th style="text-align:right">2025 Rev</th><th style="text-align:right">2026 Rev</th><th>Last Order</th><th></th></tr></thead>
           <tbody></tbody>
         </table></div>
       </div>
@@ -2478,10 +2496,22 @@ async function loadTrends(){
       '<td style="text-align:right"><span class="tr-delta '+momCls+'">'+(momPct>=0?'+':'')+Math.round(momPct)+'%</span></td>'+
       '<td style="text-align:right"><span class="tr-delta '+yoyCls+'">'+(yoyPct>=0?'+':'')+Math.round(yoyPct)+'%</span></td>'+
       '<td style="text-align:right;color:#555">'+r.activeC.size+'</td>'+
-      '<td style="text-align:right;color:'+(r.atRiskC>0?'#dc2626':'#888')+';font-weight:'+(r.atRiskC>0?'600':'400')+'">'+r.atRiskC+'</td>';
+      '<td style="text-align:right;color:'+(r.atRiskC>0?'#dc2626':'#888')+';font-weight:'+(r.atRiskC>0?'600':'400')+'">'+r.atRiskC+'</td>'+
+      '<td style="text-align:right"><button class="dd-view-btn tr-rep-drill" data-rep="'+r.rep.replace(/"/g,'&quot;')+'">Drill &#8594;</button></td>';
     repTb.appendChild(tr);
   });
-  if(!repList.length)repTb.innerHTML='<tr><td colspan="6" class="tr-empty">No rep activity this period.</td></tr>';
+  if(!repList.length)repTb.innerHTML='<tr><td colspan="7" class="tr-empty">No rep activity this period.</td></tr>';
+  // One-time delegation for drill buttons
+  if(!repTb.dataset.bound){
+    repTb.addEventListener('click',function(e){
+      var btn=e.target.closest('.tr-rep-drill');
+      if(btn){
+        var sel=document.getElementById('tr-rep');
+        if(sel){sel.value=btn.dataset.rep;TR_REP_FILTER=btn.dataset.rep;loadTrends();window.scrollTo({top:0,behavior:'smooth'});}
+      }
+    });
+    repTb.dataset.bound='1';
+  }
 
   // ----- Pipeline Radar -----
   // Filter ARL/WBL by allowed clinics if rep filter active
@@ -2694,28 +2724,33 @@ function renderDrugDetail(ingredient){
 function ddRenderClinicList(which,list){
   var tbody=document.querySelector('.dd-pane[data-pane="'+which+'"] tbody');
   tbody.innerHTML='';
-  if(!list.length){tbody.innerHTML='<tr><td colspan="5" style="padding:20px;text-align:center;color:#aaa">No clinics in this bucket.</td></tr>';return;}
+  if(!list.length){tbody.innerHTML='<tr><td colspan="6" style="padding:20px;text-align:center;color:#aaa">No clinics in this bucket.</td></tr>';return;}
   list.slice(0,200).forEach(function(c){
-    var tr=document.createElement('tr');tr.dataset.idx=c.idx;tr.style.cursor='pointer';
+    var tr=document.createElement('tr');tr.dataset.idx=c.idx;
     var lastDateStr=c.lastEp>=0?epDate(c.lastEp):'\u2014';
+    var viewBtn='<td style="text-align:right"><button class="dd-view-btn" data-idx="'+c.idx+'">View &#8594;</button></td>';
     if(which==='stopped'){
       tr.innerHTML='<td class="pn">'+c.name+'</td>'+
         '<td style="color:#666">'+(c.rep||'\u2014')+'</td>'+
         '<td style="text-align:right">'+trFmtUSD(c.y25||c.y24)+'</td>'+
         '<td style="text-align:right;color:#dc2626;font-weight:600">'+trFmtUSD(c.y25||c.y24)+'</td>'+
-        '<td style="text-align:right;color:#888;font-size:11px">'+lastDateStr+'</td>';
+        '<td style="color:#888;font-size:11px;white-space:nowrap">'+lastDateStr+'</td>'+
+        viewBtn;
     } else {
       tr.innerHTML='<td class="pn">'+c.name+'</td>'+
         '<td style="color:#666">'+(c.rep||'\u2014')+'</td>'+
         '<td style="text-align:right">'+trFmtUSD(c.y25)+'</td>'+
         '<td style="text-align:right;color:#16a34a;font-weight:600">'+trFmtUSD(c.y26)+'</td>'+
-        '<td style="text-align:right;color:#888;font-size:11px">'+lastDateStr+'</td>';
+        '<td style="color:#888;font-size:11px;white-space:nowrap">'+lastDateStr+'</td>'+
+        viewBtn;
     }
     tbody.appendChild(tr);
   });
-  // Attach click handler (idempotent: replace handler each render)
+  // Open clinic when View is clicked (button OR row body)
   tbody.onclick=function(e){
-    var tr=e.target.closest('tr');if(tr&&tr.dataset.idx)openPanel(parseInt(tr.dataset.idx));
+    var btn=e.target.closest('.dd-view-btn');
+    if(btn){closeDrugDetail();openPanel(parseInt(btn.dataset.idx));return;}
+    var tr=e.target.closest('tr');if(tr&&tr.dataset.idx){closeDrugDetail();openPanel(parseInt(tr.dataset.idx));}
   };
 }
 
