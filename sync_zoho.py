@@ -103,7 +103,7 @@ def fetch_all_line_items(token):
             'date_end':   chunk_end.strftime('%Y-%m-%d'),
             'status':     'paid,sent,overdue,viewed',
             'sort_column':'date',
-            'sort_order': 'A_Z',
+            'sort_order': 'ascending',
         }
         print(f'  chunk {chunk_start} → {chunk_end}', end=' ', flush=True)
         invoices = zoho_get(token, '/invoices', params)
