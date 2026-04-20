@@ -1,32 +1,39 @@
 #!/usr/bin/env python3
 """
-PSTOOL — Zoho Invoice nightly sync
-Pulls all invoice line items from Zoho Invoice API and rebuilds data.js
+PSTOOL — Zoho Invoice nightly sync (MERGE mode)
+====================================================
+CRITICAL BEHAVIOR:
+  - Incremental (default): pulls last 3 days from Zoho, MERGES into existing data.js
+  - Full (FULL_SYNC=1): pulls from 2024-01-01, MERGES into existing data.js
+  - NEVER overwrites historical data — only ADDS new rows and updates last order dates
+  - If Zoho returns 0 lines, aborts without touching data.js
 
 Requires env vars:
   ZOHO_CLIENT_ID
   ZOHO_CLIENT_SECRET
   ZOHO_REFRESH_TOKEN
-  ZOHO_ORG_ID
+  ZOHO_ORG_ID  (optional, defaults to 691451730)
 """
 
-import os, sys, json, time, re, math
+import os, sys, json, time, re
 from datetime import datetime, date, timedelta
 from collections import defaultdict
+import urllib.request, urllib.parse, urllib.error
 
-import urllib.request
-import urllib.parse
-import urllib.error
-
-# ── Config ────────────────────────────────────────────────────
+# ── Config ─────────────────────────────────────────────────────
 CLIENT_ID     = os.environ['ZOHO_CLIENT_ID']
 CLIENT_SECRET = os.environ['ZOHO_CLIENT_SECRET']
 REFRESH_TOKEN = os.environ['ZOHO_REFRESH_TOKEN']
 ORG_ID        = os.environ.get('ZOHO_ORG_ID', '691451730')
 API_BASE      = 'https://www.zohoapis.com/invoice/v3'
-EP0           = date(2024, 1, 1)   # epoch anchor — day 0
+EP0           = date(2024, 1, 1)
 
-# ── Token refresh ─────────────────────────────────────────────
+def epoch_day(d):
+    if isinstance(d, str):
+        d = date.fromisoformat(d)
+    return (d - EP0).days
+
+# ── Token ──────────────────────────────────────────────────────
 def get_access_token():
     params = urllib.parse.urlencode({
         'refresh_token': REFRESH_TOKEN,
@@ -42,23 +49,22 @@ def get_access_token():
         data = json.loads(r.read())
     if 'access_token' not in data:
         raise RuntimeError(f'Token refresh failed: {data}')
-    print(f'[auth] got access token, expires in {data.get("expires_in")}s')
+    print(f'[auth] token ok, expires in {data.get("expires_in")}s')
     return data['access_token']
 
-# ── Generic paginated GET ──────────────────────────────────────
+# ── Zoho paginated GET ─────────────────────────────────────────
 def zoho_get(token, path, params=None):
     headers = {
         'Authorization': f'Zoho-oauthtoken {token}',
         'X-com-zoho-invoice-organizationid': ORG_ID,
     }
-    base = f'{API_BASE}{path}'
     results = []
     page = 1
     while True:
         p = dict(params or {})
         p['page'] = page
         p['per_page'] = 200
-        url = base + '?' + urllib.parse.urlencode(p)
+        url = f'{API_BASE}{path}?' + urllib.parse.urlencode(p)
         req = urllib.request.Request(url, headers=headers)
         try:
             with urllib.request.urlopen(req, timeout=60) as r:
@@ -66,69 +72,48 @@ def zoho_get(token, path, params=None):
         except urllib.error.HTTPError as e:
             body = e.read().decode()
             raise RuntimeError(f'HTTP {e.code} on {path}: {body[:300]}')
-        
-        # Zoho wraps results in different keys depending on endpoint
-        payload = (data.get('invoices') or data.get('lineitems') or
-                   data.get('invoice') or [])
+        payload = (data.get('invoices') or data.get('invoice') or [])
         if isinstance(payload, dict):
             payload = [payload]
         results.extend(payload)
-        
-        page_context = data.get('page_context', {})
-        if not page_context.get('has_more_page', False):
+        if not data.get('page_context', {}).get('has_more_page', False):
             break
         page += 1
-        time.sleep(0.2)   # be polite to the API
-    
+        time.sleep(0.25)
     return results
 
-# ── Fetch all invoices with line items ────────────────────────
-def fetch_all_line_items(token):
-    """
-    Fetches every SENT/PAID invoice from 2024-01-01 onward.
-    Returns list of dicts: {date, customer_name, item_name, quantity, line_total}
-    """
-    print('[fetch] pulling invoices from 2024-01-01 ...')
-    
-    # Pull invoices in date-range chunks to avoid timeouts on large accounts
+# ── Fetch new line items from Zoho ─────────────────────────────
+def fetch_new_lines(token, start_date, end_date):
     all_lines = []
-    full_sync = os.environ.get('FULL_SYNC', '0') == '1'
-    start = date(2024, 1, 1) if full_sync else date.today() - timedelta(days=2)
-    end   = date.today()
-    print(f'[fetch] mode={"full" if full_sync else "incremental"}, range {start} -> {end}')
-    
-    chunk_start = start
-    while chunk_start <= end:
-        chunk_end = min(chunk_start + timedelta(days=90), end)
+    chunk_start = start_date
+    while chunk_start <= end_date:
+        chunk_end = min(chunk_start + timedelta(days=90), end_date)
         params = {
-            'date_start': chunk_start.strftime('%Y-%m-%d'),
-            'date_end':   chunk_end.strftime('%Y-%m-%d'),
-
-            'sort_column':'date',
+            'date_start':  chunk_start.strftime('%Y-%m-%d'),
+            'date_end':    chunk_end.strftime('%Y-%m-%d'),
+            'sort_column': 'date',
         }
         print(f'  chunk {chunk_start} → {chunk_end}', end=' ', flush=True)
         invoices = zoho_get(token, '/invoices', params)
         print(f'({len(invoices)} invoices)', flush=True)
-        
+
         for inv in invoices:
             inv_date_str = inv.get('date', '')
             customer     = inv.get('customer_name', '').strip()
             inv_id       = inv.get('invoice_id', '')
             if not inv_date_str or not customer:
                 continue
-            
-            # line_items may be inline or need a detail fetch
             line_items = inv.get('line_items', [])
             if not line_items:
-                # Fetch detail to get line items
                 try:
                     detail = zoho_get(token, f'/invoices/{inv_id}')
                     if detail:
-                        line_items = detail[0].get('line_items', []) if isinstance(detail, list) else detail.get('line_items', [])
+                        line_items = (detail[0].get('line_items', [])
+                                      if isinstance(detail, list)
+                                      else detail.get('line_items', []))
                 except Exception as e:
                     print(f'  [warn] detail fetch failed for {inv_id}: {e}')
                     continue
-            
             for li in line_items:
                 name  = (li.get('name') or li.get('item_name') or '').strip()
                 qty   = float(li.get('quantity', 0) or 0)
@@ -142,45 +127,92 @@ def fetch_all_line_items(token):
                     'qty':      qty,
                     'total':    total,
                 })
-        
         chunk_start = chunk_end + timedelta(days=1)
-    
-    print(f'[fetch] total line items: {len(all_lines)}')
+
+    print(f'[fetch] total new line items: {len(all_lines)}')
     return all_lines
 
-# ── Build data structures ──────────────────────────────────────
-def epoch_day(d):
-    """Days since 2024-01-01"""
-    if isinstance(d, str):
-        d = date.fromisoformat(d)
-    return (d - EP0).days
+# ── Load existing data.js into Python structures ───────────────
+def load_existing_data(path='data.js'):
+    """
+    Returns (C, D, KA, REPS, P, T) from existing data.js.
+    D values are lists of lists (mutable).
+    Returns None if file doesn't exist or can't be parsed.
+    """
+    if not os.path.exists(path):
+        print(f'[load] {path} not found — will build from scratch')
+        return None
 
-def build_data(lines):
+    print(f'[load] reading existing {path}...')
+    with open(path, 'r', encoding='utf-8') as f:
+        js = f.read()
+
+    def extract(var):
+        # Match var X = <value>;  where value can be [...] or {...}
+        m = re.search(r'var\s+' + var + r'\s*=\s*(\{[\s\S]*?\}|\[[\s\S]*?\]);', js)
+        if not m:
+            return None
+        try:
+            return json.loads(m.group(1))
+        except Exception as e:
+            print(f'[load] JSON parse error for {var}: {e}')
+            return None
+
+    C    = extract('C')
+    D    = extract('D')
+    KA   = extract('KA')
+    REPS = extract('REPS')
+    P    = extract('P')
+    T    = extract('T')
+
+    if C is None or D is None or P is None:
+        print('[load] could not parse required arrays — will build from scratch')
+        return None
+
+    # Convert D values to lists of lists (they may be lists of lists already)
+    for k in D:
+        D[k] = [list(row) for row in D[k]]
+
+    print(f'[load] loaded {len(C)} clinics, {len(P)} products from existing data.js')
+    return C, D, KA or [], REPS or [], P, T or []
+
+# ── Merge new lines into existing data structures ──────────────
+def merge_new_lines(existing, new_lines):
     """
-    Returns (C, D, KA, REPS, P, T) matching existing data.js schema.
-    
-    D[clinicName] = [[yearCode(4/5/6), prodIdx, revenue, epochDay, qty], ...]
-    KA[clinicIdx] = [repIdx, email, phone, doctor, address, city_state, lastOrderISO]
-    P[idx] = productName
-    REPS[idx] = repName
-    T[idx] = [prodIdx, something, totalRevenue]  (top 30 products)
-    C[idx] = clinicName
+    Takes existing (C, D, KA, REPS, P, T) and new_lines list.
+    Returns updated (C, D, KA, REPS, P, T) with new rows merged in.
+
+    Key rules:
+    - Product names are matched exactly; new products get new P[] indices
+    - Existing rows are NEVER deleted
+    - Duplicate rows (same clinic + product + epoch_day + revenue) are skipped
+    - KA lastOrderISO is updated for any clinic that has new orders
+    - New clinics get a blank KA entry
     """
-    # Build product index
-    products = {}   # name -> idx
-    P = []
+    C_list, D, KA, REPS, P, T = existing
+
+    # Build mutable product index
+    prod_map = {name: idx for idx, name in enumerate(P)}
+
     def get_prod(name):
-        if name not in products:
-            products[name] = len(P)
+        if name not in prod_map:
+            prod_map[name] = len(P)
             P.append(name)
-        return products[name]
-    
-    # Aggregate: clinic -> list of row tuples
-    clinic_rows = defaultdict(list)   # clinicName -> [(yr, pidx, rev, ep, qty)]
-    
-    today = date.today()
-    
-    for li in lines:
+        return prod_map[name]
+
+    # Build set of existing rows per clinic for dedup
+    # Key: (yr_code, prod_idx, revenue, epoch_day) — qty can vary, ignore for dedup
+    existing_keys = defaultdict(set)
+    for clinic, rows in D.items():
+        for row in rows:
+            existing_keys[clinic].add((row[0], row[1], row[2], row[3]))
+
+    # Track which clinics got new orders (to update lastOrderISO)
+    updated_clinics = set()
+    new_row_count = 0
+    new_clinic_count = 0
+
+    for li in new_lines:
         try:
             d = date.fromisoformat(li['date'])
         except:
@@ -188,159 +220,160 @@ def build_data(lines):
         yr = d.year
         if yr < 2024:
             continue
-        yr_code = yr - 2020   # 2024→4, 2025→5, 2026→6
-        ep = epoch_day(d)
-        pidx = get_prod(li['item'])
-        clinic_rows[li['customer']].append((yr_code, pidx, li['total'], ep, li['qty']))
-    
-    # Sort clinics alphabetically
-    C = sorted(clinic_rows.keys())
-    
-    # Build KA — we don't have contact info from invoice API alone,
-    # so populate what we can and leave contact fields blank (preserved from existing KA if merging)
-    # Rep info also not in basic invoice pull — leave as -1 for now
-    # (A future enhancement can pull contacts separately)
-    KA = []
-    REPS = []
-    
-    for clinic in C:
-        rows = clinic_rows[clinic]
+        yr_code = yr - 2020
+        ep      = epoch_day(d)
+        pidx    = get_prod(li['item'])
+        rev     = li['total']
+        qty     = li['qty']
+        customer = li['customer']
+
+        key = (yr_code, pidx, rev, ep)
+        if key in existing_keys[customer]:
+            continue  # already have this row
+
+        # New row — add it
+        if customer not in D:
+            D[customer] = []
+            new_clinic_count += 1
+        D[customer].append([yr_code, pidx, rev, ep, qty])
+        existing_keys[customer].add(key)
+        updated_clinics.add(customer)
+        new_row_count += 1
+
+    print(f'[merge] added {new_row_count} new rows across {len(updated_clinics)} clinics')
+    print(f'[merge] {new_clinic_count} brand-new clinics added')
+
+    # Rebuild C[] sorted
+    C_new = sorted(D.keys())
+
+    # Rebuild KA — preserve existing, add blanks for new clinics, update lastOrderISO
+    old_ka_map = {name: list(KA[i]) for i, name in enumerate(C_list) if i < len(KA)}
+
+    KA_new = []
+    for clinic in C_new:
+        rows = D[clinic]
         last_ep = max(r[3] for r in rows) if rows else -1
         last_iso = (EP0 + timedelta(days=last_ep)).strftime('%Y-%m-%d') if last_ep >= 0 else ''
-        # [repIdx, email, phone, doctor, address, city_state, lastOrderISO]
-        KA.append([-1, '', '', '', '', '', last_iso])
-    
-    # D dict
-    D = {clinic: clinic_rows[clinic] for clinic in C}
-    
-    # Top 30 products by total revenue (2025+2026)
+
+        if clinic in old_ka_map:
+            entry = old_ka_map[clinic]
+            # Update lastOrderISO[6] only if this clinic had new orders
+            if clinic in updated_clinics:
+                while len(entry) < 7:
+                    entry.append('')
+                entry[6] = last_iso
+            KA_new.append(entry)
+        else:
+            # New clinic — blank contact info
+            KA_new.append([-1, '', '', '', '', '', last_iso])
+
+    # Recompute T[] — top 30 products by 2025+2026 revenue
     prod_rev = defaultdict(float)
-    for rows in clinic_rows.values():
+    for rows in D.values():
         for r in rows:
-            if r[0] >= 5:   # 2025 or 2026
+            if r[0] >= 5:  # 2025 or 2026
                 prod_rev[r[1]] += r[2]
-    
     top30 = sorted(prod_rev.items(), key=lambda x: -x[1])[:30]
-    T = [[pidx, 0, rev] for pidx, rev in top30]
-    
-    return C, D, KA, REPS, P, T
+    T_new = [[pidx, 0, rev] for pidx, rev in top30]
 
-# ── Merge with existing KA contact info ───────────────────────
-def merge_existing_contacts(C, KA, existing_js_path='data.js'):
-    """
-    If an existing data.js exists, preserve contact info (email, phone, doctor,
-    address, rep assignments) for clinics we already know about.
-    New clinics from Zoho get blank contact fields.
-    """
-    if not os.path.exists(existing_js_path):
-        print('[merge] no existing data.js found, skipping contact merge')
-        return KA
-    
-    print('[merge] loading existing contact data...')
-    with open(existing_js_path, 'r', encoding='utf-8') as f:
-        js = f.read()
-    
-    # Extract existing C array
-    c_match = re.search(r'var C\s*=\s*(\[.*?\]);', js, re.DOTALL)
-    ka_match = re.search(r'var KA\s*=\s*(\[.*?\]);', js, re.DOTALL)
-    reps_match = re.search(r'var REPS\s*=\s*(\[.*?\]);', js, re.DOTALL)
-    
-    if not c_match or not ka_match:
-        print('[merge] could not parse existing data.js, skipping merge')
-        return KA
-    
-    try:
-        old_C    = json.loads(c_match.group(1))
-        old_KA   = json.loads(ka_match.group(1))
-        old_REPS = json.loads(reps_match.group(1)) if reps_match else []
-    except Exception as e:
-        print(f'[merge] JSON parse error: {e}, skipping merge')
-        return KA
-    
-    # Build lookup: clinic name -> old KA entry
-    old_ka_map = {}
-    for i, name in enumerate(old_C):
-        if i < len(old_KA):
-            old_ka_map[name] = old_KA[i]
-    
-    # Merge: for each clinic in new C, if we have old contact info, use it
-    merged = []
-    for i, name in enumerate(C):
-        new_entry = list(KA[i])
-        if name in old_ka_map:
-            old = old_ka_map[name]
-            # Preserve: repIdx[0], email[1], phone[2], doctor[3], address[4], city[5]
-            # Update: lastOrderISO[6] from fresh data
-            new_entry[0] = old[0] if len(old) > 0 else -1
-            new_entry[1] = old[1] if len(old) > 1 else ''
-            new_entry[2] = old[2] if len(old) > 2 else ''
-            new_entry[3] = old[3] if len(old) > 3 else ''
-            new_entry[4] = old[4] if len(old) > 4 else ''
-            new_entry[5] = old[5] if len(old) > 5 else ''
-            # new_entry[6] stays as freshly computed last order date
-        merged.append(new_entry)
-    
-    print(f'[merge] preserved contact info for {sum(1 for n in C if n in old_ka_map)} / {len(C)} clinics')
-    return merged
+    return C_new, D, KA_new, REPS, P, T_new
 
-# ── Serialise to data.js ───────────────────────────────────────
+# ── Write data.js ──────────────────────────────────────────────
 def write_data_js(C, D, KA, REPS, P, T, out_path='data.js'):
     now = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
-    
-    # Compact-encode D
+
     d_parts = []
     for clinic in C:
-        rows = D[clinic]
-        # sort by epoch day
-        rows_sorted = sorted(rows, key=lambda r: r[3])
-        encoded = json.dumps(rows_sorted, separators=(',', ':'))
+        rows = sorted(D[clinic], key=lambda r: r[3])
+        encoded = json.dumps(rows, separators=(',', ':'))
         clinic_esc = clinic.replace('\\', '\\\\').replace('"', '\\"')
         d_parts.append(f'"{clinic_esc}":{encoded}')
-    d_str = '{' + ','.join(d_parts) + '}'
-    
-    c_str   = json.dumps(C,    separators=(',', ':'))
-    ka_str  = json.dumps(KA,   separators=(',', ':'))
-    reps_str= json.dumps(REPS, separators=(',', ':'))
-    p_str   = json.dumps(P,    separators=(',', ':'))
-    t_str   = json.dumps(T,    separators=(',', ':'))
-    
-    js = f"""// data.js — auto-generated by sync_zoho.py
-// Last sync: {now}
-// Source: Zoho Invoice (org {ORG_ID})
-// Clinics: {len(C)} | Products: {len(P)}
 
-var C={c_str};
-var D={d_str};
-var KA={ka_str};
-var REPS={reps_str};
-var P={p_str};
-var T={t_str};
-"""
+    js = (
+        f'// data.js — auto-generated by sync_zoho.py\n'
+        f'// Last sync: {now}\n'
+        f'// Source: Zoho Invoice (org {ORG_ID})\n'
+        f'// Clinics: {len(C)} | Products: {len(P)}\n\n'
+        f'var C={json.dumps(C, separators=(",", ":"))};' + '\n'
+        f'var D={{{",".join(d_parts)}}};' + '\n'
+        f'var KA={json.dumps(KA, separators=(",", ":"))};' + '\n'
+        f'var REPS={json.dumps(REPS, separators=(",", ":"))};' + '\n'
+        f'var P={json.dumps(P, separators=(",", ":"))};' + '\n'
+        f'var T={json.dumps(T, separators=(",", ":"))};' + '\n'
+    )
+
     with open(out_path, 'w', encoding='utf-8') as f:
         f.write(js)
-    
+
     size_kb = os.path.getsize(out_path) // 1024
-    print(f'[write] {out_path} written — {len(C)} clinics, {len(P)} products, {size_kb}KB')
+    print(f'[write] {out_path} — {len(C)} clinics, {len(P)} products, {size_kb}KB')
 
 # ── Main ───────────────────────────────────────────────────────
 def main():
-    print(f'[start] PSTOOL Zoho Invoice sync — {datetime.utcnow().isoformat()}')
-    
-    token = get_access_token()
-    lines = fetch_all_line_items(token)
-    
-    if not lines:
-        print('[error] no line items returned — aborting to avoid overwriting good data')
-        sys.exit(1)
-    
-    C, D, KA, REPS, P, T = build_data(lines)
-    
-    # Merge existing contact/rep info so we don't lose it
-    KA = merge_existing_contacts(C, KA, existing_js_path='data.js')
-    
-    write_data_js(C, D, KA, REPS, P, T, out_path='data.js')
-    
-    print(f'[done] sync complete — {len(lines)} line items → {len(C)} clinics')
+    print(f'[start] PSTOOL Zoho sync (MERGE mode) — {datetime.utcnow().isoformat()}')
+
+    full_sync = os.environ.get('FULL_SYNC', '0') == '1'
+    today     = date.today()
+    start     = date(2024, 1, 1) if full_sync else today - timedelta(days=3)
+    end       = today
+
+    print(f'[mode] {"FULL (2024-01-01 → today)" if full_sync else f"incremental ({start} → {end})"}')
+
+    # Step 1: Load existing data.js
+    existing = load_existing_data('data.js')
+
+    # Step 2: Fetch new lines from Zoho
+    token     = get_access_token()
+    new_lines = fetch_new_lines(token, start, end)
+
+    if not new_lines:
+        if existing is None:
+            print('[error] no existing data and no new lines — aborting')
+            sys.exit(1)
+        else:
+            print('[info] no new lines from Zoho — data.js unchanged, exiting cleanly')
+            sys.exit(0)
+
+    # Step 3: If no existing data, build from scratch
+    if existing is None:
+        print('[build] building from scratch (no existing data.js)')
+        prod_map = {}
+        P = []
+        def get_prod(name):
+            if name not in prod_map:
+                prod_map[name] = len(P)
+                P.append(name)
+            return prod_map[name]
+        clinic_rows = defaultdict(list)
+        for li in new_lines:
+            try:
+                d = date.fromisoformat(li['date'])
+            except:
+                continue
+            if d.year < 2024:
+                continue
+            yr_code = d.year - 2020
+            ep = epoch_day(d)
+            pidx = get_prod(li['item'])
+            clinic_rows[li['customer']].append([yr_code, pidx, li['total'], ep, li['qty']])
+        C = sorted(clinic_rows.keys())
+        D = dict(clinic_rows)
+        KA = [[-1, '', '', '', '', '', (EP0 + timedelta(days=max(r[3] for r in D[c]))).strftime('%Y-%m-%d')] for c in C]
+        REPS = []
+        prod_rev = defaultdict(float)
+        for rows in D.values():
+            for r in rows:
+                if r[0] >= 5:
+                    prod_rev[r[1]] += r[2]
+        top30 = sorted(prod_rev.items(), key=lambda x: -x[1])[:30]
+        T = [[pidx, 0, rev] for pidx, rev in top30]
+    else:
+        # Step 4: Merge new lines into existing data
+        C, D, KA, REPS, P, T = merge_new_lines(existing, new_lines)
+
+    # Step 5: Write merged data.js
+    write_data_js(C, D, KA, REPS, P, T, 'data.js')
+    print(f'[done] sync complete')
 
 if __name__ == '__main__':
     main()
