@@ -4,7 +4,7 @@ on:
   workflow_dispatch:  # manual trigger from Actions tab
   schedule:
     # 07:00 UTC = 02:00 CT (standard time) / 01:00 CT (daylight time)
-    - cron: "0 7 * * *"  # every night
+    - # cron: "0 7 * * *"  # every night
 
 permissions:
   contents: write
