@@ -2,7 +2,7 @@ name: Nightly Zoho Invoice Sync
 
 on:
   schedule:
-    - cron: '0 7 * * *'   # 2am US Central (7am UTC)
+    - # cron: '0 7 * * *'   # 2am US Central (7am UTC)
   workflow_dispatch:
     inputs:
       full_sync:
