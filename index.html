@@ -1659,6 +1659,29 @@ table.ptbl tr:last-child td{border-bottom:none}
 var SB=supabase.createClient('https://kijoonuxbkpzejnqxnwl.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtpam9vbnV4YmtwemVqbnF4bndsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMzkyOTAsImV4cCI6MjA5MTkxNTI5MH0.tdTwDNLpY2jq16-NhmFwOj326d_UYpT4BlTyYoYSYVM');
 var ME=null,CUR=null,ALLREPS=[];
 
+// Auto-restore session from localStorage on page load
+(function(){
+  try{
+    var saved=localStorage.getItem('pstool_me');
+    if(!saved)return;
+    var rep=JSON.parse(saved);
+    if(!rep||!rep.username)return;
+    // Verify rep still exists in Supabase before restoring
+    SB.from('reps').select('*').eq('username',rep.username).eq('password',rep.password).single().then(function(res){
+      if(res.error||!res.data){
+        localStorage.removeItem('pstool_me');
+        return;
+      }
+      ME=res.data;
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('app').style.display='block';
+      document.getElementById('rbadge').textContent=ME.name+(ME.role==='admin'?' (Admin)':'');
+      applyTabVisibility();
+      init();
+    });
+  }catch(e){}
+})();
+
 // ---- v6: Custom permissions ----
 // TAB_CATALOG defines every tab that can be granted/revoked per user.
 // key = data-page attribute on the tab element
@@ -1734,6 +1757,7 @@ async function login(){
   document.getElementById('lbtn').textContent='Sign In';
   if(error||!data){err.textContent='Invalid username or password';return;}
   ME=data;
+  try{localStorage.setItem('pstool_me',JSON.stringify(data));}catch(e){}
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='block';
   document.getElementById('rbadge').textContent=data.name+(data.role==='admin'?' (Admin)':'');
@@ -1759,6 +1783,7 @@ function applyTabVisibility(){
 }
 document.getElementById('lout').addEventListener('click',function(){
   ME=null;
+  try{localStorage.removeItem('pstool_me');}catch(e){}
   document.getElementById('atab').style.display='none';
   document.getElementById('cbtab').style.display='none';
   document.getElementById('trtab').style.display='none';
