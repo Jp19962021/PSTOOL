@@ -16,7 +16,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
       - name: Force sync from April 16
-        run: echo '{"completed_at": "2026-04-16T00:00:00Z"}' > last_sync.json
+        run: echo "{\"completed_at\": \"2026-04-16T00:00:00Z\"}" > last_sync.json
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
