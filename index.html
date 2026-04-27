@@ -1658,7 +1658,14 @@ table.ptbl tr:last-child td{border-bottom:none}
 <script>
 var SB=supabase.createClient('https://kijoonuxbkpzejnqxnwl.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtpam9vbnV4YmtwemVqbnF4bndsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMzkyOTAsImV4cCI6MjA5MTkxNTI5MH0.tdTwDNLpY2jq16-NhmFwOj326d_UYpT4BlTyYoYSYVM');
 var ME=null,CUR=null,ALLREPS=[];
+// HubSpot auto-login: detect ?hs_user=&hs_pass=&clinic= params
+(function(){
+  ... new code ...
+})();
 
+// Auto-restore session from localStorage on page load
+(function(){
+  ... existing code ...
 // Auto-restore session from localStorage on page load
 (function(){
   try{
