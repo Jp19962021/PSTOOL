@@ -1,0 +1,30 @@
+name: HubSpot Nightly Sync
+
+on:
+  schedule:
+    # Runs at 3:00 AM UTC (after Zoho sync completes)
+    - cron: '0 3 * * *'
+  workflow_dispatch:  # Allow manual trigger from GitHub Actions tab
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run HubSpot sync
+        env:
+          HS_TOKEN:      ${{ secrets.HS_TOKEN }}
+          SUPABASE_URL:  ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY:  ${{ secrets.SUPABASE_KEY }}
+        run: python hubspot_sync.py
