@@ -5961,6 +5961,30 @@ function init(){
   document.getElementById('arc').textContent=ARL.length.toLocaleString();
   buildWB();buildAR();setupSearch();
   initAiChats();
+  // Deep-link: ?clinic=NAME auto-opens the clinic panel
+  (function(){
+    try{
+      var params=new URLSearchParams(window.location.search);
+      var clinicParam=params.get('clinic');
+      if(!clinicParam)return;
+      var decoded=decodeURIComponent(clinicParam).trim();
+      var idx=C.indexOf(decoded);
+      if(idx<0){
+        // fuzzy fallback — find best match
+        var best=-1,bestScore=0;
+        var norm=decoded.toLowerCase();
+        for(var i=0;i<C.length;i++){
+          var s=C[i].toLowerCase();
+          if(s===norm){best=i;break;}
+          if(s.indexOf(norm)>=0&&1>bestScore){bestScore=1;best=i;}
+        }
+        idx=best;
+      }
+      if(idx>=0){
+        setTimeout(function(){openPanel(idx);},300);
+      }
+    }catch(e){}
+  })();
   // Default to territory page and auto-load it
   document.querySelectorAll('.page').forEach(function(x){x.classList.remove('active');});
   document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
