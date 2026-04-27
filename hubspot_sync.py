@@ -222,14 +222,14 @@ def get_existing_bodies(company_id, eng_type):
 def push_notes(company_id, clinic_name):
     pushed = 0
     try:
-        notes = sb_get("notes", params={"select": "*", "customer_name": f"eq.{clinic_name}"})
+        notes = sb_get("clinic_notes", params={"select": "*", "clinic_name": f"eq.{clinic_name}"})
     except Exception as e:
         print(f"    Notes fetch error: {e}")
         return 0
 
     existing = get_existing_bodies(company_id, "NOTE")
     for note in (notes or []):
-        body   = note.get("content") or note.get("text") or note.get("note") or ""
+        body   = note.get("note") or ""
         tagged = f"[PetScript] {body}"
         if not body or tagged in existing:
             continue
@@ -238,11 +238,13 @@ def push_notes(company_id, clinic_name):
             ts = int(datetime.fromisoformat(created.replace("Z", "+00:00")).timestamp() * 1000)
         except:
             ts = int(time.time() * 1000)
+        rep = note.get("rep_name", "")
+        full_body = f"[PetScript] {rep}: {body}" if rep else tagged
         try:
             hs_post("/engagements/v1/engagements", {
                 "engagement":   {"active": True, "type": "NOTE", "timestamp": ts},
                 "associations": {"companyIds": [int(company_id)]},
-                "metadata":     {"body": tagged},
+                "metadata":     {"body": full_body},
             })
             pushed += 1
             time.sleep(0.2)
@@ -253,14 +255,14 @@ def push_notes(company_id, clinic_name):
 def push_tasks(company_id, clinic_name):
     pushed = 0
     try:
-        tasks = sb_get("tasks", params={"select": "*", "customer_name": f"eq.{clinic_name}"})
+        tasks = sb_get("rep_tasks", params={"select": "*", "clinic_name": f"eq.{clinic_name}"})
     except Exception as e:
         print(f"    Tasks fetch error: {e}")
         return 0
 
     existing = get_existing_bodies(company_id, "TASK")
     for task in (tasks or []):
-        title  = task.get("title") or task.get("task") or "PetScript Task"
+        title  = task.get("task") or "PetScript Task"
         tagged = f"[PetScript] {title}"
         if tagged in existing:
             continue
@@ -272,15 +274,19 @@ def push_tasks(company_id, clinic_name):
                              .replace(tzinfo=timezone.utc).timestamp() * 1000)
             except:
                 pass
+        done   = task.get("done", False)
+        status = "COMPLETED" if done else "NOT_STARTED"
+        rep    = task.get("rep_name", "")
         try:
             hs_post("/engagements/v1/engagements", {
                 "engagement":   {"active": True, "type": "TASK",
                                  "timestamp": due_ts or int(time.time() * 1000)},
                 "associations": {"companyIds": [int(company_id)]},
                 "metadata":     {
-                    "subject": tagged,
-                    "status":  "NOT_STARTED",
-                    "body":    task.get("description") or "",
+                    "subject":  tagged,
+                    "status":   status,
+                    "body":     f"Rep: {rep}" if rep else "",
+                    "priority": task.get("priority") or "NONE",
                 },
             })
             pushed += 1
