@@ -1238,6 +1238,16 @@ table.ptbl tr:last-child td{border-bottom:none}
           <tbody></tbody>
         </table></div>
       </div>
+      '<div class="dd-pane" data-pane="never">'+
+        '<div style="display:flex;align-items:center;margin-bottom:8px">'+
+          '<div style="font-size:12px;color:#555;font-weight:600">'+neverList.length+' clinics have never ordered this drug</div>'+
+          '<button class="dd-export-btn" data-bucket="never" style="margin-left:auto">&#128196; Export CSV</button>'+
+        '</div>'+
+        '<div style="overflow-x:auto"><table class="tr-rep-tbl dd-tbl">'+
+          '<thead><tr><th>Clinic</th><th>Rep</th><th style="text-align:right">Total Revenue (all drugs)</th><th></th></tr></thead>'+
+          '<tbody></tbody>'+
+        '</table></div>'+
+      '</div>'+
       <div class="dd-pane" data-pane="askai">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap">
           <p class="fnote" style="margin:0;flex:1;min-width:180px">The AI knows you're viewing this drug. Ask broader questions anytime.</p>
