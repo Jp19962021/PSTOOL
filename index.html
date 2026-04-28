@@ -4857,6 +4857,7 @@ function renderDrugDetail(ingredient){
   // Render clinic table — default to "Stopped" view (most actionable)
   ddRenderClinicList('stopped',stoppedList);
   ddRenderClinicList('active',activeList);
+  ddRenderClinicList('never',neverList);
   // Show stopped tab by default
   document.querySelectorAll('#dd-panel .dd-tab').forEach(function(t){t.classList.remove('active');});
   document.querySelector('#dd-panel .dd-tab[data-tab="stopped"]').classList.add('active');
@@ -4866,11 +4867,12 @@ function renderDrugDetail(ingredient){
   // Save current ingredient for "open chat about this drug" button
   document.getElementById('dd-panel').dataset.ing=ingredient;
   // Stash full lists for CSV export (v7)
-  DD_EXPORT_DATA={
+DD_EXPORT_DATA={
     ingredient:ingredient,
     filter:filter,
     stopped:stoppedList,
-    active:activeList
+    active:activeList,
+    never:neverList
   };
 }
 function ddRenderClinicList(which,list){
@@ -4881,7 +4883,12 @@ function ddRenderClinicList(which,list){
     var tr=document.createElement('tr');tr.dataset.idx=c.idx;
     var lastDateStr=c.lastEp>=0?epDate(c.lastEp):'\u2014';
     var viewBtn='<td style="text-align:right"><button class="dd-view-btn" data-idx="'+c.idx+'">View &#8594;</button></td>';
-    if(which==='stopped'){
+    if(which==='never'){
+      tr.innerHTML='<td class="pn">'+c.name+'</td>'+
+        '<td style="color:#666">'+(c.rep||'\u2014')+'</td>'+
+        '<td style="text-align:right;font-weight:600">'+trFmtUSD(c.tot)+'</td>'+
+        viewBtn;
+    } else if(which==='stopped'){
       tr.innerHTML='<td class="pn">'+c.name+'</td>'+
         '<td style="color:#666">'+(c.rep||'\u2014')+'</td>'+
         '<td style="text-align:right">'+trFmtUSD(c.y25||c.y24)+'</td>'+
