@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-      # - name: Force sync from April 16
+      # - name: Force sync from April 25
       # run: python -c "import json; f=open('last_sync.json','w'); json.dump({'completed_at':'2026-04-16T00:00:00Z'},f); f.close()"
       - name: Set up Python
         uses: actions/setup-python@v5
