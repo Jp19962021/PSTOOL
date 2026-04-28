@@ -4824,10 +4824,24 @@ function renderDrugDetail(ingredient){
   });
   stoppedList.sort(function(a,b){return (b.y25||b.y24)-(a.y25||a.y24);});
   activeList.sort(function(a,b){return b.tot-a.tot;});
-
+// Build never purchased list — clinics with no orders for this ingredient
+  var neverList=[];
+  for(var ni=0;ni<C.length;ni++){
+    if(allowedClinicIdx&&!allowedClinicIdx[ni])continue;
+    if(clinicAgg[ni])continue; // already ordered it
+    var nk=KA[ni]||[];
+    var nrep=nk[0]>=0?REPS[nk[0]]:'';
+    // Only include clinics with some revenue (exclude dead/inactive)
+    var nrows=D[C[ni]]||[];
+    var ntot=0;nrows.forEach(function(r){ntot+=r[2];});
+    if(ntot<100)continue; // skip tiny/inactive clinics
+    neverList.push({idx:ni,name:C[ni],rep:nrep,tot:ntot,y25:0,y26:0,lastEp:-1});
+  }
+  neverList.sort(function(a,b){return b.tot-a.tot;});
   // Build the three-tab clinic table
   document.getElementById('dd-stopped-count').textContent=stoppedList.length;
   document.getElementById('dd-active-count').textContent=activeList.length;
+  document.getElementById('dd-never-count').textContent=neverList.length;
   document.getElementById('dd-stopped-loss').textContent=trFmtUSD(stoppedList.reduce(function(s,c){return s+(c.y25||c.y24);},0));
   // Render clinic table — default to "Stopped" view (most actionable)
   ddRenderClinicList('stopped',stoppedList);
