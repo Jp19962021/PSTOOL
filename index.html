@@ -938,7 +938,7 @@ table.ptbl tr:last-child td{border-bottom:none}
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
     <div>
       <h2 style="font-size:20px;font-weight:800;color:#1a2035;margin:0">&#9993; Outreach</h2>
-      <p style="font-size:12px;color:#888;margin:4px 0 0">Click a clinic to generate a draft email, then save to Gmail Drafts.</p>
+      <p style="font-size:12px;color:#888;margin:4px 0 0">Click a clinic to generate a draft. Save to Gmail Drafts when ready.</p>
     </div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <div id="or-gmail-status" style="font-size:12px;color:#888">Not connected to Gmail</div>
@@ -946,7 +946,6 @@ table.ptbl tr:last-child td{border-bottom:none}
     </div>
   </div>
 
-  <!-- Controls -->
   <div style="background:#fff;border:1px solid #e8eaed;border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
     <div>
       <label style="font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Filter</label>
@@ -961,44 +960,13 @@ table.ptbl tr:last-child td{border-bottom:none}
     </div>
   </div>
 
-  <!-- Draft preview panel -->
-  <div id="or-draft-panel" style="display:none;background:#fff;border:1px solid #e8eaed;border-radius:12px;padding:20px;margin-bottom:16px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-      <div>
-        <div id="or-draft-clinic" style="font-size:15px;font-weight:700;color:#1a2035"></div>
-        <div id="or-draft-meta" style="font-size:12px;color:#888;margin-top:2px"></div>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button id="or-draft-save" class="abtn" style="background:#16a34a;display:none">&#128228; Save to Gmail Drafts</button>
-        <button id="or-draft-mailto" class="abtn" style="background:#f3f4f6;color:#555;display:none">&#128231; Open in Gmail</button>
-        <button id="or-draft-regen" class="abtn" style="background:#6b7280;display:none">&#8635; Regenerate</button>
-      </div>
-    </div>
-    <div id="or-draft-status" style="font-size:13px;color:#888;text-align:center;padding:20px">Select a clinic below</div>
-    <div id="or-draft-content" style="display:none">
-      <div style="margin-bottom:10px">
-        <div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:4px">Subject</div>
-        <div id="or-draft-subject" style="font-size:13px;color:#1a2035;background:#f7f8fa;border:1px solid #e0e3ea;border-radius:6px;padding:9px 12px;font-weight:600"></div>
-      </div>
-      <div>
-        <div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:4px">Body</div>
-        <div id="or-draft-body" style="font-size:13px;color:#333;background:#f7f8fa;border:1px solid #e0e3ea;border-radius:6px;padding:12px;white-space:pre-wrap;line-height:1.7;min-height:80px"></div>
-      </div>
-      <div id="or-draft-saved-badge" style="display:none;margin-top:10px">
-        <span style="background:#dcfce7;color:#16a34a;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px">&#10003; Saved to Gmail Drafts</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Clinic list -->
-  <div id="or-grid" style="display:flex;flex-direction:column;gap:4px"></div>
+  <div id="or-grid" style="display:flex;flex-direction:column;gap:6px"></div>
   <div id="or-empty" style="text-align:center;padding:60px 20px;color:#aaa">
     <div style="font-size:48px;margin-bottom:12px">&#9993;</div>
     <div style="font-size:15px;font-weight:600;color:#555;margin-bottom:6px">Ready to roll</div>
     <div style="font-size:13px">Connect Gmail, then hit "Roll 50 Clinics"</div>
   </div>
 
-</div></div>
 </div></div>
 
 <div id="page-atrisk" class="page"><div class="container">
@@ -6552,8 +6520,9 @@ function initAiChats(){
 
 
 
+
 // ═══════════════════════════════════════════════════════════════
-// OUTREACH MODULE — one-at-a-time draft generator
+// OUTREACH MODULE
 // ═══════════════════════════════════════════════════════════════
 var OR_CLIENT_ID = '34261178989-innajk10hom9lm5b3a15juq3fiu9cmq0.apps.googleusercontent.com';
 var OR_SCOPE     = 'https://www.googleapis.com/auth/gmail.compose';
@@ -6561,12 +6530,11 @@ var OR_EPOCH     = new Date('2024-01-01').getTime();
 var OR_EXCLUDED  = ['vetcove','pet parent','petscript direct','usc','shelters united','vha','vethubrx','mike salsbury','serena patterson'];
 var OR_DRUG_SHORT= {pimobendan:'pimo',gabapentin:'gaba',trazodone:'traz',methocarbamol:'metho',cyclosporine:'cyclo',doxycycline:'doxy',prednisolone:'pred',fenbendazole:'fenbend',metronidazole:'metro',omeprazole:'omep',furosemide:'lasix',amoxicillin:'amox'};
 
-var _orTokenClient=null, _orAccessToken=null, _orClinics=[], _orActive=null;
+var _orTokenClient=null, _orAccessToken=null, _orClinics=[], _orLog={};
 
 function orEpochStr(ep){
   if(!ep)return '—';
-  var d=new Date(OR_EPOCH+ep*86400000);
-  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  return new Date(OR_EPOCH+ep*86400000).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 }
 function orFmt(n){return '$'+Math.round(n||0).toLocaleString();}
 function orNorm(s){return (s||'').replace(/\*/g,'').toLowerCase().trim();}
@@ -6593,9 +6561,8 @@ function orBuildLapsed(pool){
       var yr=2020+r[0],pid=r[1],revenue=r[2],ep=r[3];
       rev[yr]=(rev[yr]||0)+revenue;
       if(ep>lastEp)lastEp=ep;
-      if(!prods[pid])prods[pid]={rev:{2024:0,2025:0,2026:0},lastEp:0};
+      if(!prods[pid])prods[pid]={rev:{2024:0,2025:0,2026:0}};
       prods[pid].rev[yr]=(prods[pid].rev[yr]||0)+revenue;
-      if(ep>prods[pid].lastEp)prods[pid].lastEp=ep;
     }
     if(rev[2026]>0)continue;
     if(!rev[2024]&&!rev[2025])continue;
@@ -6603,11 +6570,10 @@ function orBuildLapsed(pool){
     if(pool==='big'&&lostRev<1000)continue;
     if(pool==='recent'&&!rev[2025])continue;
     var stopped=[];
-    var pidKeys=Object.keys(prods);
-    for(var pi=0;pi<pidKeys.length;pi++){
-      var pd=prods[pidKeys[pi]];
-      if(pd.rev[2025]>0||pd.rev[2024]>0) stopped.push({name:P[parseInt(pidKeys[pi])],rev:pd.rev});
-    }
+    Object.keys(prods).forEach(function(pid){
+      var pd=prods[pid];
+      if(pd.rev[2025]>0||pd.rev[2024]>0)stopped.push({name:P[parseInt(pid)],rev:pd.rev});
+    });
     stopped.sort(function(a,b){return(b.rev[2025]||b.rev[2024])-(a.rev[2025]||a.rev[2024]);});
     var ka=KA[ci]||[];
     result.push({ci:ci,name:C[ci],rep:ka[0]>=0?REPS[ka[0]]:'',email:ka[1]||'',phone:ka[2]||'',doctor:ka[3]||'',lastEp:lastEp,rev:rev,lostRev:lostRev,stopped:stopped});
@@ -6615,186 +6581,256 @@ function orBuildLapsed(pool){
   return result;
 }
 
-function orWeightedSample(arr,n){
-  // Simple random shuffle, no weighting
-  var shuffled=arr.slice().sort(function(){return Math.random()-.5;});
-  return shuffled.slice(0,n);
-}
-
-function orRollClinics(){
+async function orRollClinics(){
   var pool=document.getElementById('or-pool').value;
   var lapsed=orBuildLapsed(pool);
   if(!lapsed.length){alert('No lapsed clinics found for this filter.');return;}
-  _orClinics=orWeightedSample(lapsed,50);
-  _orActive=null;
-  orHideDraft();
+  _orClinics=lapsed.slice().sort(function(){return Math.random()-.5;}).slice(0,50);
+  // load contact log from supabase
+  await orLoadLog();
   orRenderGrid();
   document.getElementById('or-empty').style.display='none';
-  document.getElementById('or-draft-panel').style.display='';
-  document.getElementById('or-draft-status').textContent='Click a clinic below to generate a draft email.';
-  document.getElementById('or-draft-content').style.display='none';
-  document.getElementById('or-draft-save').style.display='none';
-  document.getElementById('or-draft-mailto').style.display='none';
-  document.getElementById('or-draft-regen').style.display='none';
+}
+
+async function orLoadLog(){
+  try{
+    var names=_orClinics.map(function(c){return c.name;});
+    var res=await SB.from('outreach_log').select('clinic_name,subject,contacted_at').in('clinic_name',names).order('contacted_at',{ascending:false});
+    _orLog={};
+    (res.data||[]).forEach(function(row){
+      if(!_orLog[row.clinic_name])_orLog[row.clinic_name]=row; // most recent
+    });
+  }catch(e){_orLog={};}
 }
 
 function orRenderGrid(){
   var grid=document.getElementById('or-grid');
   grid.innerHTML='';
   _orClinics.forEach(function(c,i){
-    var stoppedStr=c.stopped.slice(0,3).map(function(s){return orDrugShort(s.name);}).filter(Boolean).join(', ')||'—';
-    var row=document.createElement('div');
-    row.style.cssText='background:#fff;border:1px solid #e8eaed;border-radius:10px;padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:border-color .15s';
-    row.dataset.ci=c.ci;
-    row.innerHTML='<div style="font-size:11px;color:#aaa;width:24px;text-align:right;flex-shrink:0">#'+(i+1)+'</div>'
-      +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:13px;font-weight:700;color:#1a2035;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+c.name+'</div>'
-        +'<div style="font-size:11px;color:#888;margin-top:2px">'+(c.doctor||'No doctor')+' · Lost: '+orFmt(c.lostRev)+' · Stopped: '+stoppedStr+'</div>'
+    var stoppedStr=c.stopped.slice(0,3).map(function(s){return orDrugShort(s.name);}).filter(function(v,i,a){return v&&a.indexOf(v)===i;}).join(', ')||'—';
+    var log=_orLog[c.name];
+    var contactedBadge='';
+    if(log){
+      var dt=new Date(log.contacted_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      contactedBadge='<span style="background:#fef3c7;color:#92400e;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:8px">&#9993; Contacted '+dt+'</span>';
+    }
+    var wrap=document.createElement('div');
+    wrap.style.cssText='border:1px solid #e8eaed;border-radius:12px;overflow:hidden;background:#fff;margin-bottom:2px';
+    wrap.innerHTML=
+      '<div style="padding:12px 16px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="orToggleRow('+c.ci+')" id="or-row-'+c.ci+'">'
+        +'<div style="font-size:11px;color:#aaa;width:22px;text-align:right;flex-shrink:0">#'+(i+1)+'</div>'
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:13px;font-weight:700;color:#1a2035;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+c.name+contactedBadge+'</div>'
+          +'<div style="font-size:11px;color:#888;margin-top:2px">'+(c.doctor||'No doctor')+' &middot; Lost: '+orFmt(c.lostRev)+' &middot; Stopped: '+stoppedStr+'</div>'
+        +'</div>'
+        +'<div style="font-size:11px;color:#aaa;flex-shrink:0">'+orEpochStr(c.lastEp)+'</div>'
+        +'<div style="font-size:11px;color:#1a2035;flex-shrink:0;font-weight:600">&#9660;</div>'
       +'</div>'
-      +'<div style="font-size:11px;color:#aaa;flex-shrink:0">'+orEpochStr(c.lastEp)+'</div>';
-    row.addEventListener('mouseenter',function(){this.style.borderColor='#1a2035';});
-    row.addEventListener('mouseleave',function(){this.style.borderColor='#e8eaed';});
-    row.addEventListener('click',function(){orSelectClinic(parseInt(this.dataset.ci));});
-    grid.appendChild(row);
+      +'<div id="or-exp-'+c.ci+'" style="display:none;border-top:1px solid #edf0f5;padding:16px 18px;background:#fafbfc">'
+        +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'
+          +(log?'<button class="abtn" style="font-size:11px;padding:6px 12px;background:#6b7280" onclick="orGenerate('+c.ci+',true)">&#8635; Follow up on previous email</button>':'')
+          +'<button class="abtn" style="font-size:11px;padding:6px 12px" onclick="orGenerate('+c.ci+',false)">&#9889; Generate Draft</button>'
+        +'</div>'
+        +'<div id="or-draft-'+c.ci+'" style="display:none">'
+          +'<div style="margin-bottom:8px">'
+            +'<div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:3px">Subject</div>'
+            +'<div id="or-subj-'+c.ci+'" style="font-size:13px;font-weight:600;color:#1a2035;background:#fff;border:1px solid #e0e3ea;border-radius:6px;padding:8px 12px"></div>'
+          +'</div>'
+          +'<div style="margin-bottom:12px">'
+            +'<div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:3px">Body</div>'
+            +'<div id="or-body-'+c.ci+'" style="font-size:13px;color:#333;background:#fff;border:1px solid #e0e3ea;border-radius:6px;padding:12px;white-space:pre-wrap;line-height:1.7"></div>'
+          +'</div>'
+          +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+            +'<button class="abtn" style="font-size:11px;padding:6px 14px;background:#16a34a" id="or-save-'+c.ci+'" onclick="orSave('+c.ci+')">&#128228; Save to Gmail Drafts</button>'
+            +'<button class="abtn" style="font-size:11px;padding:6px 14px;background:#f3f4f6;color:#555" id="or-mailto-'+c.ci+'" onclick="orMailto('+c.ci+')">&#128231; Open in Gmail</button>'
+          +'</div>'
+          +'<div id="or-saved-'+c.ci+'" style="display:none;margin-top:8px"><span style="background:#dcfce7;color:#16a34a;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px">&#10003; Saved to Gmail Drafts &middot; <span id="or-saved-time-'+c.ci+'"></span></span></div>'
+        +'</div>'
+        +'<div id="or-status-'+c.ci+'" style="font-size:12px;color:#888;display:none"></div>'
+      +'</div>';
+    grid.appendChild(wrap);
   });
 }
 
-function orHideDraft(){
-  document.getElementById('or-draft-content').style.display='none';
-  document.getElementById('or-draft-save').style.display='none';
-  document.getElementById('or-draft-mailto').style.display='none';
-  document.getElementById('or-draft-regen').style.display='none';
-  document.getElementById('or-draft-saved-badge').style.display='none';
-}
+window.orToggleRow=function(ci){
+  var exp=document.getElementById('or-exp-'+ci);
+  var row=document.getElementById('or-row-'+ci);
+  if(!exp)return;
+  var open=exp.style.display==='none';
+  exp.style.display=open?'':'none';
+  var arrow=row.querySelector('div:last-child');
+  if(arrow)arrow.textContent=open?'▲':'▼';
+};
 
-async function orSelectClinic(ci){
+window.orGenerate=async function(ci,isFollowUp){
   var c=_orClinics.find(function(x){return x.ci===ci;});
   if(!c)return;
-  _orActive=c;
-
-  // highlight selected row
-  document.querySelectorAll('#or-grid div[data-ci]').forEach(function(r){
-    r.style.background=parseInt(r.dataset.ci)===ci?'#f0f2ff':'#fff';
-    r.style.borderColor=parseInt(r.dataset.ci)===ci?'#1a2035':'#e8eaed';
-  });
-
-  // scroll draft panel into view
-  document.getElementById('or-draft-panel').scrollIntoView({behavior:'smooth',block:'nearest'});
-
-  // show clinic info
-  document.getElementById('or-draft-clinic').textContent=c.name;
-  document.getElementById('or-draft-meta').textContent=(c.doctor?c.doctor+' · ':'')+(c.email?c.email+' · ':'No email on file · ')+'Lost: '+orFmt(c.lostRev);
-  orHideDraft();
-  document.getElementById('or-draft-status').textContent='Generating draft...';
-  document.getElementById('or-draft-status').style.display='';
-
+  var statusEl=document.getElementById('or-status-'+ci);
+  var draftEl=document.getElementById('or-draft-'+ci);
+  statusEl.style.display='';
+  statusEl.textContent='Generating draft...';
+  draftEl.style.display='none';
   try{
-    var result=await orGenerateEmail(c);
-    document.getElementById('or-draft-subject').textContent=result.subject;
-    document.getElementById('or-draft-body').textContent=result.body;
-    document.getElementById('or-draft-content').style.display='';
-    document.getElementById('or-draft-status').style.display='none';
-    document.getElementById('or-draft-regen').style.display='';
-    if(c.email){
-      document.getElementById('or-draft-save').style.display='';
-      document.getElementById('or-draft-mailto').style.display='';
-    }
-    // store on clinic object for send
+    var result=await orGenerateEmail(c,isFollowUp);
+    document.getElementById('or-subj-'+ci).textContent=result.subject;
+    document.getElementById('or-body-'+ci).textContent=result.body;
+    draftEl.style.display='';
+    statusEl.style.display='none';
+    document.getElementById('or-saved-'+ci).style.display='none';
     c._subject=result.subject;
     c._body=result.body;
-    c._saved=false;
   }catch(e){
-    document.getElementById('or-draft-status').textContent='Error: '+e.message;
-    document.getElementById('or-draft-status').style.display='';
+    statusEl.textContent='Error: '+e.message;
   }
-}
+};
 
-async function orGenerateEmail(c){
-  var stoppedDrugs=c.stopped.slice(0,3).map(function(s){return orDrugShort(s.name);}).filter(Boolean);
-  // dedupe
-  stoppedDrugs=stoppedDrugs.filter(function(v,i,a){return a.indexOf(v)===i;});
+async function orGenerateEmail(c,isFollowUp){
+  var stoppedDrugs=c.stopped.slice(0,3).map(function(s){return orDrugShort(s.name);}).filter(function(v,i,a){return v&&a.indexOf(v)===i;});
   var drugStr=stoppedDrugs.slice(0,2).join(' and ')||'several products';
   var doctor=(c.doctor||'').replace(/^Dr\.?\s*/i,'').split(' ')[0]||'there';
-  var clinic=c.name.replace(/\*/g,'').trim();
+  var log=_orLog[c.name];
 
-  var prompt=[
-    'Write a short winback email from Jonathan at PetScript pharmacy to Dr. '+doctor+' at '+clinic+'.',
-    '',
-    'Style: Alex Hormozi. Short, punchy, direct. No fluff. No opener. Max 3-4 sentences.',
-    '',
-    'Context:',
-    '- They stopped ordering around '+orEpochStr(c.lastEp),
-    '- They used to spend about '+orFmt(c.lostRev)+' per year',
-    '- Drugs they stopped: '+drugStr,
-    '- We make compounded veterinary medications',
-    '',
-    'Instructions:',
-    '- Subject line: Hey Dr. '+doctor+' - quick question',
-    '- Reference the stopped drug(s) by shorthand name',
-    '- End with one direct question or call to action',
-    '- Sign off: Jonathan, PetScript',
-    '- Plain text only, no bullet points',
-    '',
-    'Respond with ONLY this JSON object, nothing else:',
-    '{"subject":"...","body":"..."}'
-  ].join('\n');
+  var lines;
+  if(isFollowUp&&log){
+    var prevDate=new Date(log.contacted_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    lines=[
+      'Write a short friendly follow-up email from Jonathan at PetScript to '+doctor+' at '+c.name.replace(/\*/g,'')+'.',
+      '',
+      'Context: Jonathan sent them an email on '+prevDate+' with subject "'+log.subject+'" but got no reply.',
+      'They used to spend '+orFmt(c.lostRev)+' per year on '+drugStr+' and went quiet.',
+      '',
+      'Tone: Warm, light, not pushy. Assume they are busy, not ignoring. Keep it very short — 2-3 sentences.',
+      'Reference the previous email briefly. Ask one simple question.',
+      'Sign off: Jonathan, PetScript',
+      'Plain text only.',
+      '',
+      'Respond with ONLY this JSON:',
+      '{"subject":"...","body":"..."}'
+    ];
+  } else {
+    lines=[
+      'Write a friendly winback email from Jonathan at PetScript pharmacy to '+doctor+' at '+c.name.replace(/\*/g,'')+'.',
+      '',
+      'Tone: Warm, curious, not pushy. Like a friend checking in. Light humor is fine.',
+      'Style example: "Hey Michael, Quick question — what happened? Looked through our records, your clinic ordered cyclo from us before but suddenly stopped. Normally this happens for 1 of 3 reasons: 1. Pricing was off 2. Clinic changed hands or new staff 3. Someone hit the lottery :) Hoping #3. Either way, can you help me understand what happened?"',
+      '',
+      'Context:',
+      '- Clinic stopped ordering around '+orEpochStr(c.lastEp),
+      '- They used to spend about '+orFmt(c.lostRev)+' per year',
+      '- Drugs they stopped: '+drugStr,
+      '- We make compounded veterinary medications',
+      '',
+      'Instructions:',
+      '- Subject: Hey '+doctor+' - quick question',
+      '- Open with first name only, casual',
+      '- Mention the specific stopped drug(s)',
+      '- Give 2-3 lighthearted possible reasons they stopped',
+      '- End asking what happened and how to fix it',
+      '- Sign off: Jonathan, PetScript',
+      '- Plain text only, short paragraphs',
+      '',
+      'Respond with ONLY this JSON:',
+      '{"subject":"...","body":"..."}'
+    ];
+  }
 
   var resp=await fetch('https://fragrant-cloud-6ef2.jp-d4e.workers.dev/claude-proxy',{
     method:'POST',
     headers:{'Content-Type':'application/json','X-API-Key':'petscript2026'},
-    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:300,messages:[{role:'user',content:prompt}]})
+    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:350,messages:[{role:'user',content:lines.join('\n')}]})
   });
   if(!resp.ok)throw new Error('Worker error '+resp.status);
   var data=await resp.json();
   var text=(data.content||[]).map(function(b){return b.text||'';}).join('').trim();
-  // extract JSON robustly
   var m=text.match(/\{[\s\S]*\}/);
   if(!m)throw new Error('No JSON in response');
   var jsonStr=m[0];
-  // fix unescaped newlines inside strings
-  jsonStr=jsonStr.replace(/"body"\s*:\s*"([\s\S]*?)"\s*\}/,function(match,body){
-    var fixed=body.replace(/\n/g,'\\n').replace(/\r/g,'\\r');
-    return '"body":"'+fixed+'"}';
+  // fix literal newlines inside JSON string values
+  jsonStr=jsonStr.replace(/"body"\s*:\s*"([\s\S]*?)"\s*\}$/,function(match,body){
+    return '"body":"'+body.replace(/\n/g,'\\n').replace(/\r/g,'')+'"}';
   });
   var parsed=JSON.parse(jsonStr);
-  if(!parsed.subject||!parsed.body)throw new Error('Missing subject or body');
-  // unescape
+  if(!parsed.subject||!parsed.body)throw new Error('Missing fields');
   parsed.body=parsed.body.replace(/\\n/g,'\n');
   return parsed;
 }
 
-async function orSaveToGmail(){
-  var c=_orActive;
+window.orSave=async function(ci){
+  var c=_orClinics.find(function(x){return x.ci===ci;});
   if(!c||!c._subject||!c._body){alert('Generate a draft first.');return;}
-  if(!c.email){alert('No email address on file for this clinic.');return;}
+  if(!c.email){alert('No email on file for this clinic.');return;}
   if(!_orAccessToken){alert('Connect Gmail first.');return;}
-  var btn=document.getElementById('or-draft-save');
+  var btn=document.getElementById('or-save-'+ci);
   btn.disabled=true;btn.textContent='Saving...';
   try{
-    var raw=['From: Jonathan @ PetScript <jp@petscript.net>','To: '+c.email,'Subject: '+c._subject,'Content-Type: text/plain; charset=utf-8','',c._body].join('\n');
+    // Save to Gmail Drafts
+    var raw=['From: Jonathan @ PetScript <jp@petscript.net>','To: '+c.email,'Subject: '+c._subject,'Content-Type: text/plain; charset=utf-8','',c._body].join('\r\n');
     var encoded=btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
     var resp=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/drafts',{
       method:'POST',
       headers:{'Authorization':'Bearer '+_orAccessToken,'Content-Type':'application/json'},
       body:JSON.stringify({message:{raw:encoded}})
     });
-    if(!resp.ok){var e=await resp.json();throw new Error((e.error&&e.error.message)||'Gmail save failed');}
-    c._saved=true;
-    document.getElementById('or-draft-saved-badge').style.display='';
-    btn.textContent='&#10003; Saved!';
-    btn.style.background='#15803d';
+    if(!resp.ok){var e=await resp.json();throw new Error((e.error&&e.error.message)||'Gmail error');}
+    // Log to Supabase
+    var now=new Date().toISOString();
+    await SB.from('outreach_log').insert({clinic_name:c.name,rep_username:ME?ME.username:'admin',subject:c._subject,contacted_at:now});
+    _orLog[c.name]={clinic_name:c.name,subject:c._subject,contacted_at:now};
+    // Update UI
+    var savedEl=document.getElementById('or-saved-'+ci);
+    var timeEl=document.getElementById('or-saved-time-'+ci);
+    if(timeEl)timeEl.textContent=new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    if(savedEl)savedEl.style.display='';
+    btn.innerHTML='&#10003; Saved!';btn.style.background='#15803d';
+    // Update row badge
+    var rowEl=document.getElementById('or-row-'+ci);
+    if(rowEl){
+      var nameDiv=rowEl.querySelector('div.flex-1 div:first-child')||rowEl.querySelector('[style*="font-weight:700"]');
+      // re-render contacted badge
+      orUpdateRowBadge(ci,now);
+    }
+    // Show follow-up button if not already there
+    orShowFollowUpBtn(ci);
     setTimeout(function(){btn.disabled=false;btn.innerHTML='&#128228; Save to Gmail Drafts';btn.style.background='#16a34a';},3000);
   }catch(e){
-    alert('Error saving draft: '+e.message);
+    alert('Error: '+e.message);
     btn.disabled=false;btn.innerHTML='&#128228; Save to Gmail Drafts';
+  }
+};
+
+function orUpdateRowBadge(ci,isoDate){
+  var dt=new Date(isoDate).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  var badge='<span style="background:#fef3c7;color:#92400e;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:8px">&#9993; Contacted '+dt+'</span>';
+  var nameDiv=document.querySelector('#or-row-'+ci+' div[style*="font-weight:700"]');
+  if(nameDiv){
+    var c=_orClinics.find(function(x){return x.ci===ci;});
+    if(c)nameDiv.innerHTML=c.name+badge;
   }
 }
 
-function orOpenMailto(){
-  var c=_orActive;
+function orShowFollowUpBtn(ci){
+  var expEl=document.getElementById('or-exp-'+ci);
+  if(!expEl)return;
+  var btnWrap=expEl.querySelector('div:first-child');
+  if(!btnWrap)return;
+  // check if follow-up button already exists
+  if(btnWrap.querySelector('[data-followup]'))return;
+  var c=_orClinics.find(function(x){return x.ci===ci;});
+  if(!c)return;
+  var btn=document.createElement('button');
+  btn.className='abtn';
+  btn.style.cssText='font-size:11px;padding:6px 12px;background:#6b7280';
+  btn.setAttribute('data-followup','1');
+  btn.innerHTML='&#8635; Follow up on previous email';
+  btn.onclick=function(){orGenerate(ci,true);};
+  btnWrap.insertBefore(btn,btnWrap.firstChild);
+}
+
+window.orMailto=function(ci){
+  var c=_orClinics.find(function(x){return x.ci===ci;});
   if(!c||!c._subject||!c._body)return;
   window.open('mailto:'+c.email+'?subject='+encodeURIComponent(c._subject)+'&body='+encodeURIComponent(c._body));
-}
+};
 
 function orInitGoogleAuth(){
   if(typeof google==='undefined'||!google.accounts)return;
@@ -6825,14 +6861,8 @@ function orInit(){
   }
   var gb=document.getElementById('or-gmail-btn');
   var rb=document.getElementById('or-roll-btn');
-  var sb=document.getElementById('or-draft-save');
-  var mb=document.getElementById('or-draft-mailto');
-  var regen=document.getElementById('or-draft-regen');
   if(gb&&!gb.dataset.bound){gb.addEventListener('click',orConnectGmail);gb.dataset.bound='1';}
   if(rb&&!rb.dataset.bound){rb.addEventListener('click',orRollClinics);rb.dataset.bound='1';}
-  if(sb&&!sb.dataset.bound){sb.addEventListener('click',orSaveToGmail);sb.dataset.bound='1';}
-  if(mb&&!mb.dataset.bound){mb.addEventListener('click',orOpenMailto);mb.dataset.bound='1';}
-  if(regen&&!regen.dataset.bound){regen.addEventListener('click',function(){if(_orActive)orSelectClinic(_orActive.ci);});regen.dataset.bound='1';}
 }
 
 
