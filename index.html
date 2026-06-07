@@ -6538,407 +6538,285 @@ function initAiChats(){
   }
 }
 
+
 // ═══════════════════════════════════════════════════════════════
 // OUTREACH MODULE — Gmail Draft Generator
+// Simple globals — no IIFE, runs after data.js is loaded
 // ═══════════════════════════════════════════════════════════════
-(function(){
-  const GMAIL_CLIENT_ID = '34261178989-innajk10hom9lm5b3a15juq3fiu9cmq0.apps.googleusercontent.com';
-  const GMAIL_SCOPE     = 'https://www.googleapis.com/auth/gmail.compose';
-  const CLAUDE_KEY      = 'sk-ant-api03-placeholder'; // set via ANTHROPIC_KEY in worker or swap in
-  const EPOCH_BASE      = new Date('2024-01-01').getTime();
-  const EXCLUDED        = ['vetcove','pet parent','petscript direct','usc','shelters united','vha','vethubrx','mike salsbury','serena patterson'];
-  const DRUG_SHORT      = {
-    'pimobendan':'pimo','gabapentin':'gaba','trazodone':'traz','methocarbamol':'metho',
-    'cyclosporine':'cyclo','doxycycline':'doxy','tilomidin':'tilo','prednisolone':'pred',
-    'fenbendazole':'fenbend','ektaban':'EKT','metronidazole':'metro','omeprazole':'omep',
-    'atenolol':'aten','furosemide':'lasix','amoxicillin':'amox','clindamycin':'clinda'
-  };
+var OR_CLIENT_ID = '34261178989-innajk10hom9lm5b3a15juq3fiu9cmq0.apps.googleusercontent.com';
+var OR_SCOPE     = 'https://www.googleapis.com/auth/gmail.compose';
+var OR_EPOCH     = new Date('2024-01-01').getTime();
+var OR_EXCLUDED  = ['vetcove','pet parent','petscript direct','usc','shelters united','vha','vethubrx','mike salsbury','serena patterson'];
+var OR_DRUG_SHORT= {pimobendan:'pimo',gabapentin:'gaba',trazodone:'traz',methocarbamol:'metho',cyclosporine:'cyclo',doxycycline:'doxy',prednisolone:'pred',fenbendazole:'fenbend',metronidazole:'metro',omeprazole:'omep',furosemide:'lasix',amoxicillin:'amox'};
 
-  let _tokenClient = null;
-  let _accessToken = null;
-  let _orClinics   = [];   // current 50
-  let _drafts      = {};   // clinicIdx → {subject, body, gmailDraftId, status}
+var _orTokenClient=null, _orAccessToken=null, _orClinics=[], _orDrafts={};
 
-  // ── helpers ─────────────────────────────────────────────────
-  function epochToDate(ep){ return ep ? new Date(EPOCH_BASE + ep*86400000) : null; }
-  function epochStr(ep){
-    const d = epochToDate(ep);
-    return d ? d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
-  }
-  function fmt$(n){ return '$'+Math.round(n).toLocaleString(); }
-  function normName(s){ return (s||'').replace(/\*/g,'').toLowerCase().trim(); }
-  function isExcluded(n){ const nn=normName(n); return EXCLUDED.some(e=>nn.includes(e)); }
-  function drugShort(name){
-    const lc = (name||'').toLowerCase();
-    for(const [k,v] of Object.entries(DRUG_SHORT)){ if(lc.includes(k)) return v; }
-    // return first meaningful word
-    return (name||'').split(' ')[0];
-  }
+function orEpochStr(ep){
+  if(!ep) return '—';
+  var d=new Date(OR_EPOCH+ep*86400000);
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+function orFmt(n){ return '$'+Math.round(n||0).toLocaleString(); }
+function orNorm(s){ return (s||'').replace(/\*/g,'').toLowerCase().trim(); }
+function orExcluded(name){ var n=orNorm(name); return OR_EXCLUDED.some(function(e){return n.indexOf(e)>=0;}); }
+function orDrugShort(name){
+  var lc=(name||'').toLowerCase();
+  var keys=Object.keys(OR_DRUG_SHORT);
+  for(var i=0;i<keys.length;i++){if(lc.indexOf(keys[i])>=0)return OR_DRUG_SHORT[keys[i]];}
+  return (name||'').split(' ')[0];
+}
 
-  // ── Build aggregated clinic data from D/P/C/KA/REPS ─────────
-  function buildLapsed(pool){
-    const result = [];
-    const now = Date.now();
-    for(let ci=0;ci<C.length;ci++){
-      if(isExcluded(C[ci])) continue;
-      const txns = D[C[ci]]||[];
-      if(!txns.length) continue;
-      const rev={2024:0,2025:0,2026:0};
-      const prods=new Map();
-      let lastEp=0;
-      for(const [yr,pid,revenue,ep] of txns){
-        const y=2020+yr;
-        rev[y]=(rev[y]||0)+revenue;
-        if(ep>lastEp) lastEp=ep;
-        if(!prods.has(pid)) prods.set(pid,{rev:{2024:0,2025:0,2026:0},lastEp:0});
-        const pd=prods.get(pid);
-        pd.rev[y]=(pd.rev[y]||0)+revenue;
-        if(ep>pd.lastEp) pd.lastEp=ep;
-      }
-      // must be lapsed: has 2024 or 2025 rev, zero 2026
-      if(rev[2026]>0) continue;
-      if(!rev[2024]&&!rev[2025]) continue;
-
-      const lostRev = rev[2025]||rev[2024]||0;
-      if(pool==='big' && lostRev<1000) continue;
-      if(pool==='recent' && !rev[2025]) continue;
-
-      const ka=KA[ci]||[];
-      const lastDate = epochToDate(lastEp);
-      const daysSince = lastDate ? Math.round((now-lastDate.getTime())/86400000) : 9999;
-
-      // stopped products
-      const stopped=[];
-      const active=[];
-      for(const [pid,pd] of prods){
-        if(pd.rev[2026]>0) active.push({name:P[pid],rev:pd.rev});
-        else if(pd.rev[2025]>0||pd.rev[2024]>0) stopped.push({name:P[pid],rev:pd.rev,lastEp:pd.lastEp});
-      }
-      stopped.sort((a,b)=>(b.rev[2025]||b.rev[2024])-(a.rev[2025]||a.rev[2024]));
-
-      result.push({
-        ci, name:C[ci],
-        rep:REPS[ka[0]]||'',
-        email:ka[1]||'',
-        phone:ka[2]||'',
-        doctor:ka[3]||'',
-        street:ka[4]||'',
-        city:ka[5]||'',
-        lastEp, lastDate, daysSince,
-        rev, lostRev, stopped, active, prods
-      });
+function orBuildLapsed(pool){
+  var result=[];
+  var now=Date.now();
+  if(typeof C==='undefined'||!C.length){alert('Data not loaded yet. Try again in a moment.');return result;}
+  for(var ci=0;ci<C.length;ci++){
+    if(orExcluded(C[ci]))continue;
+    var txns=D[C[ci]]||[];
+    if(!txns.length)continue;
+    var rev={2024:0,2025:0,2026:0};
+    var prods={};
+    var lastEp=0;
+    for(var ri=0;ri<txns.length;ri++){
+      var r=txns[ri];
+      var yr=2020+r[0],pid=r[1],revenue=r[2],ep=r[3];
+      rev[yr]=(rev[yr]||0)+revenue;
+      if(ep>lastEp)lastEp=ep;
+      if(!prods[pid])prods[pid]={rev:{2024:0,2025:0,2026:0},lastEp:0};
+      prods[pid].rev[yr]=(prods[pid].rev[yr]||0)+revenue;
+      if(ep>prods[pid].lastEp)prods[pid].lastEp=ep;
     }
-    return result;
-  }
-
-  // Weighted random sample — higher lostRev = more likely
-  function weightedSample(arr, n){
-    if(arr.length<=n) return [...arr];
-    const total = arr.reduce((s,c)=>s+Math.sqrt(c.lostRev+1),0);
-    const chosen=new Set();
-    const out=[];
-    let attempts=0;
-    while(out.length<n && attempts<n*20){
-      attempts++;
-      let r=Math.random()*total, acc=0;
-      for(const c of arr){
-        acc+=Math.sqrt(c.lostRev+1);
-        if(r<=acc && !chosen.has(c.ci)){
-          chosen.add(c.ci);
-          out.push(c);
-          break;
-        }
-      }
+    if(rev[2026]>0)continue;
+    if(!rev[2024]&&!rev[2025])continue;
+    var lostRev=rev[2025]||rev[2024]||0;
+    if(pool==='big'&&lostRev<1000)continue;
+    if(pool==='recent'&&!rev[2025])continue;
+    var lastDate=lastEp?new Date(OR_EPOCH+lastEp*86400000):null;
+    var daysSince=lastDate?Math.round((now-lastDate.getTime())/86400000):9999;
+    var stopped=[],active=[];
+    var pidKeys=Object.keys(prods);
+    for(var pi=0;pi<pidKeys.length;pi++){
+      var pd=prods[pidKeys[pi]];
+      if(pd.rev[2026]>0)active.push({name:P[parseInt(pidKeys[pi])],rev:pd.rev});
+      else if(pd.rev[2025]>0||pd.rev[2024]>0)stopped.push({name:P[parseInt(pidKeys[pi])],rev:pd.rev,lastEp:pd.lastEp});
     }
-    return out;
-  }
-
-  // ── Roll 50 ──────────────────────────────────────────────────
-  function rollClinics(){
-    const pool = document.getElementById('or-pool').value;
-    const lapsed = buildLapsed(pool);
-    _orClinics = weightedSample(lapsed, 50);
-    _drafts = {};
-    renderGrid();
-    document.getElementById('or-gen-btn').style.display = _orClinics.length ? '' : 'none';
-    document.getElementById('or-empty').style.display   = _orClinics.length ? 'none' : '';
-  }
-
-  // ── Render clinic cards ──────────────────────────────────────
-  function renderGrid(){
-    const grid = document.getElementById('or-grid');
-    grid.innerHTML = '';
-    _orClinics.forEach((c,i)=>{
-      const d = _drafts[c.ci];
-      const statusIcon = !d ? '⬜' : d.status==='pending' ? '⏳' : d.status==='done' ? '✅' : '❌';
-      const stoppedStr = c.stopped.slice(0,3).map(s=>drugShort(s.name)).join(', ')||'—';
-      const card = document.createElement('div');
-      card.className='or-card';
-      card.id=`or-card-${c.ci}`;
-      card.style.cssText='background:#fff;border:1px solid #e8eaed;border-radius:12px;padding:0;overflow:hidden;transition:box-shadow .15s';
-      card.innerHTML=`
-        <div class="or-card-top" style="padding:14px 18px;display:flex;align-items:flex-start;gap:12px;cursor:pointer" onclick="orToggle(${c.ci})">
-          <div style="font-size:18px;flex-shrink:0;margin-top:2px">${statusIcon}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:14px;font-weight:700;color:#1a2035;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>
-            <div style="font-size:11px;color:#888;margin-top:2px">${c.doctor||'No doctor'} &bull; Last order: ${epochStr(c.lastEp)} (${c.daysSince}d ago) &bull; Lost: ${fmt$(c.lostRev)}</div>
-            <div style="font-size:11px;color:#dc2626;margin-top:2px">Stopped: ${stoppedStr}</div>
-          </div>
-          <div style="font-size:11px;color:#aaa;flex-shrink:0">#${i+1}</div>
-        </div>
-        <div id="or-expand-${c.ci}" style="display:none;border-top:1px solid #edf0f5;padding:16px 18px;background:#fafbfc">
-          ${d ? renderDraftHTML(c,d) : `<div style="font-size:12px;color:#aaa;text-align:center;padding:8px">Hit "Generate All Drafts" to create email</div>`}
-        </div>`;
-      grid.appendChild(card);
+    stopped.sort(function(a,b){return(b.rev[2025]||b.rev[2024])-(a.rev[2025]||a.rev[2024]);});
+    var ka=KA[ci]||[];
+    result.push({
+      ci:ci,name:C[ci],
+      rep:ka[0]>=0?REPS[ka[0]]:'',
+      email:ka[1]||'',phone:ka[2]||'',doctor:ka[3]||'',
+      street:ka[4]||'',city:ka[5]||'',
+      lastEp:lastEp,lastDate:lastDate,daysSince:daysSince,
+      rev:rev,lostRev:lostRev,stopped:stopped,active:active
     });
   }
+  return result;
+}
 
-  function renderDraftHTML(c, d){
-    if(d.status==='pending') return `<div style="font-size:12px;color:#888;text-align:center;padding:8px">⏳ Generating...</div>`;
-    if(d.status==='error')   return `<div style="font-size:12px;color:#dc2626;padding:8px">❌ Error: ${d.error}</div>`;
-    const savedBadge = d.gmailDraftId
-      ? `<span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px">✓ Saved to Gmail Drafts</span>`
-      : `<span style="background:#fef3c7;color:#92400e;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px">⚠ Not yet saved</span>`;
-    return `
-      <div style="margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        ${savedBadge}
-        ${c.email ? `<span style="font-size:11px;color:#555">To: ${c.email}</span>` : `<span style="font-size:11px;color:#dc2626">⚠ No email on file</span>`}
-      </div>
-      <div style="margin-bottom:6px">
-        <div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:3px">Subject</div>
-        <div style="font-size:12px;color:#1a2035;background:#fff;border:1px solid #e0e3ea;border-radius:6px;padding:7px 10px">${d.subject}</div>
-      </div>
-      <div style="margin-bottom:12px">
-        <div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:3px">Body</div>
-        <div style="font-size:12px;color:#333;background:#fff;border:1px solid #e0e3ea;border-radius:6px;padding:10px 12px;white-space:pre-wrap;line-height:1.6;max-height:220px;overflow-y:auto">${d.body}</div>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        ${!d.gmailDraftId && c.email ? `<button class="abtn" style="font-size:11px;padding:6px 12px" onclick="orSaveDraft(${c.ci})">&#128228; Save to Gmail Drafts</button>` : ''}
-        ${c.email ? `<button class="abtn" style="font-size:11px;padding:6px 12px;background:#f3f4f6;color:#555" onclick="orMailto(${c.ci})">&#128231; Open in Gmail</button>` : ''}
-      </div>`;
+function orWeightedSample(arr,n){
+  if(arr.length<=n)return arr.slice();
+  var total=arr.reduce(function(s,c){return s+Math.sqrt(c.lostRev+1);},0);
+  var chosen={},out=[];
+  var attempts=0;
+  while(out.length<n&&attempts<n*20){
+    attempts++;
+    var rand=Math.random()*total,acc=0;
+    for(var i=0;i<arr.length;i++){
+      acc+=Math.sqrt(arr[i].lostRev+1);
+      if(rand<=acc&&!chosen[arr[i].ci]){chosen[arr[i].ci]=1;out.push(arr[i]);break;}
+    }
   }
+  return out;
+}
 
-  window.orToggle = function(ci){
-    const el = document.getElementById(`or-expand-${ci}`);
-    if(el) el.style.display = el.style.display==='none' ? '' : 'none';
-  };
+function orRollClinics(){
+  var pool=document.getElementById('or-pool').value;
+  var lapsed=orBuildLapsed(pool);
+  if(!lapsed.length){
+    document.getElementById('or-empty').style.display='';
+    document.getElementById('or-empty').innerHTML='<div style="font-size:48px">🤷</div><div style="font-size:15px;font-weight:600;color:#555">No lapsed clinics found for this filter.</div>';
+    return;
+  }
+  _orClinics=orWeightedSample(lapsed,50);
+  _orDrafts={};
+  orRenderGrid();
+  document.getElementById('or-gen-btn').style.display=_orClinics.length?'':'none';
+  document.getElementById('or-empty').style.display=_orClinics.length?'none':'';
+}
 
-  // ── Generate all drafts ──────────────────────────────────────
-  async function generateAll(){
-    const btn = document.getElementById('or-gen-btn');
-    btn.disabled = true;
-    btn.textContent = '⏳ Generating...';
-    document.getElementById('or-progress-wrap').style.display = '';
+function orRenderGrid(){
+  var grid=document.getElementById('or-grid');
+  grid.innerHTML='';
+  _orClinics.forEach(function(c,i){
+    var d=_orDrafts[c.ci];
+    var icon=!d?'⬜':d.status==='pending'?'⏳':d.status==='done'||d.status==='generated'?'✅':'❌';
+    var stoppedStr=c.stopped.slice(0,3).map(function(s){return orDrugShort(s.name);}).join(', ')||'—';
+    var card=document.createElement('div');
+    card.style.cssText='background:#fff;border:1px solid #e8eaed;border-radius:12px;overflow:hidden;margin-bottom:2px';
+    card.innerHTML='<div style="padding:14px 18px;display:flex;align-items:flex-start;gap:12px;cursor:pointer" onclick="orToggle('+c.ci+')">'
+      +'<div style="font-size:18px;flex-shrink:0;margin-top:2px">'+icon+'</div>'
+      +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:14px;font-weight:700;color:#1a2035;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+c.name+'</div>'
+        +'<div style="font-size:11px;color:#888;margin-top:2px">'+(c.doctor||'No doctor')+' · Last: '+orEpochStr(c.lastEp)+' ('+c.daysSince+'d) · Lost: '+orFmt(c.lostRev)+'</div>'
+        +'<div style="font-size:11px;color:#dc2626;margin-top:2px">Stopped: '+stoppedStr+'</div>'
+      +'</div>'
+      +'<div style="font-size:11px;color:#aaa;flex-shrink:0">#'+(i+1)+'</div>'
+    +'</div>'
+    +'<div id="or-exp-'+c.ci+'" style="display:none;border-top:1px solid #edf0f5;padding:16px 18px;background:#fafbfc">'
+      +(d?orDraftHTML(c,d):'<div style="font-size:12px;color:#aaa;text-align:center;padding:8px">Hit "Generate All Drafts" to create email</div>')
+    +'</div>';
+    grid.appendChild(card);
+  });
+}
 
-    let done = 0;
-    const updateProgress = ()=>{
+window.orToggle=function(ci){
+  var el=document.getElementById('or-exp-'+ci);
+  if(el)el.style.display=el.style.display==='none'?'':'none';
+};
+
+function orDraftHTML(c,d){
+  if(d.status==='pending')return '<div style="font-size:12px;color:#888;text-align:center;padding:8px">⏳ Generating...</div>';
+  if(d.status==='error')return '<div style="font-size:12px;color:#dc2626;padding:8px">❌ '+d.error+'</div>';
+  var saved=d.gmailDraftId?'<span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px">✓ Saved to Gmail Drafts</span>':'<span style="background:#fef3c7;color:#92400e;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px">Not yet saved</span>';
+  return '<div style="margin-bottom:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+saved+(c.email?'<span style="font-size:11px;color:#555">To: '+c.email+'</span>':'<span style="font-size:11px;color:#dc2626">⚠ No email on file</span>')+'</div>'
+    +'<div style="margin-bottom:6px"><div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:3px">Subject</div><div style="font-size:12px;color:#1a2035;background:#fff;border:1px solid #e0e3ea;border-radius:6px;padding:7px 10px">'+d.subject+'</div></div>'
+    +'<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:3px">Body</div><div style="font-size:12px;color:#333;background:#fff;border:1px solid #e0e3ea;border-radius:6px;padding:10px 12px;white-space:pre-wrap;line-height:1.6;max-height:220px;overflow-y:auto">'+d.body+'</div></div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+    +(!d.gmailDraftId&&c.email?'<button class="abtn" style="font-size:11px;padding:6px 12px" onclick="orSaveDraft('+c.ci+')">💾 Save to Gmail Drafts</button>':'')
+    +(c.email?'<button class="abtn" style="font-size:11px;padding:6px 12px;background:#f3f4f6;color:#555" onclick="orMailto('+c.ci+')">📧 Open in Gmail</button>':'')
+    +'</div>';
+}
+
+function orRefreshCard(ci){
+  var c=_orClinics.find(function(x){return x.ci===ci;});
+  if(!c)return;
+  var d=_orDrafts[ci];
+  // update icon on card top
+  var card=document.querySelector('[onclick="orToggle('+ci+')"]');
+  if(card){var icon=card.querySelector('div:first-child');if(icon)icon.textContent=!d?'⬜':d.status==='pending'?'⏳':d.status==='done'||d.status==='generated'?'✅':'❌';}
+  var exp=document.getElementById('or-exp-'+ci);
+  if(exp&&exp.style.display!=='none')exp.innerHTML=orDraftHTML(c,d);
+}
+
+async function orGenerateAll(){
+  var btn=document.getElementById('or-gen-btn');
+  btn.disabled=true;btn.textContent='⏳ Generating...';
+  document.getElementById('or-progress-wrap').style.display='';
+  var done=0;
+  var BATCH=5;
+  for(var i=0;i<_orClinics.length;i+=BATCH){
+    var batch=_orClinics.slice(i,i+BATCH);
+    await Promise.all(batch.map(async function(c){
+      _orDrafts[c.ci]={status:'pending'};
+      orRefreshCard(c.ci);
+      try{
+        var result=await orGenerateEmail(c);
+        _orDrafts[c.ci]={status:'generated',subject:result.subject,body:result.body,gmailDraftId:null};
+        if(_orAccessToken&&c.email){
+          try{var id=await orSaveGmailDraft(c.email,result.subject,result.body);_orDrafts[c.ci].gmailDraftId=id;_orDrafts[c.ci].status='done';}
+          catch(e){_orDrafts[c.ci].status='generated';}
+        }else{_orDrafts[c.ci].status='done';}
+      }catch(e){_orDrafts[c.ci]={status:'error',error:e.message};}
       done++;
-      const pct = Math.round((done/_orClinics.length)*100);
-      document.getElementById('or-progress-bar').style.width = pct+'%';
-      document.getElementById('or-progress-count').textContent = `${done} / ${_orClinics.length}`;
-    };
+      var pct=Math.round((done/_orClinics.length)*100);
+      document.getElementById('or-progress-bar').style.width=pct+'%';
+      document.getElementById('or-progress-count').textContent=done+' / '+_orClinics.length;
+      orRefreshCard(c.ci);
+    }));
+  }
+  btn.disabled=false;btn.textContent='⚡ Regenerate';
+  document.getElementById('or-progress-label').textContent='Complete!';
+}
 
-    // batch in groups of 5 to avoid rate limits
-    const BATCH = 5;
-    for(let i=0;i<_orClinics.length;i+=BATCH){
-      const batch = _orClinics.slice(i,i+BATCH);
-      await Promise.all(batch.map(async c=>{
-        _drafts[c.ci]={status:'pending'};
-        refreshCard(c.ci);
-        try{
-          const {subject,body} = await generateEmail(c);
-          _drafts[c.ci]={status:'generated',subject,body,gmailDraftId:null};
-          // auto-save to Gmail if connected and email exists
-          if(_accessToken && c.email){
-            try{
-              const id = await saveGmailDraft(c.email, subject, body);
-              _drafts[c.ci].gmailDraftId = id;
-              _drafts[c.ci].status = 'done';
-            }catch(e){
-              _drafts[c.ci].status = 'generated'; // generated but not saved
-            }
-          } else {
-            _drafts[c.ci].status = 'done';
-          }
-        }catch(e){
-          _drafts[c.ci]={status:'error',error:e.message};
-        }
-        updateProgress();
-        refreshCard(c.ci);
-      }));
+async function orGenerateEmail(c){
+  var stoppedDrugs=c.stopped.slice(0,4).map(function(s){
+    return orDrugShort(s.name)+' (was '+orFmt(s.rev[2025]||s.rev[2024]||0)+'/yr)';
+  }).join(', ')||'several products';
+  var doctor=c.doctor?c.doctor.replace(/^Dr\.?\s*/i,''):'there';
+  var clinic=c.name.replace(/\*/g,'').trim();
+  var prompt='Write a short winback email from Jonathan at PetScript pharmacy to Dr. '+doctor+' at '+clinic+'.\n\nStyle: Alex Hormozi — short, punchy, direct. No fluff. No "I hope this finds you well." 3-4 sentences max.\n\nFacts:\n- They stopped ordering around '+orEpochStr(c.lastEp)+'\n- They used to spend ~'+orFmt(c.lostRev)+'/year\n- Stopped drugs: '+stoppedDrugs+'\n- We make compounded vet meds\n\nRules:\n- Subject: "Hey Dr. '+doctor+' - quick question"\n- Mention 1-2 stopped drugs by shorthand\n- End with one simple question\n- Sign off: "Jonathan, PetScript"\n- Plain text only\n\nReturn ONLY valid JSON: {"subject":"...","body":"..."}';
+  var resp=await fetch('https://fragrant-cloud-6ef2.jp-d4e.workers.dev/claude-proxy',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-API-Key':'petscript2026'},
+    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:400,messages:[{role:'user',content:prompt}]})
+  });
+  if(!resp.ok)throw new Error('Claude API '+resp.status);
+  var data=await resp.json();
+  var text=(data.content||[]).map(function(b){return b.text||'';}).join('');
+  var clean=text.replace(/```json|```/g,'').trim();
+  var parsed=JSON.parse(clean);
+  if(!parsed.subject||!parsed.body)throw new Error('Bad response format');
+  return parsed;
+}
+
+async function orSaveGmailDraft(toEmail,subject,body){
+  if(!_orAccessToken)throw new Error('Not authenticated with Gmail');
+  var raw=['From: Jonathan @ PetScript <jp@petscript.net>','To: '+toEmail,'Subject: '+subject,'Content-Type: text/plain; charset=utf-8','',body].join('\r\n');
+  var encoded=btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  var resp=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/drafts',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+_orAccessToken,'Content-Type':'application/json'},
+    body:JSON.stringify({message:{raw:encoded}})
+  });
+  if(!resp.ok){var e=await resp.json();throw new Error(e.error&&e.error.message||'Gmail save failed');}
+  var data=await resp.json();
+  return data.id;
+}
+
+window.orSaveDraft=async function(ci){
+  var c=_orClinics.find(function(x){return x.ci===ci;});
+  var d=_orDrafts[ci];
+  if(!c||!d||!c.email){alert('No email address on file.');return;}
+  if(!_orAccessToken){alert('Connect Gmail first.');return;}
+  try{var id=await orSaveGmailDraft(c.email,d.subject,d.body);_orDrafts[ci].gmailDraftId=id;_orDrafts[ci].status='done';orRefreshCard(ci);}
+  catch(e){alert('Error: '+e.message);}
+};
+
+window.orMailto=function(ci){
+  var c=_orClinics.find(function(x){return x.ci===ci;});
+  var d=_orDrafts[ci];
+  if(!c||!d)return;
+  window.open('mailto:'+c.email+'?subject='+encodeURIComponent(d.subject)+'&body='+encodeURIComponent(d.body));
+};
+
+function orInitGoogleAuth(){
+  if(typeof google==='undefined'||!google.accounts)return;
+  _orTokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:OR_CLIENT_ID,scope:OR_SCOPE,
+    callback:function(resp){
+      if(resp.error){alert('Gmail auth failed: '+resp.error);return;}
+      _orAccessToken=resp.access_token;
+      document.getElementById('or-gmail-status').textContent='✓ Connected as jp@petscript.net';
+      document.getElementById('or-gmail-status').style.color='#16a34a';
+      document.getElementById('or-gmail-btn').textContent='🔓 Reconnect Gmail';
+      document.getElementById('or-gmail-btn').style.background='#16a34a';
     }
+  });
+}
 
-    btn.disabled = false;
-    btn.textContent = '⚡ Regenerate';
-    document.getElementById('or-progress-label').textContent = 'Complete!';
+function orConnectGmail(){
+  if(!_orTokenClient){alert('Google auth not loaded yet — try again in a second.');return;}
+  _orTokenClient.requestAccessToken({prompt:'consent'});
+}
+
+// Wire up buttons — called after login when DOM is ready
+function orInit(){
+  var gsiScript=document.getElementById('gsi-script');
+  if(!gsiScript){
+    var s=document.createElement('script');s.id='gsi-script';
+    s.src='https://accounts.google.com/gsi/client';s.async=true;s.defer=true;
+    s.onload=orInitGoogleAuth;
+    document.head.appendChild(s);
   }
+  var gb=document.getElementById('or-gmail-btn');
+  var rb=document.getElementById('or-roll-btn');
+  var genb=document.getElementById('or-gen-btn');
+  if(gb&&!gb.dataset.bound){gb.addEventListener('click',orConnectGmail);gb.dataset.bound='1';}
+  if(rb&&!rb.dataset.bound){rb.addEventListener('click',orRollClinics);rb.dataset.bound='1';}
+  if(genb&&!genb.dataset.bound){genb.addEventListener('click',orGenerateAll);genb.dataset.bound='1';}
+}
 
-  function refreshCard(ci){
-    const c = _orClinics.find(x=>x.ci===ci);
-    if(!c) return;
-    const d = _drafts[ci];
-    // update status icon
-    const top = document.querySelector(`#or-card-${ci} .or-card-top`);
-    if(top){
-      const icon = top.querySelector('div:first-child');
-      if(icon) icon.textContent = !d?'⬜':d.status==='pending'?'⏳':d.status==='done'||d.status==='generated'?'✅':'❌';
-    }
-    // refresh expanded area
-    const exp = document.getElementById(`or-expand-${ci}`);
-    if(exp && exp.style.display!=='none'){
-      exp.innerHTML = renderDraftHTML(c, d);
-    }
-  }
-
-  // ── Claude API: generate email ───────────────────────────────
-  async function generateEmail(c){
-    const stoppedDrugs = c.stopped.slice(0,4).map(s=>{
-      const short = drugShort(s.name);
-      const rev = s.rev[2025]||s.rev[2024]||0;
-      return `${short} (was ${fmt$(rev)}/yr)`;
-    }).join(', ') || 'several products';
-
-    const doctor = c.doctor ? c.doctor.replace(/^Dr\.?\s*/i,'') : 'there';
-    const clinicName = c.name.replace(/\*/g,'').trim();
-    const lostStr = fmt$(c.lostRev);
-    const lastStr = epochStr(c.lastEp);
-
-    const prompt = `You write short, direct outreach emails in Alex Hormozi style. No fluff, no "I hope this finds you well", get to the point fast. Short sentences. Sound like a real person, not a marketer.
-
-Write a winback email from Jonathan at PetScript pharmacy to Dr. ${doctor} at ${clinicName}.
-
-Facts:
-- They stopped ordering around ${lastStr}
-- They used to spend ~${lostStr}/year with us
-- Stopped products: ${stoppedDrugs}
-- We make compounded vet medications (not retail)
-
-Rules:
-- Subject line: "Hey Dr. ${doctor} - quick question"
-- 3-4 sentences max for the body
-- Mention 1-2 specific stopped drugs by shorthand name
-- End with one simple question or CTA
-- Sign off as "Jonathan, PetScript"
-- No bullet points, no headers, just plain text
-
-Return ONLY valid JSON: {"subject":"...","body":"..."}`;
-
-    // Call Claude via the existing Cloudflare worker proxy (avoids CORS/key exposure)
-    const resp = await fetch('https://fragrant-cloud-6ef2.jp-d4e.workers.dev/claude-proxy', {
-      method:'POST',
-      headers:{'Content-Type':'application/json','X-API-Key':'petscript2026'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:400,
-        messages:[{role:'user',content:prompt}]
-      })
-    });
-
-    if(!resp.ok) throw new Error(`Claude API ${resp.status}`);
-    const data = await resp.json();
-    const text = (data.content||[]).map(b=>b.text||'').join('');
-    const clean = text.replace(/```json|```/g,'').trim();
-    const parsed = JSON.parse(clean);
-    if(!parsed.subject||!parsed.body) throw new Error('Bad response format');
-    return parsed;
-  }
-
-  // ── Gmail OAuth ──────────────────────────────────────────────
-  function initGoogleAuth(){
-    if(typeof google==='undefined'||!google.accounts) return;
-    _tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: GMAIL_CLIENT_ID,
-      scope: GMAIL_SCOPE,
-      callback:(resp)=>{
-        if(resp.error){ alert('Gmail auth failed: '+resp.error); return; }
-        _accessToken = resp.access_token;
-        document.getElementById('or-gmail-status').textContent='✓ Connected as jp@petscript.net';
-        document.getElementById('or-gmail-status').style.color='#16a34a';
-        document.getElementById('or-gmail-btn').textContent='&#128275; Reconnect Gmail';
-        document.getElementById('or-gmail-btn').style.background='#16a34a';
-      }
-    });
-  }
-
-  function connectGmail(){
-    if(!_tokenClient){ alert('Google auth not loaded yet — refresh and try again.'); return; }
-    _tokenClient.requestAccessToken({prompt:'consent'});
-  }
-
-  // ── Save draft to Gmail ──────────────────────────────────────
-  async function saveGmailDraft(toEmail, subject, body){
-    if(!_accessToken) throw new Error('Not authenticated with Gmail');
-    // RFC 2822 email
-    const from    = 'jp@petscript.net';
-    const raw     = [`From: Jonathan @ PetScript <${from}>`,
-                     `To: ${toEmail}`,
-                     `Subject: ${subject}`,
-                     `Content-Type: text/plain; charset=utf-8`,
-                     ``,
-                     body].join('\r\n');
-    const encoded = btoa(unescape(encodeURIComponent(raw)))
-                      .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-
-    const resp = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/drafts',{
-      method:'POST',
-      headers:{
-        'Authorization':'Bearer '+_accessToken,
-        'Content-Type':'application/json'
-      },
-      body: JSON.stringify({message:{raw:encoded}})
-    });
-    if(!resp.ok){
-      const e=await resp.json();
-      throw new Error(e.error?.message||'Gmail save failed');
-    }
-    const data = await resp.json();
-    return data.id;
-  }
-
-  window.orSaveDraft = async function(ci){
-    const c = _orClinics.find(x=>x.ci===ci);
-    const d = _drafts[ci];
-    if(!c||!d||!c.email){ alert('No email address on file for this clinic.'); return; }
-    if(!_accessToken){ alert('Connect Gmail first.'); return; }
-    try{
-      const id = await saveGmailDraft(c.email, d.subject, d.body);
-      _drafts[ci].gmailDraftId = id;
-      _drafts[ci].status = 'done';
-      refreshCard(ci);
-    }catch(e){ alert('Error saving draft: '+e.message); }
-  };
-
-  window.orMailto = function(ci){
-    const c = _orClinics.find(x=>x.ci===ci);
-    const d = _drafts[ci];
-    if(!c||!d) return;
-    const url = `mailto:${c.email}?subject=${encodeURIComponent(d.subject)}&body=${encodeURIComponent(d.body)}`;
-    window.open(url);
-  };
-
-  // ── Init outreach UI bindings (tab visibility handled by applyTabVisibility) ──
-  function initOutreach(){
-    // Load Google Identity Services
-    if(!document.getElementById('gsi-script')){
-      const s=document.createElement('script');
-      s.id='gsi-script';
-      s.src='https://accounts.google.com/gsi/client';
-      s.async=true;
-      s.defer=true;
-      s.onload=initGoogleAuth;
-      document.head.appendChild(s);
-    }
-    var gb=document.getElementById('or-gmail-btn');
-    var rb=document.getElementById('or-roll-btn');
-    var genb=document.getElementById('or-gen-btn');
-    if(gb)gb.addEventListener('click',connectGmail);
-    if(rb)rb.addEventListener('click',rollClinics);
-    if(genb)genb.addEventListener('click',generateAll);
-  }
-
-  // Run after login (ME is set)
-  setTimeout(initOutreach, 1200);
-})();
 
 </script>
 </body>
