@@ -6107,6 +6107,7 @@ function init(){
   document.getElementById('arc').textContent=ARL.length.toLocaleString();
   buildWB();buildAR();setupSearch();
   initAiChats();
+  if(ME&&ME.role==='admin') setTimeout(orInit, 500);
   // Deep-link: ?clinic=NAME auto-opens the clinic panel
   (function(){
     try{
