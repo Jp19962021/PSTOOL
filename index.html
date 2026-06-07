@@ -6693,12 +6693,15 @@ function orRefreshCard(ci){
   var c=_orClinics.find(function(x){return x.ci===ci;});
   if(!c)return;
   var d=_orDrafts[ci];
-  // update icon on card top
-  var card=document.querySelector('[onclick="orToggle('+ci+')"]');
-  if(card){var icon=card.querySelector('div:first-child');if(icon)icon.textContent=!d?'⬜':d.status==='pending'?'⏳':d.status==='done'||d.status==='generated'?'✅':'❌';}
+  // update icon and always refresh expand content
+  var topDiv=document.querySelector('div[onclick="orToggle('+ci+')"]');
+  if(topDiv){
+    var iconEl=topDiv.querySelector('div:first-child');
+    if(iconEl)iconEl.textContent=!d?'⬜':d.status==='pending'?'⏳':(d.status==='done'||d.status==='generated')?'✅':'❌';
+  }
   var exp=document.getElementById('or-exp-'+ci);
-  if(exp&&exp.style.display!=='none')exp.innerHTML=orDraftHTML(c,d);
-}
+  if(exp)exp.innerHTML=d?orDraftHTML(c,d):'<div style="font-size:12px;color:#aaa;text-align:center;padding:8px">Hit &quot;Generate All Drafts&quot; to create email</div>';
+
 
 async function orGenerateAll(){
   var btn=document.getElementById('or-gen-btn');
@@ -6746,7 +6749,22 @@ async function orGenerateEmail(c){
   var data=await resp.json();
   var text=(data.content||[]).map(function(b){return b.text||'';}).join('');
   var clean=text.replace(/```json|```/g,'').trim();
-  var parsed=JSON.parse(clean);
+  // Strip control characters that break JSON.parse
+  clean=clean.replace(/[\x00-\x1F\x7F]/g,function(c){
+    if(c==='\n')return '\\n';
+    if(c==='\r')return '\\r';
+    if(c==='\t')return '\\t';
+    return '';
+  });
+  var parsed;
+  try{ parsed=JSON.parse(clean); }
+  catch(e){
+    // Fallback: extract subject and body with regex
+    var sm=clean.match(/"subject"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+    var bm=clean.match(/"body"\s*:\s*"((?:[^"\\]|\\.)*?)(?="\s*[,}])/s);
+    if(!sm||!bm)throw new Error('Could not parse email: '+e.message);
+    parsed={subject:sm[1].replace(/\\n/g,'\n'),body:bm[1].replace(/\\n/g,'\n')};
+  }
   if(!parsed.subject||!parsed.body)throw new Error('Bad response format');
   return parsed;
 }
