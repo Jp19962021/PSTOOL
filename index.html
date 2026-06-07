@@ -763,6 +763,7 @@ table.ptbl tr:last-child td{border-bottom:none}
       <div class="cltab" data-pane="shared">&#128172; Shared Notes <span class="badge" id="nc">0</span></div>
       <div class="cltab" data-pane="orders">&#128230; Orders</div>
       <div class="cltab" data-pane="pitch">&#11088; Pitch</div>
+      <div class="cltab" data-pane="nearby">&#128205; Nearby</div>
       
     </div>
 
@@ -830,6 +831,20 @@ table.ptbl tr:last-child td{border-bottom:none}
     <div class="clpane" data-pane="pitch">
       <div class="sechd">&#11088; Pitch Opportunities <span class="shc" id="pxc"></span></div>
       <table class="ptbl"><thead><tr><th>Product</th><th style="text-align:right">Our Revenue</th><th style="text-align:right">Rank</th></tr></thead><tbody id="pxb"></tbody></table>
+    </div>
+
+    <!-- Nearby pane -->
+    <div class="clpane" data-pane="nearby">
+      <div class="sechd">&#128205; Nearby Clinics
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button class="abtn" id="nb-25" style="font-size:11px;padding:5px 10px;background:#1a2035">25 mi</button>
+          <button class="abtn" id="nb-50" style="font-size:11px;padding:5px 10px;background:#e8eaed;color:#1a2035">50 mi</button>
+        </div>
+      </div>
+      <div id="nb-map" style="height:320px;border-radius:10px;overflow:hidden;border:1px solid #e8eaed;margin-bottom:14px;background:#f0f0f0;display:flex;align-items:center;justify-content:center">
+        <div style="color:#aaa;font-size:13px">Loading map...</div>
+      </div>
+      <div id="nb-list" style="display:flex;flex-direction:column;gap:6px"></div>
     </div>
 
     <!-- Ask AI (inline chat scoped to this clinic) -->
@@ -2063,6 +2078,7 @@ document.querySelectorAll('.cltab').forEach(function(ct){
     if(ct.dataset.pane==='mynotes')loadPrivateClinicNotes();
     if(ct.dataset.pane==='mytasks')loadPrivateClinicTasks();
     if(ct.dataset.pane==='shared')loadNotes(CUR);
+    if(ct.dataset.pane==='nearby')loadNearby();
     if(ct.dataset.pane==='askai'){
       setTimeout(function(){var inp=document.getElementById('cl-chat-inp');if(inp)inp.focus();},150);
     }
@@ -6865,6 +6881,252 @@ function orInit(){
   if(rb&&!rb.dataset.bound){rb.addEventListener('click',orRollClinics);rb.dataset.bound='1';}
 }
 
+
+
+
+// ============================================================
+// NEARBY MAP MODULE — geocodes on the fly via Google Maps API
+// ============================================================
+var MAPS_KEY = 'AIzaSyAm7Uvx3wwX4QA9RgXwnQF6AdJxA4neKBU';
+var NB_RADIUS = 25;
+var NB_GEO_CACHE = {}; // clinic_name -> {lat,lng}
+
+function nbDistance(lat1, lng1, lat2, lng2) {
+  var R = 3958.8;
+  var dLat = (lat2-lat1)*Math.PI/180;
+  var dLng = (lng2-lng1)*Math.PI/180;
+  var a = Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function nbLoadMapsApi(cb) {
+  if (window.google && window.google.maps) { cb(); return; }
+  if (window._mapsLoading) { (window._mapsCallbacks=window._mapsCallbacks||[]).push(cb); return; }
+  window._mapsLoading = true;
+  window._mapsCallbacks = [cb];
+  window.nbMapsReady = function() {
+    window._mapsLoading = false;
+    (window._mapsCallbacks||[]).forEach(function(fn){fn();});
+    window._mapsCallbacks = [];
+  };
+  var s = document.createElement('script');
+  s.src = 'https://maps.googleapis.com/maps/api/js?key='+MAPS_KEY+'&callback=nbMapsReady';
+  s.async = true; s.defer = true;
+  document.head.appendChild(s);
+}
+
+function nbGeocodeAddress(address) {
+  return new Promise(function(resolve) {
+    if (!window.google || !google.maps) { resolve(null); return; }
+    var gc = new google.maps.Geocoder();
+    gc.geocode({address: address}, function(results, status) {
+      if (status === 'OK' && results[0]) {
+        var loc = results[0].geometry.location;
+        resolve({lat: loc.lat(), lng: loc.lng()});
+      } else {
+        resolve(null);
+      }
+    });
+  });
+}
+
+function nbGetRevenue(name) {
+  var rows = D[name] || [];
+  var r24=0,r25=0,r26=0;
+  rows.forEach(function(r){if(r[0]===4)r24+=r[2];else if(r[0]===5)r25+=r[2];else r26+=r[2];});
+  return {r24:r24,r25:r25,r26:r26};
+}
+
+function nbGetStatus(rev) {
+  if (rev.r26>0) return {label:'Active',color:'#16a34a',bg:'#dcfce7'};
+  if (rev.r25>0||rev.r24>0) return {label:'Lapsed',color:'#dc2626',bg:'#fee2e2'};
+  return {label:'No data',color:'#aaa',bg:'#f3f4f6'};
+}
+
+async function loadNearby() {
+  if (!CUR) return;
+  var mapEl = document.getElementById('nb-map');
+  var listEl = document.getElementById('nb-list');
+  mapEl.style.display = 'flex';
+  mapEl.innerHTML = '<div style="color:#aaa;font-size:13px;margin:auto">Geocoding address...</div>';
+  listEl.innerHTML = '';
+
+  // Get current clinic address
+  var ci = C.indexOf(CUR);
+  var ka = KA[ci] || [];
+  var street = (ka[4]||'').trim();
+  var city   = (ka[5]||'').trim();
+  var address = [street,city].filter(Boolean).join(', ');
+
+  if (!address) {
+    mapEl.innerHTML = '<div style="color:#888;font-size:13px;margin:auto;padding:20px;text-align:center">No address on file for this clinic.</div>';
+    return;
+  }
+
+  // Load Maps API first, then geocode
+  nbLoadMapsApi(async function() {
+    // Geocode current clinic
+    var curGeo = NB_GEO_CACHE[CUR];
+    if (!curGeo) {
+      curGeo = await nbGeocodeAddress(address);
+      if (curGeo) NB_GEO_CACHE[CUR] = curGeo;
+    }
+
+    if (!curGeo) {
+      mapEl.innerHTML = '<div style="color:#dc2626;font-size:13px;margin:auto;padding:20px;text-align:center">Could not geocode address: '+address+'</div>';
+      return;
+    }
+
+    mapEl.innerHTML = '<div style="color:#aaa;font-size:13px;margin:auto">Finding nearby clinics...</div>';
+
+    // Find clinics with addresses in KA, geocode them
+    // Use bounding box pre-filter (~1 deg lat/lng = ~70mi) to limit geocoding calls
+    var candidates = [];
+    for (var i = 0; i < C.length; i++) {
+      if (C[i] === CUR) continue;
+      var k = KA[i] || [];
+      var s2 = (k[4]||'').trim();
+      var c2 = (k[5]||'').trim();
+      if (!s2 && !c2) continue;
+      // Only include clinics we haven't geocoded yet or already have cached
+      var addr2 = [s2,c2].filter(Boolean).join(', ');
+      candidates.push({idx:i, name:C[i], address:addr2});
+    }
+
+    // Geocode candidates in batches, checking distance as we go
+    // Limit to 200 geocode calls per load (enough for 50mi radius in most areas)
+    var nearby = [];
+    var geocoded = 0;
+    var MAX_GEOCODE = 200;
+
+    // First pass: use already-cached locations
+    for (var j = 0; j < candidates.length; j++) {
+      var cand = candidates[j];
+      if (NB_GEO_CACHE[cand.name]) {
+        var geo2 = NB_GEO_CACHE[cand.name];
+        var dist = nbDistance(curGeo.lat, curGeo.lng, geo2.lat, geo2.lng);
+        if (dist <= NB_RADIUS) {
+          cand.lat = geo2.lat; cand.lng = geo2.lng; cand.dist = dist;
+          nearby.push(cand);
+        }
+      }
+    }
+
+    // Second pass: geocode uncached ones (limited)
+    var uncached = candidates.filter(function(c2){ return !NB_GEO_CACHE[c2.name]; });
+    for (var k2 = 0; k2 < uncached.length && geocoded < MAX_GEOCODE; k2++) {
+      var cand2 = uncached[k2];
+      var geo3 = await nbGeocodeAddress(cand2.address);
+      geocoded++;
+      if (geo3) {
+        NB_GEO_CACHE[cand2.name] = geo3;
+        var dist2 = nbDistance(curGeo.lat, curGeo.lng, geo3.lat, geo3.lng);
+        if (dist2 <= NB_RADIUS) {
+          cand2.lat = geo3.lat; cand2.lng = geo3.lng; cand2.dist = dist2;
+          nearby.push(cand2);
+        }
+      }
+      // Small delay to avoid rate limiting
+      if (geocoded % 10 === 0) await new Promise(function(r){setTimeout(r,50);});
+    }
+
+    nearby.sort(function(a,b){return a.dist-b.dist;});
+    nearby = nearby.slice(0, 30);
+
+    // Render map
+    mapEl.innerHTML = '';
+    mapEl.style.display = 'block';
+    var map = new google.maps.Map(mapEl, {
+      center: {lat: curGeo.lat, lng: curGeo.lng},
+      zoom: NB_RADIUS <= 25 ? 10 : 9,
+      mapTypeControl: false, streetViewControl: false, fullscreenControl: true,
+    });
+
+    // Current clinic — blue
+    new google.maps.Marker({
+      position: {lat: curGeo.lat, lng: curGeo.lng},
+      map: map, title: CUR,
+      icon: {path: google.maps.SymbolPath.CIRCLE, scale: 10, fillColor:'#1a2035', fillOpacity:1, strokeColor:'#fff', strokeWeight:2},
+      zIndex: 999
+    });
+
+    var infoWin = new google.maps.InfoWindow();
+
+    nearby.forEach(function(loc) {
+      var rev = nbGetRevenue(loc.name);
+      var st = nbGetStatus(rev);
+      var ka2 = KA[loc.idx] || [];
+      var doctor = ka2[3] || '';
+      var marker = new google.maps.Marker({
+        position: {lat: loc.lat, lng: loc.lng},
+        map: map, title: loc.name,
+        icon: {path: google.maps.SymbolPath.CIRCLE, scale: 7, fillColor: st.color, fillOpacity:0.85, strokeColor:'#fff', strokeWeight:1.5}
+      });
+      marker.addListener('click', function() {
+        infoWin.setContent(
+          '<div style="font-size:13px;min-width:180px;font-family:-apple-system,sans-serif">'+
+          '<div style="font-weight:700;color:#1a2035;margin-bottom:4px">'+loc.name+'</div>'+
+          (doctor?'<div style="font-size:11px;color:#666;margin-bottom:4px">'+doctor+'</div>':'')+
+          '<span style="background:'+st.color+';color:#fff;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600">'+st.label+'</span>'+
+          '<div style="font-size:12px;color:#555;margin-top:6px">2025: $'+Math.round(rev.r25).toLocaleString()+' &nbsp;|&nbsp; 2026: $'+Math.round(rev.r26).toLocaleString()+'</div>'+
+          '<div style="font-size:11px;color:#aaa;margin-top:3px">'+loc.dist.toFixed(1)+' mi away</div>'+
+          '<button onclick="openPanel('+loc.idx+')" style="margin-top:8px;padding:5px 12px;background:#1a2035;color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;width:100%">View Profile &#8594;</button>'+
+          '</div>'
+        );
+        infoWin.open(map, marker);
+      });
+    });
+
+    // List
+    nbRenderList(nearby, listEl);
+  });
+}
+
+function nbRenderList(nearby, container) {
+  if (!nearby.length) {
+    container.innerHTML = '<div style="color:#aaa;font-size:13px;text-align:center;padding:20px">No clinics found within '+NB_RADIUS+' miles.</div>';
+    return;
+  }
+  nearby.forEach(function(loc) {
+    var rev = nbGetRevenue(loc.name);
+    var st = nbGetStatus(rev);
+    var ka2 = KA[loc.idx] || [];
+    var doctor = ka2[3] || '';
+    var phone = ka2[2] || '';
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 14px;background:#fff;border:1px solid #e8eaed;border-radius:8px;cursor:pointer;margin-bottom:4px';
+    row.innerHTML =
+      '<div style="width:8px;height:8px;border-radius:50%;background:'+st.color+';flex-shrink:0"></div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-size:13px;font-weight:600;color:#1a2035;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+loc.name+'</div>'+
+        '<div style="font-size:11px;color:#888">'+(doctor||'')+(phone?' &middot; '+phone:'')+' &middot; '+loc.dist.toFixed(1)+' mi</div>'+
+        '<div style="font-size:11px;color:#555;margin-top:2px">2025: $'+Math.round(rev.r25).toLocaleString()+' &nbsp;&middot;&nbsp; 2026: $'+Math.round(rev.r26).toLocaleString()+'</div>'+
+      '</div>'+
+      '<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:'+st.bg+';color:'+st.color+';white-space:nowrap">'+st.label+'</span>';
+    row.addEventListener('mouseenter', function(){this.style.background='#f7f8fa';});
+    row.addEventListener('mouseleave', function(){this.style.background='#fff';});
+    row.addEventListener('click', function(){openPanel(loc.idx);});
+    container.appendChild(row);
+  });
+}
+
+// Radius toggle buttons — wired in loadNearby but also handle here
+document.addEventListener('click', function(e) {
+  if (e.target.id === 'nb-25') {
+    NB_RADIUS = 25;
+    e.target.style.background='#1a2035'; e.target.style.color='#fff';
+    var btn50 = document.getElementById('nb-50');
+    if (btn50) { btn50.style.background='#e8eaed'; btn50.style.color='#1a2035'; }
+    loadNearby();
+  }
+  if (e.target.id === 'nb-50') {
+    NB_RADIUS = 50;
+    e.target.style.background='#1a2035'; e.target.style.color='#fff';
+    var btn25 = document.getElementById('nb-25');
+    if (btn25) { btn25.style.background='#e8eaed'; btn25.style.color='#1a2035'; }
+    loadNearby();
+  }
+});
 
 </script>
 </body>
