@@ -6581,7 +6581,7 @@ function initAiChats(){
     const now = Date.now();
     for(let ci=0;ci<C.length;ci++){
       if(isExcluded(C[ci])) continue;
-      const txns = D[ci]||[];
+      const txns = D[C[ci]]||[];
       if(!txns.length) continue;
       const rev={2024:0,2025:0,2026:0};
       const prods=new Map();
