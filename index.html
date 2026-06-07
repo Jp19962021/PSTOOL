@@ -1824,7 +1824,8 @@ var TAB_CATALOG=[
   {key:'notestasks',  label:'My Notes & Tasks',  adminOnly:false},
   {key:'admin',       label:'Admin',             adminOnly:true},
   {key:'chatbot',     label:'Chat Bot',          adminOnly:true},
-  {key:'ar',          label:'Receivables',       adminOnly:true}
+  {key:'ar',          label:'Receivables',       adminOnly:true},
+  {key:'outreach',    label:'Outreach',          adminOnly:true}
 ];
 
 // Resolve whether the current user (or a given rep record) can see a given tab.
@@ -6915,16 +6916,8 @@ Return ONLY valid JSON: {"subject":"...","body":"..."}`;
     window.open(url);
   };
 
-  // ── Show outreach tab only for admin ─────────────────────────
+  // ── Init outreach UI bindings (tab visibility handled by applyTabVisibility) ──
   function initOutreach(){
-    // Show tab for admin role
-    const role = window._psRole||'';
-    if(role==='admin'||role==='Admin'){
-      const t=document.getElementById('outreachtab');
-      if(t) t.style.display='';
-      document.querySelectorAll('.mob-nav-tab[data-page="outreach"]').forEach(el=>el.style.display='');
-    }
-
     // Load Google Identity Services
     if(!document.getElementById('gsi-script')){
       const s=document.createElement('script');
@@ -6935,18 +6928,16 @@ Return ONLY valid JSON: {"subject":"...","body":"..."}`;
       s.onload=initGoogleAuth;
       document.head.appendChild(s);
     }
-
-    document.getElementById('or-gmail-btn').addEventListener('click',connectGmail);
-    document.getElementById('or-roll-btn').addEventListener('click',rollClinics);
-    document.getElementById('or-gen-btn').addEventListener('click',generateAll);
+    var gb=document.getElementById('or-gmail-btn');
+    var rb=document.getElementById('or-roll-btn');
+    var genb=document.getElementById('or-gen-btn');
+    if(gb)gb.addEventListener('click',connectGmail);
+    if(rb)rb.addEventListener('click',rollClinics);
+    if(genb)genb.addEventListener('click',generateAll);
   }
 
-  // Wait for page data to be ready
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded', initOutreach);
-  } else {
-    setTimeout(initOutreach, 800);
-  }
+  // Run after login (ME is set)
+  setTimeout(initOutreach, 1200);
 })();
 
 </script>
