@@ -857,6 +857,7 @@ table.ptbl tr:last-child td{border-bottom:none}
     <div class="tab" data-page="winback">&#128257; Win-Back</div>
     <div class="tab" data-page="atrisk">&#9888; At-Risk</div>
     <div class="tab" data-page="churn">&#128302; Churn</div>
+    <div class="tab admin-tab" data-page="outreach" id="outreachtab" style="display:none">&#9993; Outreach</div>
     <div class="tab admin-tab" data-page="trends" id="trtab" style="display:none">&#128200; Trends</div>
     <div class="tab admin-tab" data-page="actionplan" id="aptab" style="display:none">&#127919; Action Plan</div>
     <div class="tab admin-tab" data-page="drugsearch" id="dstab" style="display:none">&#128269; Drug Search</div>
@@ -880,6 +881,7 @@ table.ptbl tr:last-child td{border-bottom:none}
     <div class="mob-nav-tab" data-page="winback">&#128257; Win-Back</div>
     <div class="mob-nav-tab" data-page="atrisk">&#9888; At-Risk</div>
     <div class="mob-nav-tab" data-page="churn">&#128302; Churn Predictor</div>
+    <div class="mob-nav-tab admin-tab" data-page="outreach" style="display:none">&#9993; Outreach</div>
     <div class="mob-nav-tab" data-page="notestasks">&#128221; Notes &amp; Tasks</div>
     <div class="mob-nav-sep admin-tab" style="display:none">— Admin —</div>
     <div class="mob-nav-tab admin-tab" data-page="trends" style="display:none">&#128200; Trends</div>
@@ -928,6 +930,64 @@ table.ptbl tr:last-child td{border-bottom:none}
     <div class="sh">&#128257; Revenue in 2024/2025 &mdash; Zero in 2026 <span class="shc" id="wbc"></span></div>
     <table class="mt" style="width:100%"><thead><tr><th class="sort-th" data-sort-tbl="wb" data-sort="clinic">Clinic<span class="sort-icon"></span></th><th class="sort-th" data-sort-tbl="wb" data-sort="doctor">Doctor<span class="sort-icon"></span></th><th class="sort-th" data-sort-tbl="wb" data-sort="rep">Rep<span class="sort-icon"></span></th><th class="sort-th" data-sort-tbl="wb" data-sort="last">Last Order<span class="sort-icon"></span></th><th>Phone</th><th class="sort-th" data-sort-tbl="wb" data-sort="rev" style="text-align:right">Lost Revenue<span class="sort-icon"></span></th><th></th></tr></thead><tbody id="wbb"></tbody></table>
   </div>
+</div></div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     OUTREACH TAB — Gmail Draft Generator
+     Admin-only. Pulls 50 random lapsed clinics, generates
+     personalized emails via Claude AI, saves to Gmail Drafts.
+═══════════════════════════════════════════════════════════════ -->
+<div id="page-outreach" class="page"><div class="container">
+
+  <!-- Header + Auth bar -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+    <div>
+      <h2 style="font-size:20px;font-weight:800;color:#1a2035;margin:0">&#9993; Outreach Drafts</h2>
+      <p style="font-size:12px;color:#888;margin:4px 0 0">Generates 50 personalized emails → saves to your Gmail Drafts</p>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <div id="or-gmail-status" style="font-size:12px;color:#888">Not connected to Gmail</div>
+      <button id="or-gmail-btn" class="abtn" style="background:#db4437;color:#fff">&#128274; Connect Gmail</button>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div style="background:#fff;border:1px solid #e8eaed;border-radius:12px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+    <div>
+      <label style="font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Pool</label>
+      <select id="or-pool" style="padding:7px 10px;border:1.5px solid #e0e3ea;border-radius:8px;font-size:12px;outline:none">
+        <option value="all">All lapsed (any time)</option>
+        <option value="recent">Lapsed in 2025 only</option>
+        <option value="big">Lost $1,000+ revenue</option>
+      </select>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <button id="or-roll-btn" class="abtn">&#127922; Roll 50 Clinics</button>
+      <button id="or-gen-btn" class="abtn" style="background:#1a2035;display:none">&#9889; Generate All Drafts</button>
+    </div>
+  </div>
+
+  <!-- Progress bar -->
+  <div id="or-progress-wrap" style="display:none;background:#fff;border:1px solid #e8eaed;border-radius:10px;padding:14px 18px;margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#555;margin-bottom:8px">
+      <span id="or-progress-label">Generating drafts...</span>
+      <span id="or-progress-count">0 / 50</span>
+    </div>
+    <div style="background:#eef0f5;border-radius:6px;height:8px;overflow:hidden">
+      <div id="or-progress-bar" style="height:100%;background:linear-gradient(90deg,#1a2035,#4ade9a);width:0%;transition:width .3s;border-radius:6px"></div>
+    </div>
+  </div>
+
+  <!-- Clinic cards grid -->
+  <div id="or-grid" style="display:grid;grid-template-columns:1fr;gap:10px"></div>
+
+  <!-- Empty state -->
+  <div id="or-empty" style="text-align:center;padding:60px 20px;color:#aaa">
+    <div style="font-size:48px;margin-bottom:12px">&#9993;</div>
+    <div style="font-size:15px;font-weight:600;color:#555;margin-bottom:6px">Ready to roll</div>
+    <div style="font-size:13px">Connect Gmail, then hit "Roll 50 Clinics" to get started</div>
+  </div>
+
 </div></div>
 
 <div id="page-atrisk" class="page"><div class="container">
@@ -6476,6 +6536,419 @@ function initAiChats(){
     document.getElementById('ai-page-new').addEventListener('click',aiPageChat.newConversation);
   }
 }
+
+// ═══════════════════════════════════════════════════════════════
+// OUTREACH MODULE — Gmail Draft Generator
+// ═══════════════════════════════════════════════════════════════
+(function(){
+  const GMAIL_CLIENT_ID = '34261178989-innajk10hom9lm5b3a15juq3fiu9cmq0.apps.googleusercontent.com';
+  const GMAIL_SCOPE     = 'https://www.googleapis.com/auth/gmail.compose';
+  const CLAUDE_KEY      = 'sk-ant-api03-placeholder'; // set via ANTHROPIC_KEY in worker or swap in
+  const EPOCH_BASE      = new Date('2024-01-01').getTime();
+  const EXCLUDED        = ['vetcove','pet parent','petscript direct','usc','shelters united','vha','vethubrx','mike salsbury','serena patterson'];
+  const DRUG_SHORT      = {
+    'pimobendan':'pimo','gabapentin':'gaba','trazodone':'traz','methocarbamol':'metho',
+    'cyclosporine':'cyclo','doxycycline':'doxy','tilomidin':'tilo','prednisolone':'pred',
+    'fenbendazole':'fenbend','ektaban':'EKT','metronidazole':'metro','omeprazole':'omep',
+    'atenolol':'aten','furosemide':'lasix','amoxicillin':'amox','clindamycin':'clinda'
+  };
+
+  let _tokenClient = null;
+  let _accessToken = null;
+  let _orClinics   = [];   // current 50
+  let _drafts      = {};   // clinicIdx → {subject, body, gmailDraftId, status}
+
+  // ── helpers ─────────────────────────────────────────────────
+  function epochToDate(ep){ return ep ? new Date(EPOCH_BASE + ep*86400000) : null; }
+  function epochStr(ep){
+    const d = epochToDate(ep);
+    return d ? d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+  }
+  function fmt$(n){ return '$'+Math.round(n).toLocaleString(); }
+  function normName(s){ return (s||'').replace(/\*/g,'').toLowerCase().trim(); }
+  function isExcluded(n){ const nn=normName(n); return EXCLUDED.some(e=>nn.includes(e)); }
+  function drugShort(name){
+    const lc = (name||'').toLowerCase();
+    for(const [k,v] of Object.entries(DRUG_SHORT)){ if(lc.includes(k)) return v; }
+    // return first meaningful word
+    return (name||'').split(' ')[0];
+  }
+
+  // ── Build aggregated clinic data from D/P/C/KA/REPS ─────────
+  function buildLapsed(pool){
+    const result = [];
+    const now = Date.now();
+    for(let ci=0;ci<C.length;ci++){
+      if(isExcluded(C[ci])) continue;
+      const txns = D[ci]||[];
+      if(!txns.length) continue;
+      const rev={2024:0,2025:0,2026:0};
+      const prods=new Map();
+      let lastEp=0;
+      for(const [yr,pid,revenue,ep] of txns){
+        const y=2020+yr;
+        rev[y]=(rev[y]||0)+revenue;
+        if(ep>lastEp) lastEp=ep;
+        if(!prods.has(pid)) prods.set(pid,{rev:{2024:0,2025:0,2026:0},lastEp:0});
+        const pd=prods.get(pid);
+        pd.rev[y]=(pd.rev[y]||0)+revenue;
+        if(ep>pd.lastEp) pd.lastEp=ep;
+      }
+      // must be lapsed: has 2024 or 2025 rev, zero 2026
+      if(rev[2026]>0) continue;
+      if(!rev[2024]&&!rev[2025]) continue;
+
+      const lostRev = rev[2025]||rev[2024]||0;
+      if(pool==='big' && lostRev<1000) continue;
+      if(pool==='recent' && !rev[2025]) continue;
+
+      const ka=KA[ci]||[];
+      const lastDate = epochToDate(lastEp);
+      const daysSince = lastDate ? Math.round((now-lastDate.getTime())/86400000) : 9999;
+
+      // stopped products
+      const stopped=[];
+      const active=[];
+      for(const [pid,pd] of prods){
+        if(pd.rev[2026]>0) active.push({name:P[pid],rev:pd.rev});
+        else if(pd.rev[2025]>0||pd.rev[2024]>0) stopped.push({name:P[pid],rev:pd.rev,lastEp:pd.lastEp});
+      }
+      stopped.sort((a,b)=>(b.rev[2025]||b.rev[2024])-(a.rev[2025]||a.rev[2024]));
+
+      result.push({
+        ci, name:C[ci],
+        rep:REPS[ka[0]]||'',
+        email:ka[1]||'',
+        phone:ka[2]||'',
+        doctor:ka[3]||'',
+        street:ka[4]||'',
+        city:ka[5]||'',
+        lastEp, lastDate, daysSince,
+        rev, lostRev, stopped, active, prods
+      });
+    }
+    return result;
+  }
+
+  // Weighted random sample — higher lostRev = more likely
+  function weightedSample(arr, n){
+    if(arr.length<=n) return [...arr];
+    const total = arr.reduce((s,c)=>s+Math.sqrt(c.lostRev+1),0);
+    const chosen=new Set();
+    const out=[];
+    let attempts=0;
+    while(out.length<n && attempts<n*20){
+      attempts++;
+      let r=Math.random()*total, acc=0;
+      for(const c of arr){
+        acc+=Math.sqrt(c.lostRev+1);
+        if(r<=acc && !chosen.has(c.ci)){
+          chosen.add(c.ci);
+          out.push(c);
+          break;
+        }
+      }
+    }
+    return out;
+  }
+
+  // ── Roll 50 ──────────────────────────────────────────────────
+  function rollClinics(){
+    const pool = document.getElementById('or-pool').value;
+    const lapsed = buildLapsed(pool);
+    _orClinics = weightedSample(lapsed, 50);
+    _drafts = {};
+    renderGrid();
+    document.getElementById('or-gen-btn').style.display = _orClinics.length ? '' : 'none';
+    document.getElementById('or-empty').style.display   = _orClinics.length ? 'none' : '';
+  }
+
+  // ── Render clinic cards ──────────────────────────────────────
+  function renderGrid(){
+    const grid = document.getElementById('or-grid');
+    grid.innerHTML = '';
+    _orClinics.forEach((c,i)=>{
+      const d = _drafts[c.ci];
+      const statusIcon = !d ? '⬜' : d.status==='pending' ? '⏳' : d.status==='done' ? '✅' : '❌';
+      const stoppedStr = c.stopped.slice(0,3).map(s=>drugShort(s.name)).join(', ')||'—';
+      const card = document.createElement('div');
+      card.className='or-card';
+      card.id=`or-card-${c.ci}`;
+      card.style.cssText='background:#fff;border:1px solid #e8eaed;border-radius:12px;padding:0;overflow:hidden;transition:box-shadow .15s';
+      card.innerHTML=`
+        <div class="or-card-top" style="padding:14px 18px;display:flex;align-items:flex-start;gap:12px;cursor:pointer" onclick="orToggle(${c.ci})">
+          <div style="font-size:18px;flex-shrink:0;margin-top:2px">${statusIcon}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:700;color:#1a2035;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>
+            <div style="font-size:11px;color:#888;margin-top:2px">${c.doctor||'No doctor'} &bull; Last order: ${epochStr(c.lastEp)} (${c.daysSince}d ago) &bull; Lost: ${fmt$(c.lostRev)}</div>
+            <div style="font-size:11px;color:#dc2626;margin-top:2px">Stopped: ${stoppedStr}</div>
+          </div>
+          <div style="font-size:11px;color:#aaa;flex-shrink:0">#${i+1}</div>
+        </div>
+        <div id="or-expand-${c.ci}" style="display:none;border-top:1px solid #edf0f5;padding:16px 18px;background:#fafbfc">
+          ${d ? renderDraftHTML(c,d) : `<div style="font-size:12px;color:#aaa;text-align:center;padding:8px">Hit "Generate All Drafts" to create email</div>`}
+        </div>`;
+      grid.appendChild(card);
+    });
+  }
+
+  function renderDraftHTML(c, d){
+    if(d.status==='pending') return `<div style="font-size:12px;color:#888;text-align:center;padding:8px">⏳ Generating...</div>`;
+    if(d.status==='error')   return `<div style="font-size:12px;color:#dc2626;padding:8px">❌ Error: ${d.error}</div>`;
+    const savedBadge = d.gmailDraftId
+      ? `<span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px">✓ Saved to Gmail Drafts</span>`
+      : `<span style="background:#fef3c7;color:#92400e;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px">⚠ Not yet saved</span>`;
+    return `
+      <div style="margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        ${savedBadge}
+        ${c.email ? `<span style="font-size:11px;color:#555">To: ${c.email}</span>` : `<span style="font-size:11px;color:#dc2626">⚠ No email on file</span>`}
+      </div>
+      <div style="margin-bottom:6px">
+        <div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:3px">Subject</div>
+        <div style="font-size:12px;color:#1a2035;background:#fff;border:1px solid #e0e3ea;border-radius:6px;padding:7px 10px">${d.subject}</div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:3px">Body</div>
+        <div style="font-size:12px;color:#333;background:#fff;border:1px solid #e0e3ea;border-radius:6px;padding:10px 12px;white-space:pre-wrap;line-height:1.6;max-height:220px;overflow-y:auto">${d.body}</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${!d.gmailDraftId && c.email ? `<button class="abtn" style="font-size:11px;padding:6px 12px" onclick="orSaveDraft(${c.ci})">&#128228; Save to Gmail Drafts</button>` : ''}
+        ${c.email ? `<button class="abtn" style="font-size:11px;padding:6px 12px;background:#f3f4f6;color:#555" onclick="orMailto(${c.ci})">&#128231; Open in Gmail</button>` : ''}
+      </div>`;
+  }
+
+  window.orToggle = function(ci){
+    const el = document.getElementById(`or-expand-${ci}`);
+    if(el) el.style.display = el.style.display==='none' ? '' : 'none';
+  };
+
+  // ── Generate all drafts ──────────────────────────────────────
+  async function generateAll(){
+    const btn = document.getElementById('or-gen-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Generating...';
+    document.getElementById('or-progress-wrap').style.display = '';
+
+    let done = 0;
+    const updateProgress = ()=>{
+      done++;
+      const pct = Math.round((done/_orClinics.length)*100);
+      document.getElementById('or-progress-bar').style.width = pct+'%';
+      document.getElementById('or-progress-count').textContent = `${done} / ${_orClinics.length}`;
+    };
+
+    // batch in groups of 5 to avoid rate limits
+    const BATCH = 5;
+    for(let i=0;i<_orClinics.length;i+=BATCH){
+      const batch = _orClinics.slice(i,i+BATCH);
+      await Promise.all(batch.map(async c=>{
+        _drafts[c.ci]={status:'pending'};
+        refreshCard(c.ci);
+        try{
+          const {subject,body} = await generateEmail(c);
+          _drafts[c.ci]={status:'generated',subject,body,gmailDraftId:null};
+          // auto-save to Gmail if connected and email exists
+          if(_accessToken && c.email){
+            try{
+              const id = await saveGmailDraft(c.email, subject, body);
+              _drafts[c.ci].gmailDraftId = id;
+              _drafts[c.ci].status = 'done';
+            }catch(e){
+              _drafts[c.ci].status = 'generated'; // generated but not saved
+            }
+          } else {
+            _drafts[c.ci].status = 'done';
+          }
+        }catch(e){
+          _drafts[c.ci]={status:'error',error:e.message};
+        }
+        updateProgress();
+        refreshCard(c.ci);
+      }));
+    }
+
+    btn.disabled = false;
+    btn.textContent = '⚡ Regenerate';
+    document.getElementById('or-progress-label').textContent = 'Complete!';
+  }
+
+  function refreshCard(ci){
+    const c = _orClinics.find(x=>x.ci===ci);
+    if(!c) return;
+    const d = _drafts[ci];
+    // update status icon
+    const top = document.querySelector(`#or-card-${ci} .or-card-top`);
+    if(top){
+      const icon = top.querySelector('div:first-child');
+      if(icon) icon.textContent = !d?'⬜':d.status==='pending'?'⏳':d.status==='done'||d.status==='generated'?'✅':'❌';
+    }
+    // refresh expanded area
+    const exp = document.getElementById(`or-expand-${ci}`);
+    if(exp && exp.style.display!=='none'){
+      exp.innerHTML = renderDraftHTML(c, d);
+    }
+  }
+
+  // ── Claude API: generate email ───────────────────────────────
+  async function generateEmail(c){
+    const stoppedDrugs = c.stopped.slice(0,4).map(s=>{
+      const short = drugShort(s.name);
+      const rev = s.rev[2025]||s.rev[2024]||0;
+      return `${short} (was ${fmt$(rev)}/yr)`;
+    }).join(', ') || 'several products';
+
+    const doctor = c.doctor ? c.doctor.replace(/^Dr\.?\s*/i,'') : 'there';
+    const clinicName = c.name.replace(/\*/g,'').trim();
+    const lostStr = fmt$(c.lostRev);
+    const lastStr = epochStr(c.lastEp);
+
+    const prompt = `You write short, direct outreach emails in Alex Hormozi style. No fluff, no "I hope this finds you well", get to the point fast. Short sentences. Sound like a real person, not a marketer.
+
+Write a winback email from Jonathan at PetScript pharmacy to Dr. ${doctor} at ${clinicName}.
+
+Facts:
+- They stopped ordering around ${lastStr}
+- They used to spend ~${lostStr}/year with us
+- Stopped products: ${stoppedDrugs}
+- We make compounded vet medications (not retail)
+
+Rules:
+- Subject line: "Hey Dr. ${doctor} - quick question"
+- 3-4 sentences max for the body
+- Mention 1-2 specific stopped drugs by shorthand name
+- End with one simple question or CTA
+- Sign off as "Jonathan, PetScript"
+- No bullet points, no headers, just plain text
+
+Return ONLY valid JSON: {"subject":"...","body":"..."}`;
+
+    // Call Claude via the existing Cloudflare worker proxy (avoids CORS/key exposure)
+    const resp = await fetch('https://fragrant-cloud-6ef2.jp-d4e.workers.dev/claude-proxy', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-API-Key':'petscript2026'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:400,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+
+    if(!resp.ok) throw new Error(`Claude API ${resp.status}`);
+    const data = await resp.json();
+    const text = (data.content||[]).map(b=>b.text||'').join('');
+    const clean = text.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(clean);
+    if(!parsed.subject||!parsed.body) throw new Error('Bad response format');
+    return parsed;
+  }
+
+  // ── Gmail OAuth ──────────────────────────────────────────────
+  function initGoogleAuth(){
+    if(typeof google==='undefined'||!google.accounts) return;
+    _tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GMAIL_CLIENT_ID,
+      scope: GMAIL_SCOPE,
+      callback:(resp)=>{
+        if(resp.error){ alert('Gmail auth failed: '+resp.error); return; }
+        _accessToken = resp.access_token;
+        document.getElementById('or-gmail-status').textContent='✓ Connected as jp@petscript.net';
+        document.getElementById('or-gmail-status').style.color='#16a34a';
+        document.getElementById('or-gmail-btn').textContent='&#128275; Reconnect Gmail';
+        document.getElementById('or-gmail-btn').style.background='#16a34a';
+      }
+    });
+  }
+
+  function connectGmail(){
+    if(!_tokenClient){ alert('Google auth not loaded yet — refresh and try again.'); return; }
+    _tokenClient.requestAccessToken({prompt:'consent'});
+  }
+
+  // ── Save draft to Gmail ──────────────────────────────────────
+  async function saveGmailDraft(toEmail, subject, body){
+    if(!_accessToken) throw new Error('Not authenticated with Gmail');
+    // RFC 2822 email
+    const from    = 'jp@petscript.net';
+    const raw     = [`From: Jonathan @ PetScript <${from}>`,
+                     `To: ${toEmail}`,
+                     `Subject: ${subject}`,
+                     `Content-Type: text/plain; charset=utf-8`,
+                     ``,
+                     body].join('\r\n');
+    const encoded = btoa(unescape(encodeURIComponent(raw)))
+                      .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+
+    const resp = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/drafts',{
+      method:'POST',
+      headers:{
+        'Authorization':'Bearer '+_accessToken,
+        'Content-Type':'application/json'
+      },
+      body: JSON.stringify({message:{raw:encoded}})
+    });
+    if(!resp.ok){
+      const e=await resp.json();
+      throw new Error(e.error?.message||'Gmail save failed');
+    }
+    const data = await resp.json();
+    return data.id;
+  }
+
+  window.orSaveDraft = async function(ci){
+    const c = _orClinics.find(x=>x.ci===ci);
+    const d = _drafts[ci];
+    if(!c||!d||!c.email){ alert('No email address on file for this clinic.'); return; }
+    if(!_accessToken){ alert('Connect Gmail first.'); return; }
+    try{
+      const id = await saveGmailDraft(c.email, d.subject, d.body);
+      _drafts[ci].gmailDraftId = id;
+      _drafts[ci].status = 'done';
+      refreshCard(ci);
+    }catch(e){ alert('Error saving draft: '+e.message); }
+  };
+
+  window.orMailto = function(ci){
+    const c = _orClinics.find(x=>x.ci===ci);
+    const d = _drafts[ci];
+    if(!c||!d) return;
+    const url = `mailto:${c.email}?subject=${encodeURIComponent(d.subject)}&body=${encodeURIComponent(d.body)}`;
+    window.open(url);
+  };
+
+  // ── Show outreach tab only for admin ─────────────────────────
+  function initOutreach(){
+    // Show tab for admin role
+    const role = window._psRole||'';
+    if(role==='admin'||role==='Admin'){
+      const t=document.getElementById('outreachtab');
+      if(t) t.style.display='';
+      document.querySelectorAll('.mob-nav-tab[data-page="outreach"]').forEach(el=>el.style.display='');
+    }
+
+    // Load Google Identity Services
+    if(!document.getElementById('gsi-script')){
+      const s=document.createElement('script');
+      s.id='gsi-script';
+      s.src='https://accounts.google.com/gsi/client';
+      s.async=true;
+      s.defer=true;
+      s.onload=initGoogleAuth;
+      document.head.appendChild(s);
+    }
+
+    document.getElementById('or-gmail-btn').addEventListener('click',connectGmail);
+    document.getElementById('or-roll-btn').addEventListener('click',rollClinics);
+    document.getElementById('or-gen-btn').addEventListener('click',generateAll);
+  }
+
+  // Wait for page data to be ready
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', initOutreach);
+  } else {
+    setTimeout(initOutreach, 800);
+  }
+})();
+
 </script>
 </body>
 </html>
