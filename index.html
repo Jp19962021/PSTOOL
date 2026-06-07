@@ -6616,19 +6616,9 @@ function orBuildLapsed(pool){
 }
 
 function orWeightedSample(arr,n){
-  if(arr.length<=n)return arr.slice().sort(function(){return Math.random()-.5;});
-  var total=arr.reduce(function(s,c){return s+Math.sqrt(c.lostRev+1);},0);
-  var chosen={},out=[];
-  var attempts=0;
-  while(out.length<n&&attempts<n*30){
-    attempts++;
-    var rand=Math.random()*total,acc=0;
-    for(var i=0;i<arr.length;i++){
-      acc+=Math.sqrt(arr[i].lostRev+1);
-      if(rand<=acc&&!chosen[arr[i].ci]){chosen[arr[i].ci]=1;out.push(arr[i]);break;}
-    }
-  }
-  return out;
+  // Simple random shuffle, no weighting
+  var shuffled=arr.slice().sort(function(){return Math.random()-.5;});
+  return shuffled.slice(0,n);
 }
 
 function orRollClinics(){
