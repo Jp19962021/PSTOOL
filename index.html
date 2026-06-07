@@ -7012,10 +7012,32 @@ async function loadNearby() {
       }
     }
 
-    // Second pass: geocode uncached ones (limited)
+    // Second pass: geocode uncached ones — same state first, then adjacent
+    // Extract state from current clinic address
+    var curState = (address.match(/,\s*([A-Z]{2})[,\s]/)|| [])[1] || '';
+
+    // Sort uncached: same state first
     var uncached = candidates.filter(function(c2){ return !NB_GEO_CACHE[c2.name]; });
+    if (curState) {
+      uncached.sort(function(a, b) {
+        var aState = (a.address.match(/,\s*([A-Z]{2})[,\s]/)|| [])[1] || '';
+        var bState = (b.address.match(/,\s*([A-Z]{2})[,\s]/)|| [])[1] || '';
+        var aMatch = aState === curState ? 0 : 1;
+        var bMatch = bState === curState ? 0 : 1;
+        return aMatch - bMatch;
+      });
+    }
+
+    mapEl.innerHTML = '<div style="color:#aaa;font-size:13px;margin:auto">Geocoding nearby clinics...</div>';
+    mapEl.style.display = 'flex';
+
     for (var k2 = 0; k2 < uncached.length && geocoded < MAX_GEOCODE; k2++) {
       var cand2 = uncached[k2];
+      // Skip different states once we have enough nearby results
+      if (curState && nearby.length >= 15 && geocoded >= 50) {
+        var candState = (cand2.address.match(/,\s*([A-Z]{2})[,\s]/)|| [])[1] || '';
+        if (candState !== curState) break;
+      }
       var geo3 = await nbGeocodeAddress(cand2.address);
       geocoded++;
       if (geo3) {
@@ -7026,8 +7048,7 @@ async function loadNearby() {
           nearby.push(cand2);
         }
       }
-      // Small delay to avoid rate limiting
-      if (geocoded % 10 === 0) await new Promise(function(r){setTimeout(r,50);});
+      if (geocoded % 10 === 0) await new Promise(function(r){setTimeout(r,30);});
     }
 
     nearby.sort(function(a,b){return a.dist-b.dist;});
