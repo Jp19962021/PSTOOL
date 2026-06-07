@@ -6727,25 +6727,27 @@ async function orGenerateEmail(c){
   var doctor=(c.doctor||'').replace(/^Dr\.?\s*/i,'').split(' ')[0]||'there';
   var clinic=c.name.replace(/\*/g,'').trim();
 
-  var prompt='Write a short winback email from Jonathan at PetScript pharmacy to Dr. '+doctor+' at '+clinic+'.
-
-Style: Alex Hormozi. Short, punchy, direct. No fluff. No opener like "I hope this finds you well." Max 3-4 sentences.
-
-Context:
-- They stopped ordering around '+orEpochStr(c.lastEp)+'
-- They used to spend about '+orFmt(c.lostRev)+' per year
-- Drugs they stopped: '+drugStr+'
-- We make compounded veterinary medications
-
-Instructions:
-- Subject line: Hey Dr. '+doctor+' - quick question
-- Reference the specific stopped drug(s) by shorthand
-- End with one direct question or call to action
-- Sign off: Jonathan, PetScript
-- Plain text only, no bullet points
-
-Respond with ONLY this JSON object, nothing else:
-{"subject":"...","body":"..."}';
+  var prompt=[
+    'Write a short winback email from Jonathan at PetScript pharmacy to Dr. '+doctor+' at '+clinic+'.',
+    '',
+    'Style: Alex Hormozi. Short, punchy, direct. No fluff. No opener. Max 3-4 sentences.',
+    '',
+    'Context:',
+    '- They stopped ordering around '+orEpochStr(c.lastEp),
+    '- They used to spend about '+orFmt(c.lostRev)+' per year',
+    '- Drugs they stopped: '+drugStr,
+    '- We make compounded veterinary medications',
+    '',
+    'Instructions:',
+    '- Subject line: Hey Dr. '+doctor+' - quick question',
+    '- Reference the stopped drug(s) by shorthand name',
+    '- End with one direct question or call to action',
+    '- Sign off: Jonathan, PetScript',
+    '- Plain text only, no bullet points',
+    '',
+    'Respond with ONLY this JSON object, nothing else:',
+    '{"subject":"...","body":"..."}'
+  ].join('\n');
 
   var resp=await fetch('https://fragrant-cloud-6ef2.jp-d4e.workers.dev/claude-proxy',{
     method:'POST',
@@ -6761,16 +6763,13 @@ Respond with ONLY this JSON object, nothing else:
   var jsonStr=m[0];
   // fix unescaped newlines inside strings
   jsonStr=jsonStr.replace(/"body"\s*:\s*"([\s\S]*?)"\s*\}/,function(match,body){
-    var fixed=body.replace(/
-/g,'\n').replace(/
-/g,'\r');
+    var fixed=body.replace(/\n/g,'\\n').replace(/\r/g,'\\r');
     return '"body":"'+fixed+'"}';
   });
   var parsed=JSON.parse(jsonStr);
   if(!parsed.subject||!parsed.body)throw new Error('Missing subject or body');
   // unescape
-  parsed.body=parsed.body.replace(/\n/g,'
-');
+  parsed.body=parsed.body.replace(/\\n/g,'\n');
   return parsed;
 }
 
@@ -6782,8 +6781,7 @@ async function orSaveToGmail(){
   var btn=document.getElementById('or-draft-save');
   btn.disabled=true;btn.textContent='Saving...';
   try{
-    var raw=['From: Jonathan @ PetScript <jp@petscript.net>','To: '+c.email,'Subject: '+c._subject,'Content-Type: text/plain; charset=utf-8','',c._body].join('
-');
+    var raw=['From: Jonathan @ PetScript <jp@petscript.net>','To: '+c.email,'Subject: '+c._subject,'Content-Type: text/plain; charset=utf-8','',c._body].join('\n');
     var encoded=btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
     var resp=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/drafts',{
       method:'POST',
