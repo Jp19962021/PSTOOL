@@ -932,18 +932,13 @@ table.ptbl tr:last-child td{border-bottom:none}
   </div>
 </div></div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     OUTREACH TAB — Gmail Draft Generator
-     Admin-only. Pulls 50 random lapsed clinics, generates
-     personalized emails via Claude AI, saves to Gmail Drafts.
-═══════════════════════════════════════════════════════════════ -->
+<!-- OUTREACH TAB -->
 <div id="page-outreach" class="page"><div class="container">
 
-  <!-- Header + Auth bar -->
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
     <div>
-      <h2 style="font-size:20px;font-weight:800;color:#1a2035;margin:0">&#9993; Outreach Drafts</h2>
-      <p style="font-size:12px;color:#888;margin:4px 0 0">Generates 50 personalized emails → saves to your Gmail Drafts</p>
+      <h2 style="font-size:20px;font-weight:800;color:#1a2035;margin:0">&#9993; Outreach</h2>
+      <p style="font-size:12px;color:#888;margin:4px 0 0">Click a clinic to generate a draft email, then save to Gmail Drafts.</p>
     </div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <div id="or-gmail-status" style="font-size:12px;color:#888">Not connected to Gmail</div>
@@ -952,42 +947,58 @@ table.ptbl tr:last-child td{border-bottom:none}
   </div>
 
   <!-- Controls -->
-  <div style="background:#fff;border:1px solid #e8eaed;border-radius:12px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+  <div style="background:#fff;border:1px solid #e8eaed;border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
     <div>
       <label style="font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Filter</label>
       <select id="or-pool" style="padding:7px 10px;border:1.5px solid #e0e3ea;border-radius:8px;font-size:12px;outline:none">
-        <option value="all">All lapsed — truly random</option>
+        <option value="all">All lapsed — random 50</option>
         <option value="recent">2025 buyers who went dark</option>
         <option value="big">Lost $1,000+ only</option>
       </select>
     </div>
-    <div style="margin-left:auto;display:flex;gap:8px">
+    <div style="margin-left:auto">
       <button id="or-roll-btn" class="abtn">&#127922; Roll 50 Clinics</button>
-      <button id="or-gen-btn" class="abtn" style="background:#1a2035;display:none">&#9889; Generate All Drafts</button>
     </div>
   </div>
 
-  <!-- Progress bar -->
-  <div id="or-progress-wrap" style="display:none;background:#fff;border:1px solid #e8eaed;border-radius:10px;padding:14px 18px;margin-bottom:16px">
-    <div style="display:flex;justify-content:space-between;font-size:12px;color:#555;margin-bottom:8px">
-      <span id="or-progress-label">Generating drafts...</span>
-      <span id="or-progress-count">0 / 50</span>
+  <!-- Draft preview panel -->
+  <div id="or-draft-panel" style="display:none;background:#fff;border:1px solid #e8eaed;border-radius:12px;padding:20px;margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div id="or-draft-clinic" style="font-size:15px;font-weight:700;color:#1a2035"></div>
+        <div id="or-draft-meta" style="font-size:12px;color:#888;margin-top:2px"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button id="or-draft-save" class="abtn" style="background:#16a34a;display:none">&#128228; Save to Gmail Drafts</button>
+        <button id="or-draft-mailto" class="abtn" style="background:#f3f4f6;color:#555;display:none">&#128231; Open in Gmail</button>
+        <button id="or-draft-regen" class="abtn" style="background:#6b7280;display:none">&#8635; Regenerate</button>
+      </div>
     </div>
-    <div style="background:#eef0f5;border-radius:6px;height:8px;overflow:hidden">
-      <div id="or-progress-bar" style="height:100%;background:linear-gradient(90deg,#1a2035,#4ade9a);width:0%;transition:width .3s;border-radius:6px"></div>
+    <div id="or-draft-status" style="font-size:13px;color:#888;text-align:center;padding:20px">Select a clinic below</div>
+    <div id="or-draft-content" style="display:none">
+      <div style="margin-bottom:10px">
+        <div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:4px">Subject</div>
+        <div id="or-draft-subject" style="font-size:13px;color:#1a2035;background:#f7f8fa;border:1px solid #e0e3ea;border-radius:6px;padding:9px 12px;font-weight:600"></div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:4px">Body</div>
+        <div id="or-draft-body" style="font-size:13px;color:#333;background:#f7f8fa;border:1px solid #e0e3ea;border-radius:6px;padding:12px;white-space:pre-wrap;line-height:1.7;min-height:80px"></div>
+      </div>
+      <div id="or-draft-saved-badge" style="display:none;margin-top:10px">
+        <span style="background:#dcfce7;color:#16a34a;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px">&#10003; Saved to Gmail Drafts</span>
+      </div>
     </div>
   </div>
 
-  <!-- Clinic cards grid -->
-  <div id="or-grid" style="display:grid;grid-template-columns:1fr;gap:10px"></div>
-
-  <!-- Empty state -->
+  <!-- Clinic list -->
+  <div id="or-grid" style="display:flex;flex-direction:column;gap:4px"></div>
   <div id="or-empty" style="text-align:center;padding:60px 20px;color:#aaa">
     <div style="font-size:48px;margin-bottom:12px">&#9993;</div>
     <div style="font-size:15px;font-weight:600;color:#555;margin-bottom:6px">Ready to roll</div>
-    <div style="font-size:13px">Connect Gmail, then hit "Roll 50 Clinics" to get started</div>
+    <div style="font-size:13px">Connect Gmail, then hit "Roll 50 Clinics"</div>
   </div>
 
+</div></div>
 </div></div>
 
 <div id="page-atrisk" class="page"><div class="container">
@@ -6540,9 +6551,9 @@ function initAiChats(){
 }
 
 
+
 // ═══════════════════════════════════════════════════════════════
-// OUTREACH MODULE — Gmail Draft Generator
-// Simple globals — no IIFE, runs after data.js is loaded
+// OUTREACH MODULE — one-at-a-time draft generator
 // ═══════════════════════════════════════════════════════════════
 var OR_CLIENT_ID = '34261178989-innajk10hom9lm5b3a15juq3fiu9cmq0.apps.googleusercontent.com';
 var OR_SCOPE     = 'https://www.googleapis.com/auth/gmail.compose';
@@ -6550,16 +6561,16 @@ var OR_EPOCH     = new Date('2024-01-01').getTime();
 var OR_EXCLUDED  = ['vetcove','pet parent','petscript direct','usc','shelters united','vha','vethubrx','mike salsbury','serena patterson'];
 var OR_DRUG_SHORT= {pimobendan:'pimo',gabapentin:'gaba',trazodone:'traz',methocarbamol:'metho',cyclosporine:'cyclo',doxycycline:'doxy',prednisolone:'pred',fenbendazole:'fenbend',metronidazole:'metro',omeprazole:'omep',furosemide:'lasix',amoxicillin:'amox'};
 
-var _orTokenClient=null, _orAccessToken=null, _orClinics=[], _orDrafts={};
+var _orTokenClient=null, _orAccessToken=null, _orClinics=[], _orActive=null;
 
 function orEpochStr(ep){
-  if(!ep) return '—';
+  if(!ep)return '—';
   var d=new Date(OR_EPOCH+ep*86400000);
   return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 }
-function orFmt(n){ return '$'+Math.round(n||0).toLocaleString(); }
-function orNorm(s){ return (s||'').replace(/\*/g,'').toLowerCase().trim(); }
-function orExcluded(name){ var n=orNorm(name); return OR_EXCLUDED.some(function(e){return n.indexOf(e)>=0;}); }
+function orFmt(n){return '$'+Math.round(n||0).toLocaleString();}
+function orNorm(s){return (s||'').replace(/\*/g,'').toLowerCase().trim();}
+function orExcluded(name){var n=orNorm(name);return OR_EXCLUDED.some(function(e){return n.indexOf(e)>=0;});}
 function orDrugShort(name){
   var lc=(name||'').toLowerCase();
   var keys=Object.keys(OR_DRUG_SHORT);
@@ -6569,8 +6580,7 @@ function orDrugShort(name){
 
 function orBuildLapsed(pool){
   var result=[];
-  var now=Date.now();
-  if(typeof C==='undefined'||!C.length){alert('Data not loaded yet. Try again in a moment.');return result;}
+  if(typeof C==='undefined'||!C.length)return result;
   for(var ci=0;ci<C.length;ci++){
     if(orExcluded(C[ci]))continue;
     var txns=D[C[ci]]||[];
@@ -6592,35 +6602,25 @@ function orBuildLapsed(pool){
     var lostRev=rev[2025]||rev[2024]||0;
     if(pool==='big'&&lostRev<1000)continue;
     if(pool==='recent'&&!rev[2025])continue;
-    var lastDate=lastEp?new Date(OR_EPOCH+lastEp*86400000):null;
-    var daysSince=lastDate?Math.round((now-lastDate.getTime())/86400000):9999;
-    var stopped=[],active=[];
+    var stopped=[];
     var pidKeys=Object.keys(prods);
     for(var pi=0;pi<pidKeys.length;pi++){
       var pd=prods[pidKeys[pi]];
-      if(pd.rev[2026]>0)active.push({name:P[parseInt(pidKeys[pi])],rev:pd.rev});
-      else if(pd.rev[2025]>0||pd.rev[2024]>0)stopped.push({name:P[parseInt(pidKeys[pi])],rev:pd.rev,lastEp:pd.lastEp});
+      if(pd.rev[2025]>0||pd.rev[2024]>0) stopped.push({name:P[parseInt(pidKeys[pi])],rev:pd.rev});
     }
     stopped.sort(function(a,b){return(b.rev[2025]||b.rev[2024])-(a.rev[2025]||a.rev[2024]);});
     var ka=KA[ci]||[];
-    result.push({
-      ci:ci,name:C[ci],
-      rep:ka[0]>=0?REPS[ka[0]]:'',
-      email:ka[1]||'',phone:ka[2]||'',doctor:ka[3]||'',
-      street:ka[4]||'',city:ka[5]||'',
-      lastEp:lastEp,lastDate:lastDate,daysSince:daysSince,
-      rev:rev,lostRev:lostRev,stopped:stopped,active:active
-    });
+    result.push({ci:ci,name:C[ci],rep:ka[0]>=0?REPS[ka[0]]:'',email:ka[1]||'',phone:ka[2]||'',doctor:ka[3]||'',lastEp:lastEp,rev:rev,lostRev:lostRev,stopped:stopped});
   }
   return result;
 }
 
 function orWeightedSample(arr,n){
-  if(arr.length<=n)return arr.slice();
+  if(arr.length<=n)return arr.slice().sort(function(){return Math.random()-.5;});
   var total=arr.reduce(function(s,c){return s+Math.sqrt(c.lostRev+1);},0);
   var chosen={},out=[];
   var attempts=0;
-  while(out.length<n&&attempts<n*20){
+  while(out.length<n&&attempts<n*30){
     attempts++;
     var rand=Math.random()*total,acc=0;
     for(var i=0;i<arr.length;i++){
@@ -6634,170 +6634,179 @@ function orWeightedSample(arr,n){
 function orRollClinics(){
   var pool=document.getElementById('or-pool').value;
   var lapsed=orBuildLapsed(pool);
-  if(!lapsed.length){
-    document.getElementById('or-empty').style.display='';
-    document.getElementById('or-empty').innerHTML='<div style="font-size:48px">🤷</div><div style="font-size:15px;font-weight:600;color:#555">No lapsed clinics found for this filter.</div>';
-    return;
-  }
+  if(!lapsed.length){alert('No lapsed clinics found for this filter.');return;}
   _orClinics=orWeightedSample(lapsed,50);
-  _orDrafts={};
+  _orActive=null;
+  orHideDraft();
   orRenderGrid();
-  document.getElementById('or-gen-btn').style.display=_orClinics.length?'':'none';
-  document.getElementById('or-empty').style.display=_orClinics.length?'none':'';
+  document.getElementById('or-empty').style.display='none';
+  document.getElementById('or-draft-panel').style.display='';
+  document.getElementById('or-draft-status').textContent='Click a clinic below to generate a draft email.';
+  document.getElementById('or-draft-content').style.display='none';
+  document.getElementById('or-draft-save').style.display='none';
+  document.getElementById('or-draft-mailto').style.display='none';
+  document.getElementById('or-draft-regen').style.display='none';
 }
 
 function orRenderGrid(){
   var grid=document.getElementById('or-grid');
   grid.innerHTML='';
   _orClinics.forEach(function(c,i){
-    var d=_orDrafts[c.ci];
-    var icon=!d?'⬜':d.status==='pending'?'⏳':d.status==='done'||d.status==='generated'?'✅':'❌';
-    var stoppedStr=c.stopped.slice(0,3).map(function(s){return orDrugShort(s.name);}).join(', ')||'—';
-    var card=document.createElement('div');
-    card.style.cssText='background:#fff;border:1px solid #e8eaed;border-radius:12px;overflow:hidden;margin-bottom:2px';
-    card.innerHTML='<div style="padding:14px 18px;display:flex;align-items:flex-start;gap:12px;cursor:pointer" onclick="orToggle('+c.ci+')">'
-      +'<div style="font-size:18px;flex-shrink:0;margin-top:2px">'+icon+'</div>'
+    var stoppedStr=c.stopped.slice(0,3).map(function(s){return orDrugShort(s.name);}).filter(Boolean).join(', ')||'—';
+    var row=document.createElement('div');
+    row.style.cssText='background:#fff;border:1px solid #e8eaed;border-radius:10px;padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:border-color .15s';
+    row.dataset.ci=c.ci;
+    row.innerHTML='<div style="font-size:11px;color:#aaa;width:24px;text-align:right;flex-shrink:0">#'+(i+1)+'</div>'
       +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:14px;font-weight:700;color:#1a2035;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+c.name+'</div>'
-        +'<div style="font-size:11px;color:#888;margin-top:2px">'+(c.doctor||'No doctor')+' · Last: '+orEpochStr(c.lastEp)+' ('+c.daysSince+'d) · Lost: '+orFmt(c.lostRev)+'</div>'
-        +'<div style="font-size:11px;color:#dc2626;margin-top:2px">Stopped: '+stoppedStr+'</div>'
+        +'<div style="font-size:13px;font-weight:700;color:#1a2035;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+c.name+'</div>'
+        +'<div style="font-size:11px;color:#888;margin-top:2px">'+(c.doctor||'No doctor')+' · Lost: '+orFmt(c.lostRev)+' · Stopped: '+stoppedStr+'</div>'
       +'</div>'
-      +'<div style="font-size:11px;color:#aaa;flex-shrink:0">#'+(i+1)+'</div>'
-    +'</div>'
-    +'<div id="or-exp-'+c.ci+'" style="display:none;border-top:1px solid #edf0f5;padding:16px 18px;background:#fafbfc">'
-      +(d?orDraftHTML(c,d):'<div style="font-size:12px;color:#aaa;text-align:center;padding:8px">Hit "Generate All Drafts" to create email</div>')
-    +'</div>';
-    grid.appendChild(card);
+      +'<div style="font-size:11px;color:#aaa;flex-shrink:0">'+orEpochStr(c.lastEp)+'</div>';
+    row.addEventListener('mouseenter',function(){this.style.borderColor='#1a2035';});
+    row.addEventListener('mouseleave',function(){this.style.borderColor='#e8eaed';});
+    row.addEventListener('click',function(){orSelectClinic(parseInt(this.dataset.ci));});
+    grid.appendChild(row);
   });
 }
 
-window.orToggle=function(ci){
-  var el=document.getElementById('or-exp-'+ci);
-  if(el)el.style.display=el.style.display==='none'?'':'none';
-};
-
-function orDraftHTML(c,d){
-  if(d.status==='pending')return '<div style="font-size:12px;color:#888;text-align:center;padding:8px">⏳ Generating...</div>';
-  if(d.status==='error')return '<div style="font-size:12px;color:#dc2626;padding:8px">❌ '+d.error+'</div>';
-  var saved=d.gmailDraftId?'<span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px">✓ Saved to Gmail Drafts</span>':'<span style="background:#fef3c7;color:#92400e;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px">Not yet saved</span>';
-  return '<div style="margin-bottom:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+saved+(c.email?'<span style="font-size:11px;color:#555">To: '+c.email+'</span>':'<span style="font-size:11px;color:#dc2626">⚠ No email on file</span>')+'</div>'
-    +'<div style="margin-bottom:6px"><div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:3px">Subject</div><div style="font-size:12px;color:#1a2035;background:#fff;border:1px solid #e0e3ea;border-radius:6px;padding:7px 10px">'+d.subject+'</div></div>'
-    +'<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:3px">Body</div><div style="font-size:12px;color:#333;background:#fff;border:1px solid #e0e3ea;border-radius:6px;padding:10px 12px;white-space:pre-wrap;line-height:1.6;max-height:220px;overflow-y:auto">'+d.body+'</div></div>'
-    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
-    +(!d.gmailDraftId&&c.email?'<button class="abtn" style="font-size:11px;padding:6px 12px" onclick="orSaveDraft('+c.ci+')">💾 Save to Gmail Drafts</button>':'')
-    +(c.email?'<button class="abtn" style="font-size:11px;padding:6px 12px;background:#f3f4f6;color:#555" onclick="orMailto('+c.ci+')">📧 Open in Gmail</button>':'')
-    +'</div>';
+function orHideDraft(){
+  document.getElementById('or-draft-content').style.display='none';
+  document.getElementById('or-draft-save').style.display='none';
+  document.getElementById('or-draft-mailto').style.display='none';
+  document.getElementById('or-draft-regen').style.display='none';
+  document.getElementById('or-draft-saved-badge').style.display='none';
 }
 
-function orRefreshCard(ci){
+async function orSelectClinic(ci){
   var c=_orClinics.find(function(x){return x.ci===ci;});
   if(!c)return;
-  var d=_orDrafts[ci];
-  // update icon and always refresh expand content
-  var topDiv=document.querySelector('div[onclick="orToggle('+ci+')"]');
-  if(topDiv){
-    var iconEl=topDiv.querySelector('div:first-child');
-    if(iconEl)iconEl.textContent=!d?'⬜':d.status==='pending'?'⏳':(d.status==='done'||d.status==='generated')?'✅':'❌';
-  }
-  var exp=document.getElementById('or-exp-'+ci);
-  if(exp)exp.innerHTML=d?orDraftHTML(c,d):'<div style="font-size:12px;color:#aaa;text-align:center;padding:8px">Hit &quot;Generate All Drafts&quot; to create email</div>';
+  _orActive=c;
 
+  // highlight selected row
+  document.querySelectorAll('#or-grid div[data-ci]').forEach(function(r){
+    r.style.background=parseInt(r.dataset.ci)===ci?'#f0f2ff':'#fff';
+    r.style.borderColor=parseInt(r.dataset.ci)===ci?'#1a2035':'#e8eaed';
+  });
 
-async function orGenerateAll(){
-  var btn=document.getElementById('or-gen-btn');
-  btn.disabled=true;btn.textContent='⏳ Generating...';
-  document.getElementById('or-progress-wrap').style.display='';
-  var done=0;
-  var BATCH=5;
-  for(var i=0;i<_orClinics.length;i+=BATCH){
-    var batch=_orClinics.slice(i,i+BATCH);
-    await Promise.all(batch.map(async function(c){
-      _orDrafts[c.ci]={status:'pending'};
-      orRefreshCard(c.ci);
-      try{
-        var result=await orGenerateEmail(c);
-        _orDrafts[c.ci]={status:'generated',subject:result.subject,body:result.body,gmailDraftId:null};
-        if(_orAccessToken&&c.email){
-          try{var id=await orSaveGmailDraft(c.email,result.subject,result.body);_orDrafts[c.ci].gmailDraftId=id;_orDrafts[c.ci].status='done';}
-          catch(e){_orDrafts[c.ci].status='generated';}
-        }else{_orDrafts[c.ci].status='done';}
-      }catch(e){_orDrafts[c.ci]={status:'error',error:e.message};}
-      done++;
-      var pct=Math.round((done/_orClinics.length)*100);
-      document.getElementById('or-progress-bar').style.width=pct+'%';
-      document.getElementById('or-progress-count').textContent=done+' / '+_orClinics.length;
-      orRefreshCard(c.ci);
-    }));
+  // scroll draft panel into view
+  document.getElementById('or-draft-panel').scrollIntoView({behavior:'smooth',block:'nearest'});
+
+  // show clinic info
+  document.getElementById('or-draft-clinic').textContent=c.name;
+  document.getElementById('or-draft-meta').textContent=(c.doctor?c.doctor+' · ':'')+(c.email?c.email+' · ':'No email on file · ')+'Lost: '+orFmt(c.lostRev);
+  orHideDraft();
+  document.getElementById('or-draft-status').textContent='Generating draft...';
+  document.getElementById('or-draft-status').style.display='';
+
+  try{
+    var result=await orGenerateEmail(c);
+    document.getElementById('or-draft-subject').textContent=result.subject;
+    document.getElementById('or-draft-body').textContent=result.body;
+    document.getElementById('or-draft-content').style.display='';
+    document.getElementById('or-draft-status').style.display='none';
+    document.getElementById('or-draft-regen').style.display='';
+    if(c.email){
+      document.getElementById('or-draft-save').style.display='';
+      document.getElementById('or-draft-mailto').style.display='';
+    }
+    // store on clinic object for send
+    c._subject=result.subject;
+    c._body=result.body;
+    c._saved=false;
+  }catch(e){
+    document.getElementById('or-draft-status').textContent='Error: '+e.message;
+    document.getElementById('or-draft-status').style.display='';
   }
-  btn.disabled=false;btn.textContent='⚡ Regenerate';
-  document.getElementById('or-progress-label').textContent='Complete!';
 }
 
 async function orGenerateEmail(c){
-  var stoppedDrugs=c.stopped.slice(0,4).map(function(s){
-    return orDrugShort(s.name)+' (was '+orFmt(s.rev[2025]||s.rev[2024]||0)+'/yr)';
-  }).join(', ')||'several products';
-  var doctor=c.doctor?c.doctor.replace(/^Dr\.?\s*/i,''):'there';
+  var stoppedDrugs=c.stopped.slice(0,3).map(function(s){return orDrugShort(s.name);}).filter(Boolean);
+  // dedupe
+  stoppedDrugs=stoppedDrugs.filter(function(v,i,a){return a.indexOf(v)===i;});
+  var drugStr=stoppedDrugs.slice(0,2).join(' and ')||'several products';
+  var doctor=(c.doctor||'').replace(/^Dr\.?\s*/i,'').split(' ')[0]||'there';
   var clinic=c.name.replace(/\*/g,'').trim();
-  var prompt='Write a short winback email from Jonathan at PetScript pharmacy to Dr. '+doctor+' at '+clinic+'.\n\nStyle: Alex Hormozi — short, punchy, direct. No fluff. No "I hope this finds you well." 3-4 sentences max.\n\nFacts:\n- They stopped ordering around '+orEpochStr(c.lastEp)+'\n- They used to spend ~'+orFmt(c.lostRev)+'/year\n- Stopped drugs: '+stoppedDrugs+'\n- We make compounded vet meds\n\nRules:\n- Subject: "Hey Dr. '+doctor+' - quick question"\n- Mention 1-2 stopped drugs by shorthand\n- End with one simple question\n- Sign off: "Jonathan, PetScript"\n- Plain text only\n\nReturn ONLY valid JSON: {"subject":"...","body":"..."}';
+
+  var prompt='Write a short winback email from Jonathan at PetScript pharmacy to Dr. '+doctor+' at '+clinic+'.
+
+Style: Alex Hormozi. Short, punchy, direct. No fluff. No opener like "I hope this finds you well." Max 3-4 sentences.
+
+Context:
+- They stopped ordering around '+orEpochStr(c.lastEp)+'
+- They used to spend about '+orFmt(c.lostRev)+' per year
+- Drugs they stopped: '+drugStr+'
+- We make compounded veterinary medications
+
+Instructions:
+- Subject line: Hey Dr. '+doctor+' - quick question
+- Reference the specific stopped drug(s) by shorthand
+- End with one direct question or call to action
+- Sign off: Jonathan, PetScript
+- Plain text only, no bullet points
+
+Respond with ONLY this JSON object, nothing else:
+{"subject":"...","body":"..."}';
+
   var resp=await fetch('https://fragrant-cloud-6ef2.jp-d4e.workers.dev/claude-proxy',{
     method:'POST',
     headers:{'Content-Type':'application/json','X-API-Key':'petscript2026'},
-    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:400,messages:[{role:'user',content:prompt}]})
+    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:300,messages:[{role:'user',content:prompt}]})
   });
-  if(!resp.ok)throw new Error('Claude API '+resp.status);
+  if(!resp.ok)throw new Error('Worker error '+resp.status);
   var data=await resp.json();
-  var text=(data.content||[]).map(function(b){return b.text||'';}).join('');
-  var clean=text.replace(/```json|```/g,'').trim();
-  // Strip control characters that break JSON.parse
-  clean=clean.replace(/[\x00-\x1F\x7F]/g,function(c){
-    if(c==='\n')return '\\n';
-    if(c==='\r')return '\\r';
-    if(c==='\t')return '\\t';
-    return '';
+  var text=(data.content||[]).map(function(b){return b.text||'';}).join('').trim();
+  // extract JSON robustly
+  var m=text.match(/\{[\s\S]*\}/);
+  if(!m)throw new Error('No JSON in response');
+  var jsonStr=m[0];
+  // fix unescaped newlines inside strings
+  jsonStr=jsonStr.replace(/"body"\s*:\s*"([\s\S]*?)"\s*\}/,function(match,body){
+    var fixed=body.replace(/
+/g,'\n').replace(/
+/g,'\r');
+    return '"body":"'+fixed+'"}';
   });
-  var parsed;
-  try{ parsed=JSON.parse(clean); }
-  catch(e){
-    // Fallback: extract subject and body with regex
-    var sm=clean.match(/"subject"\s*:\s*"((?:[^"\\]|\\.)*)"/);
-    var bm=clean.match(/"body"\s*:\s*"((?:[^"\\]|\\.)*?)(?="\s*[,}])/s);
-    if(!sm||!bm)throw new Error('Could not parse email: '+e.message);
-    parsed={subject:sm[1].replace(/\\n/g,'\n'),body:bm[1].replace(/\\n/g,'\n')};
-  }
-  if(!parsed.subject||!parsed.body)throw new Error('Bad response format');
+  var parsed=JSON.parse(jsonStr);
+  if(!parsed.subject||!parsed.body)throw new Error('Missing subject or body');
+  // unescape
+  parsed.body=parsed.body.replace(/\n/g,'
+');
   return parsed;
 }
 
-async function orSaveGmailDraft(toEmail,subject,body){
-  if(!_orAccessToken)throw new Error('Not authenticated with Gmail');
-  var raw=['From: Jonathan @ PetScript <jp@petscript.net>','To: '+toEmail,'Subject: '+subject,'Content-Type: text/plain; charset=utf-8','',body].join('\r\n');
-  var encoded=btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-  var resp=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/drafts',{
-    method:'POST',
-    headers:{'Authorization':'Bearer '+_orAccessToken,'Content-Type':'application/json'},
-    body:JSON.stringify({message:{raw:encoded}})
-  });
-  if(!resp.ok){var e=await resp.json();throw new Error(e.error&&e.error.message||'Gmail save failed');}
-  var data=await resp.json();
-  return data.id;
+async function orSaveToGmail(){
+  var c=_orActive;
+  if(!c||!c._subject||!c._body){alert('Generate a draft first.');return;}
+  if(!c.email){alert('No email address on file for this clinic.');return;}
+  if(!_orAccessToken){alert('Connect Gmail first.');return;}
+  var btn=document.getElementById('or-draft-save');
+  btn.disabled=true;btn.textContent='Saving...';
+  try{
+    var raw=['From: Jonathan @ PetScript <jp@petscript.net>','To: '+c.email,'Subject: '+c._subject,'Content-Type: text/plain; charset=utf-8','',c._body].join('
+');
+    var encoded=btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    var resp=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/drafts',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+_orAccessToken,'Content-Type':'application/json'},
+      body:JSON.stringify({message:{raw:encoded}})
+    });
+    if(!resp.ok){var e=await resp.json();throw new Error((e.error&&e.error.message)||'Gmail save failed');}
+    c._saved=true;
+    document.getElementById('or-draft-saved-badge').style.display='';
+    btn.textContent='&#10003; Saved!';
+    btn.style.background='#15803d';
+    setTimeout(function(){btn.disabled=false;btn.innerHTML='&#128228; Save to Gmail Drafts';btn.style.background='#16a34a';},3000);
+  }catch(e){
+    alert('Error saving draft: '+e.message);
+    btn.disabled=false;btn.innerHTML='&#128228; Save to Gmail Drafts';
+  }
 }
 
-window.orSaveDraft=async function(ci){
-  var c=_orClinics.find(function(x){return x.ci===ci;});
-  var d=_orDrafts[ci];
-  if(!c||!d||!c.email){alert('No email address on file.');return;}
-  if(!_orAccessToken){alert('Connect Gmail first.');return;}
-  try{var id=await orSaveGmailDraft(c.email,d.subject,d.body);_orDrafts[ci].gmailDraftId=id;_orDrafts[ci].status='done';orRefreshCard(ci);}
-  catch(e){alert('Error: '+e.message);}
-};
-
-window.orMailto=function(ci){
-  var c=_orClinics.find(function(x){return x.ci===ci;});
-  var d=_orDrafts[ci];
-  if(!c||!d)return;
-  window.open('mailto:'+c.email+'?subject='+encodeURIComponent(d.subject)+'&body='+encodeURIComponent(d.body));
-};
+function orOpenMailto(){
+  var c=_orActive;
+  if(!c||!c._subject||!c._body)return;
+  window.open('mailto:'+c.email+'?subject='+encodeURIComponent(c._subject)+'&body='+encodeURIComponent(c._body));
+}
 
 function orInitGoogleAuth(){
   if(typeof google==='undefined'||!google.accounts)return;
@@ -6808,7 +6817,7 @@ function orInitGoogleAuth(){
       _orAccessToken=resp.access_token;
       document.getElementById('or-gmail-status').textContent='✓ Connected as jp@petscript.net';
       document.getElementById('or-gmail-status').style.color='#16a34a';
-      document.getElementById('or-gmail-btn').textContent='🔓 Reconnect Gmail';
+      document.getElementById('or-gmail-btn').textContent='&#128275; Connected';
       document.getElementById('or-gmail-btn').style.background='#16a34a';
     }
   });
@@ -6819,10 +6828,8 @@ function orConnectGmail(){
   _orTokenClient.requestAccessToken({prompt:'consent'});
 }
 
-// Wire up buttons — called after login when DOM is ready
 function orInit(){
-  var gsiScript=document.getElementById('gsi-script');
-  if(!gsiScript){
+  if(!document.getElementById('gsi-script')){
     var s=document.createElement('script');s.id='gsi-script';
     s.src='https://accounts.google.com/gsi/client';s.async=true;s.defer=true;
     s.onload=orInitGoogleAuth;
@@ -6830,10 +6837,14 @@ function orInit(){
   }
   var gb=document.getElementById('or-gmail-btn');
   var rb=document.getElementById('or-roll-btn');
-  var genb=document.getElementById('or-gen-btn');
+  var sb=document.getElementById('or-draft-save');
+  var mb=document.getElementById('or-draft-mailto');
+  var regen=document.getElementById('or-draft-regen');
   if(gb&&!gb.dataset.bound){gb.addEventListener('click',orConnectGmail);gb.dataset.bound='1';}
   if(rb&&!rb.dataset.bound){rb.addEventListener('click',orRollClinics);rb.dataset.bound='1';}
-  if(genb&&!genb.dataset.bound){genb.addEventListener('click',orGenerateAll);genb.dataset.bound='1';}
+  if(sb&&!sb.dataset.bound){sb.addEventListener('click',orSaveToGmail);sb.dataset.bound='1';}
+  if(mb&&!mb.dataset.bound){mb.addEventListener('click',orOpenMailto);mb.dataset.bound='1';}
+  if(regen&&!regen.dataset.bound){regen.addEventListener('click',function(){if(_orActive)orSelectClinic(_orActive.ci);});regen.dataset.bound='1';}
 }
 
 
