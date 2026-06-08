@@ -956,8 +956,7 @@ table.ptbl tr:last-child td{border-bottom:none}
       <p style="font-size:12px;color:#888;margin:4px 0 0">Click a clinic to generate a draft. Save to Gmail Drafts when ready.</p>
     </div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-      <div id="or-gmail-status" style="font-size:12px;color:#888">Not connected to Gmail</div>
-      <button id="or-gmail-btn" class="abtn" style="background:#db4437;color:#fff">&#128274; Connect Gmail</button>
+
     </div>
   </div>
 
@@ -6733,7 +6732,7 @@ function orRenderGrid(){
           +'<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:3px">Body</div>'
           +'<div id="or-body-'+c.ci+'" style="font-size:13px;color:#374151;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:12px;white-space:pre-wrap;line-height:1.7"></div></div>'
           +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
-            +'<button class="abtn" style="font-size:11px;padding:6px 14px;background:#16a34a" id="or-save-'+c.ci+'" onclick="orSave('+c.ci+')">&#128228; Save to Gmail Drafts</button>'
+            +'<button class="abtn" style="font-size:11px;padding:6px 14px;background:#1d4ed8" id="or-save-'+c.ci+'" onclick="orAddToApollo('+c.ci+')">&#128640; Add to Apollo</button>'
             +(c.email?'<button class="abtn" style="font-size:11px;padding:6px 14px;background:#fff;color:#0f172a;border:1px solid #e2e8f0" onclick="orMailto('+c.ci+')">&#128231; Open in Gmail</button>':'')
           +'</div>'
           +'<div id="or-saved-'+c.ci+'" style="display:none;margin-top:8px"><span style="background:#dcfce7;color:#16a34a;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px">&#10003; Saved to Gmail Drafts &middot; <span id="or-saved-time-'+c.ci+'"></span></span></div>'
@@ -6870,33 +6869,52 @@ async function orGenerateEmail(c,isFollowUp){
   return parsed;
 }
 
-window.orSave=async function(ci){
+// Apollo sequence IDs
+var OR_SEQUENCES = {
+  dark:    '6a270cf7368e130018290a9b',
+  lapsed:  '6a270d07a642c7001892d0d4',
+  winback: '6a270cf7368e130018290a9b',
+  dropped: '6a270d18368e130018290aeb'
+};
+
+window.orAddToApollo=async function(ci){
   var c=_orClinics.find(function(x){return x.ci===ci;});
-  if(!c||!c._subject||!c._body){alert('Generate a draft first.');return;}
+  if(!c){return;}
   if(!c.email){alert('No email on file for this clinic.');return;}
-  if(!_orAccessToken){alert('Connect Gmail first.');return;}
+  var seqId=OR_SEQUENCES[_orBucket]||OR_SEQUENCES.dark;
   var btn=document.getElementById('or-save-'+ci);
-  btn.disabled=true;btn.textContent='Saving...';
+  btn.disabled=true;btn.textContent='Adding...';
   try{
-    var raw=['From: Jonathan @ PetScript <jp@petscript.net>','To: '+c.email,'Subject: '+c._subject,'Content-Type: text/plain; charset=utf-8','',c._body].join('\r\n');
-    var encoded=btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-    var resp=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/drafts',{
+    var proxyResp=await fetch('https://fragrant-cloud-6ef2.jp-d4e.workers.dev/apollo-proxy',{
       method:'POST',
-      headers:{'Authorization':'Bearer '+_orAccessToken,'Content-Type':'application/json'},
-      body:JSON.stringify({message:{raw:encoded}})
+      headers:{'Content-Type':'application/json','X-API-Key':'petscript2026'},
+      body:JSON.stringify({
+        action:'enroll',
+        email:c.email,
+        first_name:(c.doctor||'').replace(/^Dr\.?\s*/i,'').split(' ')[0]||c.name.split(' ')[0],
+        last_name:(c.doctor||'').split(' ').slice(-1)[0]||'',
+        organization_name:c.name.replace(/\*/g,'').trim(),
+        sequence_id:seqId
+      })
     });
-    if(!resp.ok){var e=await resp.json();throw new Error((e.error&&e.error.message)||'Gmail error');}
+    var result=await proxyResp.json();
+    if(!result.success)throw new Error(result.error||'Apollo enrollment failed');
     var now=new Date().toISOString();
-    await SB.from('outreach_log').insert({clinic_name:c.name,rep_username:ME?ME.username:'admin',subject:c._subject,contacted_at:now});
-    _orLog[c.name]={clinic_name:c.name,subject:c._subject,contacted_at:now};
+    await SB.from('outreach_log').insert({clinic_name:c.name,rep_username:ME?ME.username:'admin',subject:'Apollo: '+(_orBucket)+' sequence',contacted_at:now});
+    _orLog[c.name]={clinic_name:c.name,subject:'Apollo sequence',contacted_at:now};
     var savedEl=document.getElementById('or-saved-'+ci);
     var timeEl=document.getElementById('or-saved-time-'+ci);
-    if(timeEl)timeEl.textContent=new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    if(timeEl)timeEl.textContent='Added to Apollo';
     if(savedEl)savedEl.style.display='';
-    btn.innerHTML='&#10003; Saved!';btn.style.background='#15803d';
-    setTimeout(function(){btn.disabled=false;btn.innerHTML='&#128228; Save to Gmail Drafts';btn.style.background='#16a34a';},3000);
-  }catch(e){alert('Error: '+e.message);btn.disabled=false;btn.innerHTML='&#128228; Save to Gmail Drafts';}
+    btn.innerHTML='&#10003; In Apollo!';btn.style.background='#15803d';
+    orUpdateRowBadge(ci,now);
+    setTimeout(function(){btn.disabled=false;btn.innerHTML='&#128640; Add to Apollo';btn.style.background='#1d4ed8';},3000);
+  }catch(e){
+    alert('Error: '+e.message);
+    btn.disabled=false;btn.innerHTML='&#128640; Add to Apollo';
+  }
 };
+window.orSave=window.orAddToApollo;
 
 window.orMailto=function(ci){
   var c=_orClinics.find(function(x){return x.ci===ci;});
