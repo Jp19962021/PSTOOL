@@ -6891,7 +6891,18 @@ window.orAddToApollo=async function(ci){
   var c=_orClinics.find(function(x){return x.ci===ci;});
   if(!c){return;}
   if(!c.email){alert('No email on file for this clinic.');return;}
-  var seqId=OR_SEQUENCES[_orBucket]||OR_SEQUENCES.dark;
+  // Ask which sequence
+  var seqChoice=window.prompt(
+    'Add '+c.name+' to which sequence?\n\n'+
+    '1 = Gone Dark 90d+ (what happened / lottery joke)\n'+
+    '2 = Lapsed 45-90d (still with us?)\n'+
+    '3 = Dropped SKU (noticed you stopped ordering)\n\n'+
+    'Enter 1, 2, or 3:'
+  );
+  if(!seqChoice)return;
+  var seqMap={'1':OR_SEQUENCES.dark,'2':OR_SEQUENCES.lapsed,'3':OR_SEQUENCES.dropped};
+  var seqId=seqMap[seqChoice.trim()];
+  if(!seqId){alert('Invalid choice. Enter 1, 2, or 3.');return;}
   var btn=document.getElementById('or-save-'+ci);
   btn.disabled=true;btn.textContent='Adding...';
   try{
