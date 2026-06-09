@@ -953,45 +953,59 @@ table.ptbl tr:last-child td{border-bottom:none}
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
     <div>
       <h2 style="font-size:20px;font-weight:800;color:#0f172a;margin:0">&#9993; Outreach</h2>
-      <p style="font-size:12px;color:#888;margin:4px 0 0">Click a clinic to generate a draft. Save to Gmail Drafts when ready.</p>
-    </div>
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-
+      <p style="font-size:12px;color:#888;margin:4px 0 0">Roll 50 lapsed clinics, add to Apollo sequences, track contacts.</p>
     </div>
   </div>
 
-  <!-- Controls -->
-  <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-    <div>
-      <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Bucket</label>
-      <div id="or-buckets" style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="or-bucket active" data-bucket="dark" style="padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid #0f172a;background:#0f172a;color:#fff;cursor:pointer">Gone Dark 90d+</button>
-        <button class="or-bucket" data-bucket="lapsed" style="padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer">Lapsed 45-90d</button>
-        <button class="or-bucket" data-bucket="winback" style="padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer">Win-Back (0 in 2026)</button>
-        <button class="or-bucket" data-bucket="dropped" style="padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer">Dropped SKU</button>
+  <!-- Tab bar -->
+  <div style="display:flex;gap:0;border-bottom:2px solid #e2e8f0;margin-bottom:20px">
+    <button class="or-tab-btn active" data-ortab="roll" style="padding:10px 20px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;color:#0f172a;border-bottom:2px solid #f97316;margin-bottom:-2px">&#127922; Rolling 50</button>
+    <button class="or-tab-btn" data-ortab="contacted" style="padding:10px 20px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;color:#64748b;border-bottom:2px solid transparent;margin-bottom:-2px">&#9993; Contacted</button>
+    <button class="or-tab-btn" data-ortab="ignored" style="padding:10px 20px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;color:#64748b;border-bottom:2px solid transparent;margin-bottom:-2px">&#128683; Ignored</button>
+  </div>
+
+  <!-- Rolling 50 tab -->
+  <div id="or-tab-roll">
+    <!-- Controls -->
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Bucket</label>
+        <div id="or-buckets" style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="or-bucket active" data-bucket="dark" style="padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid #0f172a;background:#0f172a;color:#fff;cursor:pointer">Gone Dark 90d+</button>
+          <button class="or-bucket" data-bucket="lapsed" style="padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer">Lapsed 45-90d</button>
+          <button class="or-bucket" data-bucket="winback" style="padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer">Win-Back 0 in 2026</button>
+          <button class="or-bucket" data-bucket="dropped" style="padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer">Dropped SKU</button>
+        </div>
+      </div>
+      <div style="margin-left:auto">
+        <button id="or-roll-btn" class="abtn" style="background:#f97316">&#127922; Roll 50</button>
       </div>
     </div>
-    <div style="margin-left:auto;display:flex;gap:8px">
-      <button id="or-ignored-btn" class="abtn" style="background:#f1f5f9;color:#64748b;font-size:11px">&#128683; Ignored (<span id="or-ignored-count">0</span>)</button>
-      <button id="or-roll-btn" class="abtn" style="background:#f97316">&#127922; Roll 50</button>
+
+    <!-- Stats -->
+    <div id="or-stats" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 18px;margin-bottom:16px;font-size:12px;color:#64748b;display:flex;gap:20px;flex-wrap:wrap"></div>
+
+    <!-- Clinic list -->
+    <div id="or-grid" style="display:flex;flex-direction:column;gap:4px"></div>
+    <div id="or-empty" style="text-align:center;padding:60px 20px;color:#aaa">
+      <div style="font-size:48px;margin-bottom:12px">&#9993;</div>
+      <div style="font-size:15px;font-weight:600;color:#555;margin-bottom:6px">Ready to roll</div>
+      <div style="font-size:13px">Select a bucket and hit Roll 50</div>
     </div>
   </div>
 
-  <!-- Stats bar -->
-  <div id="or-stats" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 18px;margin-bottom:16px;display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:#64748b"></div>
-
-  <!-- Clinic list -->
-  <div id="or-grid" style="display:flex;flex-direction:column;gap:4px"></div>
-  <div id="or-empty" style="text-align:center;padding:60px 20px;color:#aaa">
-    <div style="font-size:48px;margin-bottom:12px">&#9993;</div>
-    <div style="font-size:15px;font-weight:600;color:#555;margin-bottom:6px">Ready to roll</div>
-    <div style="font-size:13px">Select a bucket and hit Roll 50</div>
+  <!-- Contacted tab -->
+  <div id="or-tab-contacted" style="display:none">
+    <div id="or-contacted-list" style="display:flex;flex-direction:column;gap:6px">
+      <div style="color:#aaa;font-size:13px;text-align:center;padding:40px">Loading...</div>
+    </div>
   </div>
 
-  <!-- Ignored panel (hidden by default) -->
-  <div id="or-ignored-panel" style="display:none">
-    <div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:12px">&#128683; Ignored Clinics</div>
-    <div id="or-ignored-list"></div>
+  <!-- Ignored tab -->
+  <div id="or-tab-ignored" style="display:none">
+    <div id="or-ignored-list" style="display:flex;flex-direction:column;gap:6px">
+      <div style="color:#aaa;font-size:13px;text-align:center;padding:40px">Loading...</div>
+    </div>
   </div>
 
 </div></div>
@@ -6550,34 +6564,28 @@ function initAiChats(){
 
 
 
-// ═══════════════════════════════════════════════════════════════
-// OUTREACH MODULE — full rebuild
-// ═══════════════════════════════════════════════════════════════
-var OR_CLIENT_ID = '34261178989-innajk10hom9lm5b3a15juq3fiu9cmq0.apps.googleusercontent.com';
-var OR_SCOPE     = 'https://www.googleapis.com/auth/gmail.compose';
-var OR_EPOCH     = new Date('2024-01-01').getTime();
-var OR_EXCLUDED  = ['vetcove','pet parent','petscript direct','usc','shelters united','vha','vethubrx','mike salsbury','serena patterson'];
-var OR_DRUG_SHORT= {pimobendan:'pimo',gabapentin:'gaba',trazodone:'traz',methocarbamol:'metho',cyclosporine:'cyclo',doxycycline:'doxy',prednisolone:'pred',fenbendazole:'fenbend',metronidazole:'metro',omeprazole:'omep',furosemide:'lasix',amoxicillin:'amox'};
 
-var _orTokenClient=null, _orAccessToken=null, _orClinics=[], _orLog={}, _orIgnored={}, _orBucket='dark';
+// ═══════════════════════════════════════════════════════════════
+// OUTREACH MODULE v3 — Apollo sequences, tabbed UI
+// ═══════════════════════════════════════════════════════════════
+var OR_EPOCH = new Date('2024-01-01').getTime();
+var OR_EXCLUDED = ['vetcove','pet parent','petscript direct','usc','shelters united','vha','vethubrx','mike salsbury','serena patterson'];
+var OR_DRUG_SHORT = {pimobendan:'pimo',gabapentin:'gaba',trazodone:'traz',methocarbamol:'metho',cyclosporine:'cyclo',doxycycline:'doxy',prednisolone:'pred',fenbendazole:'fenbend',metronidazole:'metro',omeprazole:'omep',furosemide:'lasix',amoxicillin:'amox'};
+var OR_SEQUENCES = {
+  dark:    {id:'6a270cf7368e130018290a9b', label:'Gone Dark 90d+ — What happened?'},
+  lapsed:  {id:'6a270d07a642c7001892d0d4', label:'Lapsed 45-90d — Still with us?'},
+  winback: {id:'6a270cf7368e130018290a9b', label:'Win-Back — What happened?'},
+  dropped: {id:'6a270d18368e130018290aeb', label:'Dropped SKU — Noticed something'}
+};
 
-function orEpochStr(ep){
-  if(!ep)return '—';
-  return new Date(OR_EPOCH+ep*86400000).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-}
-function orFmtRev(n){return '$'+Math.round(n||0).toLocaleString();}
-function orNorm(s){return (s||'').replace(/\*/g,'').toLowerCase().trim();}
-function orExcluded(name){var n=orNorm(name);return OR_EXCLUDED.some(function(e){return n.indexOf(e)>=0;});}
-function orDrugShort(name){
-  var lc=(name||'').toLowerCase();
-  var keys=Object.keys(OR_DRUG_SHORT);
-  for(var i=0;i<keys.length;i++){if(lc.indexOf(keys[i])>=0)return OR_DRUG_SHORT[keys[i]];}
-  return (name||'').split(' ')[0];
-}
-function orDaysAgo(ep){
-  if(!ep)return null;
-  return Math.round((Date.now()-OR_EPOCH-ep*86400000)/86400000);
-}
+var _orBucket = 'dark', _orClinics = [], _orLog = {}, _orIgnored = {}, _orContacted = new Set();
+
+function orEpochStr(ep){ if(!ep)return '—'; return new Date(OR_EPOCH+ep*86400000).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+function orFmtRev(n){ return '$'+Math.round(n||0).toLocaleString(); }
+function orNorm(s){ return (s||'').replace(/\*/g,'').toLowerCase().trim(); }
+function orExcluded(name){ var n=orNorm(name); return OR_EXCLUDED.some(function(e){return n.indexOf(e)>=0;}); }
+function orDrugShort(name){ var lc=(name||'').toLowerCase(); var keys=Object.keys(OR_DRUG_SHORT); for(var i=0;i<keys.length;i++){if(lc.indexOf(keys[i])>=0)return OR_DRUG_SHORT[keys[i]];} return (name||'').split(' ')[0]; }
+function orDaysSince(ep){ if(!ep)return 0; return Math.round((Date.now()-OR_EPOCH-ep*86400000)/86400000); }
 
 function orBuildPool(bucket){
   var result=[];
@@ -6586,11 +6594,8 @@ function orBuildPool(bucket){
   for(var ci=0;ci<C.length;ci++){
     if(orExcluded(C[ci]))continue;
     if(_orIgnored[C[ci]])continue;
+    if(_orContacted.has(C[ci]))continue; // skip already contacted
     var txns=D[C[ci]]||[];
-    if(!txns.length){
-      if(bucket==='dark')result.push(orBuildClinic(ci,txns,'never'));
-      continue;
-    }
     var rev={2024:0,2025:0,2026:0};
     var prods={};
     var lastEp=0;
@@ -6599,42 +6604,37 @@ function orBuildPool(bucket){
       var yr=2020+r[0],pid=r[1],revenue=r[2],ep=r[3];
       rev[yr]=(rev[yr]||0)+revenue;
       if(ep>lastEp)lastEp=ep;
-      if(!prods[pid])prods[pid]={rev:{2024:0,2025:0,2026:0},lastEp:0};
+      if(!prods[pid])prods[pid]={rev:{2024:0,2025:0,2026:0}};
       prods[pid].rev[yr]=(prods[pid].rev[yr]||0)+revenue;
-      if(ep>prods[pid].lastEp)prods[pid].lastEp=ep;
     }
     var daysSince=today-lastEp;
-    var c=orBuildClinic(ci,txns,null,rev,prods,lastEp,daysSince);
-    if(bucket==='dark'&&daysSince>=90&&rev[2026]===0)result.push(c);
-    else if(bucket==='lapsed'&&daysSince>=45&&daysSince<90)result.push(c);
-    else if(bucket==='winback'&&(rev[2024]>0||rev[2025]>0)&&rev[2026]===0)result.push(c);
-    else if(bucket==='dropped'&&rev[2026]>0&&c.stopped.length>0)result.push(c);
+    var eligible=false;
+    if(bucket==='dark'&&daysSince>=90&&rev[2026]===0)eligible=true;
+    else if(bucket==='lapsed'&&daysSince>=45&&daysSince<90)eligible=true;
+    else if(bucket==='winback'&&(rev[2024]>0||rev[2025]>0)&&rev[2026]===0)eligible=true;
+    else if(bucket==='dropped'){
+      var hasDropped=Object.keys(prods).some(function(pid){var pd=prods[pid];return (pd.rev[2025]>0||pd.rev[2024]>0)&&pd.rev[2026]===0;});
+      if(rev[2026]>0&&hasDropped)eligible=true;
+    }
+    if(!eligible)continue;
+    var stopped=[],active=[];
+    Object.keys(prods).forEach(function(pid){
+      var pd=prods[pid];
+      var name=P[parseInt(pid)]||'';
+      if(pd.rev[2026]>0)active.push({name:name,rev:pd.rev});
+      else if(pd.rev[2025]>0||pd.rev[2024]>0)stopped.push({name:name,rev:pd.rev});
+    });
+    stopped.sort(function(a,b){return(b.rev[2025]||b.rev[2024])-(a.rev[2025]||a.rev[2024]);});
+    var ka=KA[ci]||[];
+    result.push({ci:ci,name:C[ci],rep:ka[0]>=0?REPS[ka[0]]:'',email:ka[1]||'',phone:ka[2]||'',doctor:ka[3]||'',street:ka[4]||'',city:ka[5]||'',lastEp:lastEp,daysSince:daysSince,rev:rev,lostRev:rev[2025]||rev[2024]||0,stopped:stopped,active:active});
   }
   return result;
-}
-
-function orBuildClinic(ci,txns,specialBucket,rev,prods,lastEp,daysSince){
-  rev=rev||{2024:0,2025:0,2026:0};
-  prods=prods||{};
-  lastEp=lastEp||0;
-  daysSince=daysSince||0;
-  var stopped=[],active=[];
-  Object.keys(prods).forEach(function(pid){
-    var pd=prods[pid];
-    var name=P[parseInt(pid)]||'';
-    if(pd.rev[2026]>0)active.push({name:name,rev:pd.rev});
-    else if(pd.rev[2025]>0||pd.rev[2024]>0)stopped.push({name:name,rev:pd.rev,lastEp:pd.lastEp});
-  });
-  stopped.sort(function(a,b){return(b.rev[2025]||b.rev[2024])-(a.rev[2025]||a.rev[2024]);});
-  var ka=KA[ci]||[];
-  var lostRev=rev[2025]||rev[2024]||0;
-  return {ci:ci,name:C[ci],rep:ka[0]>=0?REPS[ka[0]]:'',email:ka[1]||'',phone:ka[2]||'',doctor:ka[3]||'',street:ka[4]||'',city:ka[5]||'',lastEp:lastEp,daysSince:daysSince,rev:rev,lostRev:lostRev,stopped:stopped,active:active};
 }
 
 async function orRollClinics(){
   if(typeof C==='undefined'||!C.length){alert('Data not loaded yet.');return;}
   await orLoadIgnored();
-  await orLoadLog();
+  await orLoadContacted();
   var pool=orBuildPool(_orBucket);
   _orClinics=pool.slice().sort(function(){return Math.random()-.5;}).slice(0,50);
   orRenderStats(pool.length);
@@ -6642,14 +6642,16 @@ async function orRollClinics(){
   document.getElementById('or-empty').style.display=_orClinics.length?'none':'';
 }
 
-async function orLoadLog(){
+async function orLoadContacted(){
   try{
-    var names=_orClinics.map(function(c){return c.name;});
-    if(!names.length)return;
-    var res=await SB.from('outreach_log').select('clinic_name,subject,contacted_at').in('clinic_name',names).order('contacted_at',{ascending:false});
+    var res=await SB.from('outreach_log').select('clinic_name,subject,contacted_at,rep_username').order('contacted_at',{ascending:false});
+    _orContacted=new Set();
     _orLog={};
-    (res.data||[]).forEach(function(row){if(!_orLog[row.clinic_name])_orLog[row.clinic_name]=row;});
-  }catch(e){_orLog={};}
+    (res.data||[]).forEach(function(row){
+      _orContacted.add(row.clinic_name);
+      if(!_orLog[row.clinic_name])_orLog[row.clinic_name]=row;
+    });
+  }catch(e){_orContacted=new Set();_orLog={};}
 }
 
 async function orLoadIgnored(){
@@ -6657,20 +6659,15 @@ async function orLoadIgnored(){
     var res=await SB.from('outreach_ignored').select('clinic_name,reason,ignored_until').gt('ignored_until',new Date().toISOString());
     _orIgnored={};
     (res.data||[]).forEach(function(row){_orIgnored[row.clinic_name]=row;});
-    document.getElementById('or-ignored-count').textContent=Object.keys(_orIgnored).length;
   }catch(e){_orIgnored={};}
 }
 
 function orRenderStats(total){
   var el=document.getElementById('or-stats');
   el.style.display='flex';
-  var contacted=Object.keys(_orLog).length;
-  el.innerHTML=
-    '<span><b style="color:#0f172a">'+_orClinics.length+'</b> shown of <b style="color:#0f172a">'+total+'</b> eligible</span>'+
-    '<span>&middot;</span>'+
-    '<span><b style="color:#f97316">'+contacted+'</b> previously contacted</span>'+
-    '<span>&middot;</span>'+
-    '<span>Bucket: <b style="color:#0f172a">'+_orBucket+'</b></span>';
+  el.innerHTML='<span><b style="color:#0f172a">'+_orClinics.length+'</b> shown of <b style="color:#0f172a">'+total+'</b> eligible</span>'
+    +'<span>&middot;</span><span>Bucket: <b style="color:#f97316">'+_orBucket+'</b></span>'
+    +'<span>&middot;</span><span><b style="color:#64748b">'+_orContacted.size+'</b> already contacted (excluded)</span>';
 }
 
 function orRenderGrid(){
@@ -6679,27 +6676,24 @@ function orRenderGrid(){
   _orClinics.forEach(function(c,i){
     var stoppedDrugs=c.stopped.slice(0,4).map(function(s){return orDrugShort(s.name);}).filter(function(v,j,a){return v&&a.indexOf(v)===j;});
     var stoppedStr=stoppedDrugs.join(', ')||'—';
-    var log=_orLog[c.name];
-    var contactedBadge=log?'<span style="background:#fef3c7;color:#92400e;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:6px">&#9993; Contacted '+new Date(log.contacted_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})+'</span>':'';
     var daysColor=c.daysSince>365?'#dc2626':c.daysSince>180?'#f97316':'#64748b';
-    var stoppedRevTotal=c.stopped.reduce(function(s,p){return s+(p.rev[2025]||p.rev[2024]||0);},0);
-    
+
     var wrap=document.createElement('div');
-    wrap.style.cssText='border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;background:#fff;transition:box-shadow .15s';
+    wrap.style.cssText='border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;background:#fff;margin-bottom:2px';
     wrap.innerHTML=
       '<div style="padding:14px 18px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="orToggleRow('+c.ci+')" id="or-row-'+c.ci+'">'
         +'<div style="font-size:11px;color:#94a3b8;width:22px;text-align:right;flex-shrink:0">#'+(i+1)+'</div>'
         +'<div style="flex:1;min-width:0">'
-          +'<div style="font-size:13px;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+c.name+contactedBadge+'</div>'
+          +'<div style="font-size:13px;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+c.name+'</div>'
           +'<div style="font-size:11px;color:#64748b;margin-top:3px;display:flex;gap:10px;flex-wrap:wrap">'
-            +(c.doctor?'<span>&#128084; '+c.doctor+'</span>':'')
+            +(c.doctor?'<span>'+c.doctor+'</span>':'')
             +(c.rep?'<span>&#128100; '+c.rep+'</span>':'')
-            +(c.email?'<span>&#9993; '+c.email+'</span>':'<span style="color:#dc2626">No email</span>')
-            +(c.phone?'<span>&#128222; '+c.phone+'</span>':'')
+            +(c.email?'<span>'+c.email+'</span>':'<span style="color:#dc2626">No email</span>')
+            +(c.phone?'<span>'+c.phone+'</span>':'')
           +'</div>'
           +'<div style="font-size:11px;margin-top:4px;display:flex;gap:10px;flex-wrap:wrap">'
             +'<span style="color:#dc2626;font-weight:600">Lost: '+orFmtRev(c.lostRev)+'</span>'
-            +(stoppedRevTotal>0?'<span style="color:#64748b">Stopped: '+stoppedStr+'</span>':'')
+            +(stoppedStr!=='—'?'<span style="color:#64748b">Stopped: '+stoppedStr+'</span>':'')
             +(c.active.length?'<span style="color:#16a34a">Active: '+c.active.slice(0,2).map(function(a){return orDrugShort(a.name);}).join(', ')+'</span>':'')
           +'</div>'
         +'</div>'
@@ -6710,21 +6704,33 @@ function orRenderGrid(){
         +'<div style="font-size:10px;color:#94a3b8;flex-shrink:0;margin-left:4px">&#9660;</div>'
       +'</div>'
       +'<div id="or-exp-'+c.ci+'" style="display:none;border-top:1px solid #f1f5f9;padding:16px 18px;background:#f8fafc">'
+        // Action buttons
         +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">'
-          +(c.email?'<button class="abtn" style="font-size:11px;padding:5px 12px;background:#1d4ed8" id="or-save-'+c.ci+'" onclick="orAddToApollo('+c.ci+')">&#128640; Add to Apollo</button>':'')
-          +(log?'<button class="abtn" style="font-size:11px;padding:5px 12px;background:#6b7280" onclick="orGenerate('+c.ci+',true)">&#8635; Follow-up email</button>':'')
-          +'<button class="abtn" style="font-size:11px;padding:5px 12px;background:#f97316" onclick="orGenerate('+c.ci+',false)">&#9889; Generate Draft</button>'
+          // Apollo dropdown button
+          +(c.email
+            ?'<div style="position:relative;display:inline-block" id="or-seq-wrap-'+c.ci+'">'
+              +'<select id="or-seq-'+c.ci+'" style="padding:6px 10px;border:1.5px solid #1d4ed8;border-radius:8px 0 0 8px;font-size:11px;font-weight:600;color:#1d4ed8;background:#eff6ff;outline:none;cursor:pointer">'
+                +'<option value="">— Select sequence —</option>'
+                +'<option value="dark">Gone Dark 90d+ (What happened?)</option>'
+                +'<option value="lapsed">Lapsed 45-90d (Still with us?)</option>'
+                +'<option value="dropped">Dropped SKU (Noticed something)</option>'
+              +'</select>'
+              +'<button class="abtn" style="font-size:11px;padding:6px 12px;background:#1d4ed8;border-radius:0 8px 8px 0;margin:0" id="or-save-'+c.ci+'" onclick="orAddToApollo('+c.ci+')">&#128640; Add to Apollo</button>'
+            +'</div>'
+            :'<span style="font-size:11px;color:#dc2626;padding:6px 0">No email — cannot add to Apollo</span>')
+          +'<button class="abtn" style="font-size:11px;padding:5px 12px" onclick="orGenerate('+c.ci+',false)">&#9889; Generate Draft</button>'
           +'<button class="abtn" style="font-size:11px;padding:5px 12px;background:#fff;color:#64748b;border:1px solid #e2e8f0" onclick="orOpenIgnore('+c.ci+')">&#128683; Ignore</button>'
           +(c.ci>=0?'<button class="abtn" style="font-size:11px;padding:5px 12px;background:#fff;color:#0f172a;border:1px solid #e2e8f0" onclick="openPanel('+c.ci+')">&#128300; View Profile</button>':'')
         +'</div>'
-        // Products stopped detail
-        +(c.stopped.length?'<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Stopped Products</div><div style="display:flex;flex-wrap:wrap;gap:6px">'+c.stopped.slice(0,6).map(function(s){return '<span style="background:#fee2e2;color:#dc2626;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px">'+s.name.replace(/\*/g,'').trim()+'<span style="font-weight:400;margin-left:4px">'+orFmtRev(s.rev[2025]||s.rev[2024]||0)+'/yr</span></span>';}).join('')+'</div></div>':'')
-        // Revenue summary
-        +'<div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">'
-          +'<div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:12px"><span style="color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:2px">2024</span><b style="color:#0f172a">'+orFmtRev(c.rev[2024])+'</b></div>'
-          +'<div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:12px"><span style="color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:2px">2025</span><b style="color:#0f172a">'+orFmtRev(c.rev[2025])+'</b></div>'
-          +'<div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:12px"><span style="color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:2px">2026 YTD</span><b style="color:'+(c.rev[2026]>0?'#16a34a':'#dc2626')+'">'+orFmtRev(c.rev[2026])+'</b></div>'
-          +(c.city?'<div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:12px;flex:1;min-width:160px"><span style="color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:2px">Address</span><b style="color:#0f172a;font-size:11px">'+c.city+'</b></div>':'')
+        // Stopped products
+        +(c.stopped.length?'<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Stopped Products</div>'
+          +'<div style="display:flex;flex-wrap:wrap;gap:6px">'+c.stopped.slice(0,6).map(function(s){return '<span style="background:#fee2e2;color:#dc2626;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px">'+s.name.replace(/\*/g,'').trim()+'<span style="font-weight:400;margin-left:4px">'+orFmtRev(s.rev[2025]||s.rev[2024]||0)+'/yr</span></span>';}).join('')+'</div></div>':'')
+        // Revenue
+        +'<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">'
+          +'<div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:12px"><div style="font-size:10px;color:#64748b;text-transform:uppercase;margin-bottom:2px">2024</div><b>'+orFmtRev(c.rev[2024])+'</b></div>'
+          +'<div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:12px"><div style="font-size:10px;color:#64748b;text-transform:uppercase;margin-bottom:2px">2025</div><b>'+orFmtRev(c.rev[2025])+'</b></div>'
+          +'<div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:12px"><div style="font-size:10px;color:#64748b;text-transform:uppercase;margin-bottom:2px">2026 YTD</div><b style="color:'+(c.rev[2026]>0?'#16a34a':'#dc2626')+'">'+orFmtRev(c.rev[2026])+'</b></div>'
+          +(c.city?'<div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:11px;flex:1;min-width:160px"><div style="font-size:10px;color:#64748b;text-transform:uppercase;margin-bottom:2px">Address</div><b>'+c.city+'</b></div>':'')
         +'</div>'
         // Draft area
         +'<div id="or-draft-'+c.ci+'" style="display:none;margin-top:4px">'
@@ -6732,19 +6738,15 @@ function orRenderGrid(){
           +'<div id="or-subj-'+c.ci+'" style="font-size:13px;font-weight:600;color:#0f172a;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:8px 12px"></div></div>'
           +'<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:3px">Body</div>'
           +'<div id="or-body-'+c.ci+'" style="font-size:13px;color:#374151;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:12px;white-space:pre-wrap;line-height:1.7"></div></div>'
-          +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
-            +'<button class="abtn" style="font-size:11px;padding:6px 14px;background:#1d4ed8" id="or-save-'+c.ci+'" onclick="orAddToApollo('+c.ci+')">&#128640; Add to Apollo</button>'
-            +(c.email?'<button class="abtn" style="font-size:11px;padding:6px 14px;background:#fff;color:#0f172a;border:1px solid #e2e8f0" onclick="orMailto('+c.ci+')">&#128231; Open in Gmail</button>':'')
-          +'</div>'
-          +'<div id="or-saved-'+c.ci+'" style="display:none;margin-top:8px"><span style="background:#dcfce7;color:#16a34a;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px">&#10003; Saved to Gmail Drafts &middot; <span id="or-saved-time-'+c.ci+'"></span></span></div>'
+          +(c.email?'<button class="abtn" style="font-size:11px;padding:6px 14px;background:#fff;color:#0f172a;border:1px solid #e2e8f0" onclick="orMailto('+c.ci+')">&#128231; Open in Gmail</button>':'')
         +'</div>'
         +'<div id="or-status-'+c.ci+'" style="font-size:12px;color:#64748b;margin-top:8px;display:none"></div>'
-        // Ignore modal
+        // Ignore form
         +'<div id="or-ignore-form-'+c.ci+'" style="display:none;margin-top:12px;padding:14px;background:#fff;border:1px solid #e2e8f0;border-radius:8px">'
-          +'<div style="font-size:12px;font-weight:600;color:#0f172a;margin-bottom:8px">Ignore this clinic for 30 days</div>'
-          +'<input type="text" id="or-ignore-reason-'+c.ci+'" placeholder="Reason (e.g. closed, already in talks, wrong contact...)" style="width:100%;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;outline:none;margin-bottom:8px;box-sizing:border-box">'
+          +'<div style="font-size:12px;font-weight:600;color:#0f172a;margin-bottom:8px">Ignore for 30 days — why?</div>'
+          +'<input type="text" id="or-ignore-reason-'+c.ci+'" placeholder="e.g. closed, already in talks, wrong contact..." style="width:100%;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;outline:none;margin-bottom:8px;box-sizing:border-box">'
           +'<div style="display:flex;gap:6px">'
-            +'<button class="abtn" style="font-size:11px;padding:5px 12px;background:#dc2626" onclick="orConfirmIgnore('+c.ci+')">Confirm Ignore</button>'
+            +'<button class="abtn" style="font-size:11px;padding:5px 12px;background:#dc2626" onclick="orConfirmIgnore('+c.ci+')">Confirm</button>'
             +'<button class="abtn" style="font-size:11px;padding:5px 12px;background:#fff;color:#64748b;border:1px solid #e2e8f0" onclick="orCloseIgnore('+c.ci+')">Cancel</button>'
           +'</div>'
         +'</div>'
@@ -6763,146 +6765,32 @@ window.orToggleRow=function(ci){
   if(arrow)arrow.textContent=open?'▲':'▼';
 };
 
-window.orCloseIgnore=function(ci){
-  var form=document.getElementById('or-ignore-form-'+ci);
-  if(form)form.style.display='none';
-};
-window.orOpenIgnore=function(ci){
-  var form=document.getElementById('or-ignore-form-'+ci);
-  if(form)form.style.display=form.style.display==='none'?'':'none';
-};
+window.orCloseIgnore=function(ci){ var f=document.getElementById('or-ignore-form-'+ci); if(f)f.style.display='none'; };
+window.orOpenIgnore=function(ci){ var f=document.getElementById('or-ignore-form-'+ci); if(f)f.style.display=f.style.display==='none'?'':'none'; };
 
 window.orConfirmIgnore=async function(ci){
   var c=_orClinics.find(function(x){return x.ci===ci;});
   if(!c)return;
-  var reasonEl=document.getElementById('or-ignore-reason-'+ci);
-  var reason=(reasonEl?reasonEl.value:'')||'No reason given';
+  var reason=(document.getElementById('or-ignore-reason-'+ci)||{}).value||'No reason';
   var until=new Date(Date.now()+30*86400000).toISOString();
   try{
     await SB.from('outreach_ignored').upsert({clinic_name:c.name,reason:reason,ignored_until:until,rep_username:ME?ME.username:'admin'});
     _orIgnored[c.name]={reason:reason,ignored_until:until};
-    // Remove from grid
     var wrap=document.getElementById('or-exp-'+ci);
     if(wrap&&wrap.parentElement)wrap.parentElement.remove();
     _orClinics=_orClinics.filter(function(x){return x.ci!==ci;});
-    document.getElementById('or-ignored-count').textContent=Object.keys(_orIgnored).length;
   }catch(e){alert('Error: '+e.message);}
 };
 
-window.orGenerate=async function(ci,isFollowUp){
-  var c=_orClinics.find(function(x){return x.ci===ci;});
-  if(!c)return;
-  var statusEl=document.getElementById('or-status-'+ci);
-  var draftEl=document.getElementById('or-draft-'+ci);
-  statusEl.style.display='';statusEl.textContent='Generating draft...';
-  draftEl.style.display='none';
-  try{
-    var result=await orGenerateEmail(c,isFollowUp);
-    document.getElementById('or-subj-'+ci).textContent=result.subject;
-    document.getElementById('or-body-'+ci).textContent=result.body;
-    draftEl.style.display='';statusEl.style.display='none';
-    document.getElementById('or-saved-'+ci).style.display='none';
-    c._subject=result.subject;c._body=result.body;
-  }catch(e){statusEl.textContent='Error: '+e.message;}
-};
-
-async function orGenerateEmail(c,isFollowUp){
-  var stoppedDrugs=c.stopped.slice(0,3).map(function(s){return orDrugShort(s.name);}).filter(function(v,i,a){return v&&a.indexOf(v)===i;});
-  var drugStr=stoppedDrugs.slice(0,2).join(' and ')||'several products';
-  var doctor=(c.doctor||'').replace(/^Dr\.?\s*/i,'').split(' ')[0]||'there';
-  var log=_orLog[c.name];
-  var lines;
-  if(isFollowUp&&log){
-    var prevDate=new Date(log.contacted_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
-    lines=[
-      'Write a short friendly follow-up email from Jonathan at PetScript to '+doctor+' at '+c.name.replace(/\*/g,'')+'.',
-      '',
-      'Context: Jonathan sent an email on '+prevDate+' with subject "'+log.subject+'" but got no reply.',
-      'They used to spend '+orFmtRev(c.lostRev)+' per year and went quiet after stopping '+drugStr+'.',
-      '',
-      'Tone: Warm, light, not pushy. 2-3 sentences max. Reference the previous email briefly.',
-      'Sign off: Jonathan, PetScript. Plain text only.',
-      '',
-      'Respond with ONLY this JSON: {"subject":"...","body":"..."}'
-    ];
-  }else{
-    lines=[
-      'Write a friendly winback email from Jonathan at PetScript pharmacy to '+doctor+' at '+c.name.replace(/\*/g,'')+'.',
-      '',
-      'Tone: Warm, curious, not pushy. Like a friend checking in. Light humor OK.',
-      'Style example: "Hey Michael, Quick question — what happened? Looked through our records, your clinic ordered cyclo from us before but suddenly stopped. Normally this happens for 1 of 3 reasons: 1. Pricing was off 2. Clinic changed hands or new staff 3. Someone hit the lottery :) Hoping #3. Either way, can you help me understand what happened?"',
-      '',
-      'Context:',
-      '- Clinic stopped ordering around '+orEpochStr(c.lastEp),
-      '- They used to spend about '+orFmtRev(c.lostRev)+' per year',
-      '- Drugs they stopped: '+drugStr,
-      '- We make compounded veterinary medications',
-      '',
-      'Instructions:',
-      '- Subject: Hey '+doctor+' - quick question',
-      '- Open casual with first name only',
-      '- Mention the specific stopped drug(s)',
-      '- Give 2-3 lighthearted possible reasons they stopped',
-      '- End asking what happened and how to fix it',
-      '- Sign off: Jonathan, PetScript',
-      '- Plain text only, short paragraphs',
-      '',
-      'Respond with ONLY this JSON: {"subject":"...","body":"..."}'
-    ];
-  }
-  var resp=await fetch('https://fragrant-cloud-6ef2.jp-d4e.workers.dev/claude-proxy',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','X-API-Key':'petscript2026'},
-    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:350,messages:[{role:'user',content:lines.join('\n')}]})
-  });
-  if(!resp.ok)throw new Error('Worker error '+resp.status);
-  var data=await resp.json();
-  var text=(data.content||[]).map(function(b){return b.text||'';}).join('').trim();
-  var m=text.match(/\{[\s\S]*\}/);
-  if(!m)throw new Error('No JSON in response');
-  var jsonStr=m[0];
-  jsonStr=jsonStr.replace(/"body"\s*:\s*"([\s\S]*?)"\s*\}$/,function(match,body){
-    return '"body":"'+body.replace(/\n/g,'\\n').replace(/\r/g,'')+'"}';
-  });
-  var parsed=JSON.parse(jsonStr);
-  if(!parsed.subject||!parsed.body)throw new Error('Missing fields');
-  parsed.body=parsed.body.replace(/\\n/g,'\n');
-  return parsed;
-}
-
-// Apollo sequence IDs
-var OR_SEQUENCES = {
-  dark:    '6a270cf7368e130018290a9b',
-  lapsed:  '6a270d07a642c7001892d0d4',
-  winback: '6a270cf7368e130018290a9b',
-  dropped: '6a270d18368e130018290aeb'
-};
-
-function orUpdateRowBadge(ci,isoDate){
-  var dt=new Date(isoDate).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  var nameDiv=document.querySelector('#or-row-'+ci+' div[style*="font-weight:700"]');
-  if(nameDiv){
-    var c=_orClinics.find(function(x){return x.ci===ci;});
-    if(c)nameDiv.innerHTML=c.name+'<span style="background:#fef3c7;color:#92400e;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:6px">&#9993; Added '+dt+'</span>';
-  }
-}
-
 window.orAddToApollo=async function(ci){
   var c=_orClinics.find(function(x){return x.ci===ci;});
-  if(!c){return;}
-  if(!c.email){alert('No email on file for this clinic.');return;}
-  // Ask which sequence
-  var seqChoice=window.prompt(
-    'Add '+c.name+' to which sequence?\n\n'+
-    '1 = Gone Dark 90d+ (what happened / lottery joke)\n'+
-    '2 = Lapsed 45-90d (still with us?)\n'+
-    '3 = Dropped SKU (noticed you stopped ordering)\n\n'+
-    'Enter 1, 2, or 3:'
-  );
-  if(!seqChoice)return;
-  var seqMap={'1':OR_SEQUENCES.dark,'2':OR_SEQUENCES.lapsed,'3':OR_SEQUENCES.dropped};
-  var seqId=seqMap[seqChoice.trim()];
-  if(!seqId){alert('Invalid choice. Enter 1, 2, or 3.');return;}
+  if(!c)return;
+  if(!c.email){alert('No email on file.');return;}
+  var sel=document.getElementById('or-seq-'+ci);
+  var seqKey=sel?sel.value:'';
+  if(!seqKey){alert('Please select a sequence first.');return;}
+  var seq=OR_SEQUENCES[seqKey];
+  if(!seq){alert('Invalid sequence.');return;}
   var btn=document.getElementById('or-save-'+ci);
   btn.disabled=true;btn.textContent='Adding...';
   try{
@@ -6915,27 +6803,108 @@ window.orAddToApollo=async function(ci){
         first_name:(c.doctor||'').replace(/^Dr\.?\s*/i,'').split(' ')[0]||c.name.split(' ')[0],
         last_name:(c.doctor||'').split(' ').slice(-1)[0]||'',
         organization_name:c.name.replace(/\*/g,'').trim(),
-        sequence_id:seqId
+        sequence_id:seq.id
       })
     });
     var result=await proxyResp.json();
     if(!result.success)throw new Error(result.error||'Apollo enrollment failed');
+
     var now=new Date().toISOString();
-    await SB.from('outreach_log').insert({clinic_name:c.name,rep_username:ME?ME.username:'admin',subject:'Apollo: '+(_orBucket)+' sequence',contacted_at:now});
-    _orLog[c.name]={clinic_name:c.name,subject:'Apollo sequence',contacted_at:now};
-    var savedEl=document.getElementById('or-saved-'+ci);
-    var timeEl=document.getElementById('or-saved-time-'+ci);
-    if(timeEl)timeEl.textContent='Added to Apollo';
-    if(savedEl)savedEl.style.display='';
-    btn.innerHTML='&#10003; In Apollo!';btn.style.background='#15803d';
-    orUpdateRowBadge(ci,now);
-    setTimeout(function(){btn.disabled=false;btn.innerHTML='&#128640; Add to Apollo';btn.style.background='#1d4ed8';},3000);
+    var seqLabel=seq.label;
+
+    // Log to Supabase
+    await SB.from('outreach_log').insert({clinic_name:c.name,rep_username:ME?ME.username:'admin',subject:'Apollo: '+seqLabel,contacted_at:now});
+
+    // Log HubSpot note via worker
+    if(c.email){
+      try{
+        await fetch('https://fragrant-cloud-6ef2.jp-d4e.workers.dev/hubspot',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            action:'note',
+            email:c.email,
+            rep_name:ME?ME.name||ME.username:'Admin',
+            clinic_name:c.name,
+            note:'Added to Apollo sequence: '+seqLabel+'\nSequence: '+seq.id+'\nAdded by: '+(ME?ME.name||ME.username:'Admin')
+          })
+        });
+      }catch(hsErr){console.warn('HubSpot note failed (non-fatal):',hsErr);}
+    }
+
+    _orLog[c.name]={clinic_name:c.name,subject:'Apollo: '+seqLabel,contacted_at:now};
+    _orContacted.add(c.name);
+
+    // Mark row as done
+    btn.innerHTML='&#10003; Added!';btn.style.background='#15803d';btn.disabled=false;
+    var rowEl=document.getElementById('or-row-'+ci);
+    if(rowEl){
+      var nameDiv=rowEl.querySelector('[style*="font-weight:700"]');
+      if(nameDiv)nameDiv.innerHTML=c.name+'<span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:6px">&#10003; In Apollo</span>';
+    }
+    // Auto-collapse after 1.5s
+    setTimeout(function(){ var exp=document.getElementById('or-exp-'+ci); if(exp)exp.style.display='none'; },1500);
   }catch(e){
     alert('Error: '+e.message);
     btn.disabled=false;btn.innerHTML='&#128640; Add to Apollo';
   }
 };
-window.orSave=window.orAddToApollo;
+
+window.orGenerate=async function(ci,isFollowUp){
+  var c=_orClinics.find(function(x){return x.ci===ci;});
+  if(!c)return;
+  var statusEl=document.getElementById('or-status-'+ci);
+  var draftEl=document.getElementById('or-draft-'+ci);
+  statusEl.style.display='';statusEl.textContent='Generating draft...';
+  draftEl.style.display='none';
+  try{
+    var stoppedDrugs=c.stopped.slice(0,3).map(function(s){return orDrugShort(s.name);}).filter(function(v,i,a){return v&&a.indexOf(v)===i;});
+    var drugStr=stoppedDrugs.slice(0,2).join(' and ')||'several products';
+    var doctor=(c.doctor||'').replace(/^Dr\.?\s*/i,'').split(' ')[0]||'there';
+    var lines=[
+      'Write a friendly winback email from Jonathan at PetScript pharmacy to '+doctor+' at '+c.name.replace(/\*/g,'')+'.',
+      '',
+      'Tone: Warm, curious, not pushy. Like a friend checking in. Light humor OK.',
+      'Style example: "Hey Michael, Quick question -- what happened? Looked through our records, your clinic ordered cyclo from us before but suddenly stopped. Normally this happens for 1 of 3 reasons: 1. Pricing was off 2. Clinic changed hands or new staff 3. Someone hit the lottery :) Hoping #3. Either way, can you help me understand what happened?"',
+      '',
+      'Context:',
+      '- Clinic stopped ordering around '+orEpochStr(c.lastEp),
+      '- They used to spend about '+orFmtRev(c.lostRev)+' per year',
+      '- Drugs they stopped: '+drugStr,
+      '- We make compounded veterinary medications',
+      '',
+      'Instructions:',
+      '- Subject: Hey '+doctor+' - quick question',
+      '- Open casual with first name only',
+      '- Mention stopped drug(s)',
+      '- Give 2-3 lighthearted possible reasons they stopped',
+      '- End asking what happened and how to fix it',
+      '- Sign off: Jonathan, PetScript',
+      '- Plain text only, short paragraphs',
+      '',
+      'Respond with ONLY this JSON: {"subject":"...","body":"..."}'
+    ];
+    var resp=await fetch('https://fragrant-cloud-6ef2.jp-d4e.workers.dev/claude-proxy',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-API-Key':'petscript2026'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:350,messages:[{role:'user',content:lines.join('\n')}]})
+    });
+    if(!resp.ok)throw new Error('Worker error '+resp.status);
+    var data=await resp.json();
+    var text=(data.content||[]).map(function(b){return b.text||'';}).join('').trim();
+    var m=text.match(/\{[\s\S]*\}/);
+    if(!m)throw new Error('No JSON in response');
+    var jsonStr=m[0];
+    jsonStr=jsonStr.replace(/"body"\s*:\s*"([\s\S]*?)"\s*\}$/,function(match,body){return '"body":"'+body.replace(/\n/g,'\\n').replace(/\r/g,'')+'"}';});
+    var parsed=JSON.parse(jsonStr);
+    if(!parsed.subject||!parsed.body)throw new Error('Missing fields');
+    parsed.body=parsed.body.replace(/\\n/g,'\n');
+    document.getElementById('or-subj-'+ci).textContent=parsed.subject;
+    document.getElementById('or-body-'+ci).textContent=parsed.body;
+    draftEl.style.display='';statusEl.style.display='none';
+    c._subject=parsed.subject;c._body=parsed.body;
+  }catch(e){statusEl.textContent='Error: '+e.message;}
+};
 
 window.orMailto=function(ci){
   var c=_orClinics.find(function(x){return x.ci===ci;});
@@ -6943,55 +6912,99 @@ window.orMailto=function(ci){
   window.open('mailto:'+c.email+'?subject='+encodeURIComponent(c._subject)+'&body='+encodeURIComponent(c._body));
 };
 
-function orInitGoogleAuth(){
-  if(typeof google==='undefined'||!google.accounts)return;
-  _orTokenClient=google.accounts.oauth2.initTokenClient({
-    client_id:OR_CLIENT_ID,scope:OR_SCOPE,
-    callback:function(resp){
-      if(resp.error){alert('Gmail auth failed: '+resp.error);return;}
-      _orAccessToken=resp.access_token;
-      document.getElementById('or-gmail-status').textContent='✓ Connected as jp@petscript.net';
-      document.getElementById('or-gmail-status').style.color='#16a34a';
-      document.getElementById('or-gmail-btn').textContent='&#128275; Connected';
-      document.getElementById('or-gmail-btn').style.background='#16a34a';
-    }
+// ── Tab switching ───────────────────────────────────────────
+function orSwitchTab(tab){
+  document.querySelectorAll('.or-tab-btn').forEach(function(b){
+    var active=b.getAttribute('data-ortab')===tab;
+    b.style.color=active?'#0f172a':'#64748b';
+    b.style.borderBottomColor=active?'#f97316':'transparent';
   });
+  document.getElementById('or-tab-roll').style.display=tab==='roll'?'':'none';
+  document.getElementById('or-tab-contacted').style.display=tab==='contacted'?'':'none';
+  document.getElementById('or-tab-ignored').style.display=tab==='ignored'?'':'none';
+  if(tab==='contacted')orRenderContacted();
+  if(tab==='ignored')orRenderIgnoredTab();
 }
 
-function orConnectGmail(){
-  if(!_orTokenClient){alert('Google auth not loaded yet — try again in a second.');return;}
-  _orTokenClient.requestAccessToken({prompt:'consent'});
+async function orRenderContacted(){
+  var el=document.getElementById('or-contacted-list');
+  el.innerHTML='<div style="color:#aaa;font-size:13px;text-align:center;padding:20px">Loading...</div>';
+  try{
+    var res=await SB.from('outreach_log').select('*').order('contacted_at',{ascending:false}).limit(200);
+    var rows=res.data||[];
+    if(!rows.length){el.innerHTML='<div style="color:#aaa;font-size:13px;text-align:center;padding:40px">No contacts logged yet.</div>';return;}
+    el.innerHTML=rows.map(function(r){
+      var dt=new Date(r.contacted_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
+      return '<div style="padding:12px 16px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;gap:12px">'
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:13px;font-weight:600;color:#0f172a">'+r.clinic_name+'</div>'
+          +'<div style="font-size:11px;color:#64748b;margin-top:2px">'+r.subject+'</div>'
+        +'</div>'
+        +'<div style="text-align:right;flex-shrink:0">'
+          +'<div style="font-size:11px;color:#64748b">'+dt+'</div>'
+          +'<div style="font-size:10px;color:#94a3b8">'+r.rep_username+'</div>'
+        +'</div>'
+      +'</div>';
+    }).join('');
+  }catch(e){el.innerHTML='<div style="color:#dc2626;font-size:13px;padding:20px">Error: '+e.message+'</div>';}
+}
+
+async function orRenderIgnoredTab(){
+  var el=document.getElementById('or-ignored-list');
+  el.innerHTML='<div style="color:#aaa;font-size:13px;text-align:center;padding:20px">Loading...</div>';
+  try{
+    var res=await SB.from('outreach_ignored').select('*').order('ignored_until',{ascending:false});
+    var rows=res.data||[];
+    if(!rows.length){el.innerHTML='<div style="color:#aaa;font-size:13px;text-align:center;padding:40px">No ignored clinics.</div>';return;}
+    el.innerHTML=rows.map(function(r){
+      var until=new Date(r.ignored_until).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      var expired=new Date(r.ignored_until)<new Date();
+      return '<div style="padding:12px 16px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;gap:12px">'
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:13px;font-weight:600;color:#0f172a">'+r.clinic_name+'</div>'
+          +'<div style="font-size:11px;color:#64748b;margin-top:2px">'+r.reason+'</div>'
+        +'</div>'
+        +'<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:'+(expired?'#f1f5f9':'#fef3c7')+';color:'+(expired?'#94a3b8':'#92400e')+'">Until '+until+'</span>'
+        +'<button data-unignore="'+encodeURIComponent(r.clinic_name)+'" style="font-size:11px;padding:4px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;cursor:pointer;color:#64748b">Remove</button>'
+      +'</div>';
+    }).join('');
+  }catch(e){el.innerHTML='<div style="color:#dc2626;font-size:13px;padding:20px">Error: '+e.message+'</div>';}
+}
+
+document.addEventListener('click',function(e){
+  var btn=e.target.closest('[data-unignore]');
+  if(btn&&document.getElementById('or-ignored-list')&&document.getElementById('or-ignored-list').contains(btn)){
+    var name=decodeURIComponent(btn.getAttribute('data-unignore'));
+    SB.from('outreach_ignored').delete().eq('clinic_name',name).then(function(){
+      delete _orIgnored[name];
+      orRenderIgnoredTab();
+    });
+  }
+});
+
+function orUpdateRowBadge(ci,isoDate){
+  var dt=new Date(isoDate).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  var nameDiv=document.querySelector('#or-row-'+ci+' [style*="font-weight:700"]');
+  if(nameDiv){ var c=_orClinics.find(function(x){return x.ci===ci;}); if(c)nameDiv.innerHTML=c.name+'<span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:6px">Added '+dt+'</span>'; }
 }
 
 function orInit(){
-  if(!document.getElementById('gsi-script')){
-    var s=document.createElement('script');s.id='gsi-script';
-    s.src='https://accounts.google.com/gsi/client';s.async=true;s.defer=true;
-    s.onload=orInitGoogleAuth;
-    document.head.appendChild(s);
-  }
-  var gb=document.getElementById('or-gmail-btn');
   var rb=document.getElementById('or-roll-btn');
-  if(gb&&!gb.dataset.bound){gb.addEventListener('click',orConnectGmail);gb.dataset.bound='1';}
   if(rb&&!rb.dataset.bound){rb.addEventListener('click',orRollClinics);rb.dataset.bound='1';}
-  // Bucket tabs
   document.querySelectorAll('.or-bucket').forEach(function(btn){
     if(btn.dataset.bound)return;
     btn.dataset.bound='1';
     btn.addEventListener('click',function(){
       _orBucket=this.dataset.bucket;
-      document.querySelectorAll('.or-bucket').forEach(function(b){
-        b.style.background='#fff';b.style.color='#64748b';b.style.borderColor='#e2e8f0';
-      });
+      document.querySelectorAll('.or-bucket').forEach(function(b){b.style.background='#fff';b.style.color='#64748b';b.style.borderColor='#e2e8f0';});
       this.style.background='#0f172a';this.style.color='#fff';this.style.borderColor='#0f172a';
     });
   });
-  // Ignored panel toggle
-  var ignBtn=document.getElementById('or-ignored-btn');
-  if(ignBtn&&!ignBtn.dataset.bound){
-    ignBtn.dataset.bound='1';
-    ignBtn.addEventListener('click',orShowIgnored);
-  }
+  document.querySelectorAll('.or-tab-btn').forEach(function(btn){
+    if(btn.dataset.bound)return;
+    btn.dataset.bound='1';
+    btn.addEventListener('click',function(){orSwitchTab(this.getAttribute('data-ortab'));});
+  });
 }
 
 async function orShowIgnored(){
