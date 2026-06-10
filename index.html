@@ -977,9 +977,21 @@ table.ptbl tr:last-child td{border-bottom:none}
           <button class="or-bucket" data-bucket="dropped" style="padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer">Dropped SKU</button>
         </div>
       </div>
-      <div style="margin-left:auto">
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:flex-end">
         <button id="or-roll-btn" class="abtn" style="background:#f97316">&#127922; Roll 50</button>
+        <button id="or-addall-btn" class="abtn" style="background:#1d4ed8;display:none">&#128640; Add All to Apollo</button>
       </div>
+    </div>
+    <!-- Bulk progress bar -->
+    <div id="or-bulk-progress" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 18px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:600;color:#0f172a">Adding to Apollo...</div>
+        <div id="or-bulk-count" style="font-size:12px;color:#64748b">0 / 0</div>
+      </div>
+      <div style="background:#f1f5f9;border-radius:20px;height:8px;overflow:hidden">
+        <div id="or-bulk-bar" style="height:100%;background:#1d4ed8;border-radius:20px;width:0%;transition:width .3s"></div>
+      </div>
+      <div id="or-bulk-status" style="font-size:11px;color:#64748b;margin-top:8px"></div>
     </div>
 
     <!-- Stats -->
@@ -6663,6 +6675,8 @@ async function orLoadIgnored(){
 }
 
 function orRenderStats(total){
+  var ab=document.getElementById('or-addall-btn');
+  if(ab)ab.style.display='';
   var el=document.getElementById('or-stats');
   el.style.display='flex';
   el.innerHTML='<span><b style="color:#0f172a">'+_orClinics.length+'</b> shown of <b style="color:#0f172a">'+total+'</b> eligible</span>'
@@ -6988,9 +7002,98 @@ function orUpdateRowBadge(ci,isoDate){
   if(nameDiv){ var c=_orClinics.find(function(x){return x.ci===ci;}); if(c)nameDiv.innerHTML=c.name+'<span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:6px">Added '+dt+'</span>'; }
 }
 
+async function orAddAllToApollo(){
+  var btn=document.getElementById('or-addall-btn');
+  var progress=document.getElementById('or-bulk-progress');
+  var bar=document.getElementById('or-bulk-bar');
+  var countEl=document.getElementById('or-bulk-count');
+  var statusEl=document.getElementById('or-bulk-status');
+
+  // Get the default sequence for current bucket
+  var seq=OR_SEQUENCES[_orBucket]||OR_SEQUENCES.dark;
+
+  // Filter to clinics with email not already added
+  var eligible=_orClinics.filter(function(c){
+    return c.email && !_orContacted.has(c.name);
+  });
+
+  if(!eligible.length){alert('No eligible clinics to add (all either have no email or already contacted).');return;}
+
+  if(!confirm('Add '+eligible.length+' clinics to "'+seq.label+'" sequence? Ignored clinics are excluded.'))return;
+
+  btn.disabled=true;
+  progress.style.display='';
+  bar.style.width='0%';
+
+  var done=0, success=0, failed=[], skipped=0;
+
+  for(var i=0;i<eligible.length;i++){
+    var c=eligible[i];
+    countEl.textContent=(i+1)+' / '+eligible.length;
+    statusEl.textContent='Adding: '+c.name.slice(0,50)+'...';
+
+    try{
+      var proxyResp=await fetch('https://fragrant-cloud-6ef2.jp-d4e.workers.dev/apollo-proxy',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-API-Key':'petscript2026'},
+        body:JSON.stringify({
+          action:'enroll',
+          email:c.email,
+          first_name:(c.doctor||'').replace(/^Dr\.?\s*/i,'').split(' ')[0]||c.name.split(' ')[0],
+          last_name:(c.doctor||'').split(' ').slice(-1)[0]||'',
+          organization_name:c.name.replace(/\*/g,'').trim(),
+          sequence_id:seq.id
+        })
+      });
+      var result=await proxyResp.json();
+      if(result.success){
+        success++;
+        // Log to Supabase
+        var now=new Date().toISOString();
+        await SB.from('outreach_log').insert({clinic_name:c.name,rep_username:ME?ME.username:'admin',subject:'Apollo: '+seq.label,contacted_at:now});
+        _orContacted.add(c.name);
+        _orLog[c.name]={clinic_name:c.name,subject:'Apollo: '+seq.label,contacted_at:now};
+        // Log HubSpot note (non-blocking)
+        if(c.email){
+          fetch('https://fragrant-cloud-6ef2.jp-d4e.workers.dev/hubspot',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({action:'note',email:c.email,rep_name:ME?ME.name||ME.username:'Admin',clinic_name:c.name,note:'Added to Apollo sequence: '+seq.label+' | Added by: '+(ME?ME.name||ME.username:'Admin')})
+          }).catch(function(){});
+        }
+        // Mark row green
+        var nameDiv=document.querySelector('#or-row-'+c.ci+' [style*="font-weight:700"]');
+        if(nameDiv)nameDiv.innerHTML=c.name+'<span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:6px">&#10003; Added</span>';
+        // Update add button on expanded row
+        var saveBtn=document.getElementById('or-save-'+c.ci);
+        if(saveBtn){saveBtn.innerHTML='&#10003; In Apollo';saveBtn.style.background='#15803d';saveBtn.disabled=true;}
+      } else {
+        failed.push(c.name+' ('+( result.error||'unknown')+')')
+      }
+    }catch(e){
+      failed.push(c.name+' ('+e.message+')');
+    }
+
+    done++;
+    bar.style.width=Math.round((done/eligible.length)*100)+'%';
+
+    // Small delay to avoid rate limiting
+    await new Promise(function(r){setTimeout(r,200);});
+  }
+
+  statusEl.innerHTML='<b style="color:#16a34a">Done!</b> Added: '+success+' &nbsp;|&nbsp; Failed: '+failed.length+(skipped?' &nbsp;|&nbsp; Skipped: '+skipped:'');
+  if(failed.length){
+    statusEl.innerHTML+='<br><span style="color:#dc2626;font-size:10px">Failed: '+failed.slice(0,5).join(', ')+(failed.length>5?' + '+(failed.length-5)+' more':'')+'</span>';
+  }
+  btn.disabled=false;
+  countEl.textContent=success+' added';
+}
+
 function orInit(){
   var rb=document.getElementById('or-roll-btn');
   if(rb&&!rb.dataset.bound){rb.addEventListener('click',orRollClinics);rb.dataset.bound='1';}
+  var ab=document.getElementById('or-addall-btn');
+  if(ab&&!ab.dataset.bound){ab.addEventListener('click',orAddAllToApollo);ab.dataset.bound='1';}
   document.querySelectorAll('.or-bucket').forEach(function(btn){
     if(btn.dataset.bound)return;
     btn.dataset.bound='1';
