@@ -283,6 +283,83 @@ function PN(id){ return MODE === 'ing' ? ING[id] : P[id]; }
 function toId(pi){ return MODE === 'ing' ? skuToIng[pi] : pi; }
 
 /* =====================================================================
+   SUPABASE — ignore system (same outreach_ignored table as the Outreach tab)
+===================================================================== */
+const SUPA_URL = 'https://kijoonuxbkpzejnqxnwl.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtpam9vbnV4YmtwemVqbnF4bndsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMzkyOTAsImV4cCI6MjA5MTkxNTI5MH0.tdTwDNLpY2jq16-NhmFwOj326d_UYpT4BlTyYoYSYVM';
+const SUPA_HEADERS = {'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'};
+
+let ignored = new Map();     // clinic name (lowercase) -> {reason, row}
+let ignoreNameCol = 'clinic';// detected from existing rows; fallback 'clinic'
+let showIgnored = false;
+
+async function loadIgnored(){
+  try{
+    const r = await fetch(`${SUPA_URL}/rest/v1/outreach_ignored?select=*`, {headers:SUPA_HEADERS});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const rows = await r.json();
+    if(rows.length){
+      const keys = Object.keys(rows[0]);
+      ignoreNameCol = ['clinic','clinic_name','name'].find(k=>keys.includes(k)) || keys.find(k=>k!=='id'&&k!=='reason') || 'clinic';
+    }
+    ignored = new Map(rows.map(row => [String(row[ignoreNameCol]||'').toLowerCase(), {reason: row.reason||'', row}]));
+  }catch(e){ console.warn('Could not load outreach_ignored:', e); }
+  if(gapX!=null && gapY!=null) renderGap();
+}
+async function ignoreClinic(idx){
+  const c = CLINICS[idx];
+  const reason = prompt(`Why ignore ${c.name}?\n(e.g. "State we can't ship to", "Asked not to contact")`);
+  if(reason===null) return;
+  try{
+    const r = await fetch(`${SUPA_URL}/rest/v1/outreach_ignored`, {
+      method:'POST', headers:{...SUPA_HEADERS,'Prefer':'return=representation'},
+      body: JSON.stringify({[ignoreNameCol]: c.name, reason})
+    });
+    if(!r.ok){ const t = await r.text(); throw new Error(t); }
+    const [row] = await r.json();
+    ignored.set(c.name.toLowerCase(), {reason, row});
+    renderGap();
+  }catch(e){
+    document.getElementById('gapStatus').textContent = 'Ignore failed: '+e.message+' — paste this error to fix the column mapping.';
+  }
+}
+async function unignoreClinic(name){
+  const entry = ignored.get(name.toLowerCase());
+  if(!entry) return;
+  try{
+    const del = entry.row && entry.row.id != null
+      ? `${SUPA_URL}/rest/v1/outreach_ignored?id=eq.${entry.row.id}`
+      : `${SUPA_URL}/rest/v1/outreach_ignored?${ignoreNameCol}=eq.${encodeURIComponent(name)}`;
+    const r = await fetch(del, {method:'DELETE', headers:SUPA_HEADERS});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    ignored.delete(name.toLowerCase());
+    renderGap();
+  }catch(e){
+    document.getElementById('gapStatus').textContent = 'Un-ignore failed: '+e.message;
+  }
+}
+function toggleShowIgnored(){ showIgnored = !showIgnored; renderGap(); }
+
+/* =====================================================================
+   CLINIC OVERVIEW (inline expand in gap list)
+===================================================================== */
+function toggleOverview(idx, el){
+  const div = document.getElementById('ov-'+idx);
+  if(div.style.display === 'block'){ div.style.display='none'; el.textContent='View products ▸'; return; }
+  const c = CLINICS[idx];
+  const rows = [...cRev(c).entries()].sort((a,b)=>b[1]-a[1]).slice(0,15);
+  const firstDay = c.invoices[0]?.[0], lastDay = c.invoices[c.invoices.length-1]?.[0];
+  const EPOCH = Date.UTC(2024,0,1);
+  const fmt = d => d==null?'—':new Date(EPOCH+d*86400000).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  div.innerHTML = `
+    <div class="small" style="margin:8px 0 6px">${c.invoices.length} order dates &middot; first ${fmt(firstDay)} &middot; latest ${fmt(lastDay)} &middot; total ${money([...cRev(c).values()].reduce((a,b)=>a+b,0))}</div>
+    <table style="font-size:12.5px"><thead><tr><th>Product</th><th class="num">Spend</th></tr></thead>
+    <tbody>${rows.map(([p,v])=>`<tr><td>${PN(p)}</td><td class="num">${money(v)}</td></tr>`).join('')}</tbody></table>`;
+  div.style.display='block';
+  el.textContent='Hide products ▾';
+}
+
+/* =====================================================================
    DATA PREP — each clinic gets both SKU-level and ingredient-level sets
 ===================================================================== */
 let CLINICS = [];
@@ -322,6 +399,7 @@ function pct(v){ return (v*100).toFixed(1).replace(/\.0$/,'') + '%'; }
     const invoices = [...byDay.entries()].sort((a,b)=>a[0]-b[0]);
     CLINICS.push({id:key, name, ka: clinicKA(key), prods, rev, invoices});
   }
+  CLINICS.forEach((c,i)=>c.idx=i);
 })();
 
 function cProds(c){ return c.prods[MODE]; }
@@ -435,18 +513,22 @@ function renderGap(){
   if(gapX==null || gapY==null) return;
   const scope = scopeClinics();
   const xClinics = scope.filter(c=>cProds(c).has(gapX));
-  gapClinicList = xClinics.filter(c=>!cProds(c).has(gapY))
+  const rawGap = xClinics.filter(c=>!cProds(c).has(gapY))
     .sort((a,b)=>(cRev(b).get(gapX)||0)-(cRev(a).get(gapX)||0));
-  const both = xClinics.length - gapClinicList.length;
+  const ignoredInList = rawGap.filter(c=>ignored.has(c.name.toLowerCase()));
+  gapClinicList = rawGap.filter(c=>!ignored.has(c.name.toLowerCase()));
+  const both = xClinics.length - rawGap.length;
   document.getElementById('gapKpis').innerHTML = `
     <div class="kpi"><div class="v">${gapClinicList.length.toLocaleString()}</div><div class="l">buy ${PN(gapX)} but not ${PN(gapY)}</div></div>
     <div class="kpi"><div class="v">${both.toLocaleString()}</div><div class="l">already buy both</div></div>
-    <div class="kpi"><div class="v">${pct(xClinics.length? both/xClinics.length : 0)}</div><div class="l">current penetration</div></div>`;
+    <div class="kpi"><div class="v">${pct(xClinics.length? both/xClinics.length : 0)}</div><div class="l">current penetration</div></div>
+    ${ignoredInList.length?`<div class="kpi" style="background:#fef3e7"><div class="v">${ignoredInList.length}</div><div class="l"><span class="linky" onclick="toggleShowIgnored()">${showIgnored?'hide':'show'} ignored</span></div></div>`:''}`;
   document.getElementById('gapActions').style.display = gapClinicList.length ? 'flex' : 'none';
-  document.getElementById('gapList').innerHTML = gapClinicList.slice(0,200).map(c=>{
+
+  const card = (c, isIgnored) => {
     const [ri,email,phone,doctor,,cityzip,lastOrd] = c.ka;
-    return `<div class="clinic-card">
-      <div class="nm">${c.name}</div>
+    return `<div class="clinic-card" ${isIgnored?'style="opacity:.65;background:#fffbf5"':''}>
+      <div class="nm">${c.name}${isIgnored?` <span class="pill oppty">Ignored: ${ignored.get(c.name.toLowerCase())?.reason||''}</span>`:''}</div>
       <div class="meta">
         ${doctor?`<span><b>${doctor}</b></span>`:''}
         ${REPS[ri]?`<span>Rep: <b>${REPS[ri]}</b></span>`:''}
@@ -456,8 +538,25 @@ function renderGap(){
         <span>${PN(gapX)} spend: <b>${money(cRev(c).get(gapX)||0)}</b></span>
         ${lastOrd?`<span>Last order: <b>${lastOrd}</b></span>`:''}
       </div>
+      <div class="meta" style="margin-top:8px">
+        <span class="linky" onclick="toggleOverview(${c.idx}, this)">View products ▸</span>
+        <a class="linky" href="index.html?clinic=${encodeURIComponent(c.name)}" target="_blank" style="text-decoration:none">Open in PSTOOL ↗</a>
+        ${isIgnored
+          ? `<span class="linky" onclick="unignoreClinic('${c.name.replace(/'/g,"\\'")}')" style="color:var(--green)">↩ Un-ignore</span>`
+          : `<span class="linky" onclick="ignoreClinic(${c.idx})" style="color:var(--red)">🚫 Ignore</span>`}
+      </div>
+      <div class="ov" id="ov-${c.idx}" style="display:none"></div>
     </div>`;
-  }).join('') + (gapClinicList.length>200?`<div class="empty">Showing top 200 of ${gapClinicList.length.toLocaleString()} — export CSV for the full list.</div>`:'');
+  };
+
+  document.getElementById('gapList').innerHTML =
+    (showIgnored && ignoredInList.length
+      ? `<div class="sub" style="margin-bottom:8px">Ignored (${ignoredInList.length}) — excluded from CSV, emails, and Apollo:</div>`
+        + ignoredInList.map(c=>card(c,true)).join('')
+        + `<div class="sub" style="margin:14px 0 8px">Active list:</div>`
+      : '')
+    + gapClinicList.slice(0,200).map(c=>card(c,false)).join('')
+    + (gapClinicList.length>200?`<div class="empty">Showing top 200 of ${gapClinicList.length.toLocaleString()} — export CSV for the full list.</div>`:'');
 }
 document.getElementById('gapCsv').onclick = () => {
   const rows = [['Clinic','Doctor','Rep','Email','Phone','Street','City/State/Zip','Last Order', PN(gapX)+' Spend']];
@@ -712,6 +811,7 @@ attachDD('seqSearch','seqDD', productItems, v=>{seqX=v; renderSeq();});
 attachDD('clSearch','clDD', ()=>CLINICS.map((c,i)=>({value:i,label:c.name,count:cProds(c).size})), v=>{clIdx=v; renderClinic();});
 document.getElementById('affSort').onchange = renderAffinity;
 document.getElementById('seqWin').onchange = renderSeq;
+loadIgnored();
 </script>
 </body>
 </html>
