@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Basket Analysis — PSTOOL</title>
+<style>
+  :root{
+    --navy:#1a2035; --bg:#f5f6fa; --card:#ffffff; --border:#e4e7ef;
+    --text:#1f2537; --muted:#6b7280; --blue:#3b6ef5; --green:#16a34a;
+    --red:#dc2626; --amber:#d97706; --chip:#eef2ff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+
+  /* ---------- Topbar ---------- */
+  .topbar{background:var(--navy);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+  .topbar h1{font-size:17px;font-weight:600;letter-spacing:.2px}
+  .topbar a.back{color:#aab4d4;text-decoration:none;font-size:13px;padding:4px 10px;border:1px solid #3a4360;border-radius:6px}
+  .topbar a.back:hover{color:#fff;border-color:#5a6488}
+  .topbar .spacer{flex:1}
+  .topbar select{background:#252c47;color:#fff;border:1px solid #3a4360;border-radius:6px;padding:6px 10px;font-size:13px;max-width:200px}
+
+  /* ---------- Tabs ---------- */
+  .tabs{display:flex;gap:4px;padding:10px 20px 0;background:var(--navy);overflow-x:auto}
+  .tab{padding:9px 16px;color:#aab4d4;cursor:pointer;font-size:13px;font-weight:500;border-radius:8px 8px 0 0;white-space:nowrap;user-select:none}
+  .tab:hover{color:#fff}
+  .tab.active{background:var(--bg);color:var(--navy);font-weight:600}
+
+  .wrap{max-width:1200px;margin:0 auto;padding:18px 20px 60px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:16px;box-shadow:0 1px 2px rgba(20,25,50,.04)}
+  .card h2{font-size:15px;font-weight:600;margin-bottom:4px}
+  .card .sub{font-size:12.5px;color:var(--muted);margin-bottom:12px}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+
+  /* ---------- Controls ---------- */
+  label.fld{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:500;min-width:220px;flex:1;max-width:340px;position:relative}
+  .fld input[type=text]{border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-size:14px;width:100%;background:#fff}
+  .fld input[type=text]:focus{outline:none;border-color:var(--blue)}
+  .fld select{border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-size:14px;background:#fff}
+  .dd{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:8px;margin-top:4px;max-height:280px;overflow-y:auto;z-index:40;box-shadow:0 6px 20px rgba(20,25,50,.12);display:none}
+  .dd div{padding:8px 12px;cursor:pointer;font-size:13px;color:var(--text)}
+  .dd div:hover{background:var(--chip)}
+  .dd .cnt{color:var(--muted);font-size:11.5px;float:right}
+
+  button.btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer}
+  button.btn:hover{filter:brightness(1.08)}
+  button.btn.ghost{background:#fff;color:var(--text);border:1px solid var(--border)}
+  button.btn.green{background:var(--green)}
+  button.btn:disabled{opacity:.5;cursor:default}
+
+  /* ---------- KPI chips ---------- */
+  .kpis{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0 4px}
+  .kpi{background:var(--chip);border-radius:10px;padding:10px 16px;min-width:130px}
+  .kpi .v{font-size:20px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:11.5px;color:var(--muted);margin-top:2px}
+
+  /* ---------- Tables ---------- */
+  .tblwrap{overflow-x:auto;margin-top:8px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;padding:8px 10px;color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+  th.noclick{cursor:default}
+  td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+  tr:hover td{background:#fafbfe}
+  .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .bar{display:inline-block;height:8px;border-radius:4px;background:var(--blue);vertical-align:middle;margin-right:8px;min-width:2px}
+  .pct{font-weight:600}
+  .small{font-size:11.5px;color:var(--muted)}
+  .lift-hi{color:var(--green);font-weight:600}
+  .lift-lo{color:var(--red)}
+  .delta-pos{color:var(--green);font-weight:600}
+  .delta-neg{color:var(--red);font-weight:600}
+  .linky{color:var(--blue);cursor:pointer;font-weight:500}
+  .linky:hover{text-decoration:underline}
+  .pill{display:inline-block;background:var(--chip);border-radius:20px;padding:2px 10px;font-size:11.5px;color:var(--navy);margin:2px 3px 2px 0}
+  .oppty{background:#fef3e7;color:var(--amber)}
+
+  /* ---------- Clinic list ---------- */
+  .clinic-card{border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#fff}
+  .clinic-card .nm{font-weight:600;font-size:14px}
+  .clinic-card .meta{font-size:12.5px;color:var(--muted);margin-top:4px;display:flex;gap:14px;flex-wrap:wrap}
+  .clinic-card .meta b{color:var(--text);font-weight:600}
+
+  .progress{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:10px;display:none}
+  .progress>div{height:100%;background:var(--green);width:0%;transition:width .2s}
+  .status{font-size:12.5px;color:var(--muted);margin-top:6px}
+
+  .note{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:12.5px;color:#92400e;margin-top:10px}
+  .empty{padding:30px;text-align:center;color:var(--muted);font-size:13px}
+
+  @media(max-width:640px){
+    .wrap{padding:14px 12px 60px}
+    label.fld{max-width:none}
+    .kpi{min-width:calc(50% - 6px)}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back" href="index.html">&larr; PSTOOL</a>
+  <h1>Market Basket Analysis</h1>
+  <div class="spacer"></div>
+  <select id="repFilter" title="Filter all views by rep territory"></select>
+</div>
+<div class="tabs">
+  <div class="tab active" data-tab="affinity">Product Affinity</div>
+  <div class="tab" data-tab="gap">Gap Analysis</div>
+  <div class="tab" data-tab="seq">Purchase Sequences</div>
+  <div class="tab" data-tab="bundles">Bundles</div>
+  <div class="tab" data-tab="clinic">Clinic Cross-Sell</div>
+</div>
+
+<div class="wrap">
+
+  <!-- ============ AFFINITY ============ -->
+  <div id="tab-affinity">
+    <div class="card">
+      <h2>Product Affinity</h2>
+      <div class="sub">Pick a product to see what else its buyers order. Confidence = % of X buyers that also buy Y. Lift &gt; 1 means Y is bought more than chance would predict.</div>
+      <div class="row">
+        <label class="fld">Product X
+          <input type="text" id="affSearch" placeholder="Search products..." autocomplete="off">
+          <div class="dd" id="affDD"></div>
+        </label>
+        <label class="fld" style="max-width:180px;min-width:150px">Sort by
+          <select id="affSort">
+            <option value="conf">Confidence</option>
+            <option value="lift">Lift</option>
+            <option value="supp">Support</option>
+            <option value="gap">Gap count</option>
+          </select>
+        </label>
+      </div>
+      <div id="affKpis" class="kpis"></div>
+      <div class="tblwrap"><div id="affResult" class="empty">Select a product to run affinity analysis.</div></div>
+    </div>
+  </div>
+
+  <!-- ============ GAP ============ -->
+  <div id="tab-gap" style="display:none">
+    <div class="card">
+      <h2>Gap Analysis</h2>
+      <div class="sub">Clinics that buy X but have never ordered Y — your upsell list, sorted by their spend on X.</div>
+      <div class="row">
+        <label class="fld">They buy (X)
+          <input type="text" id="gapXSearch" placeholder="Search products..." autocomplete="off">
+          <div class="dd" id="gapXDD"></div>
+        </label>
+        <label class="fld">But not (Y)
+          <input type="text" id="gapYSearch" placeholder="Search products..." autocomplete="off">
+          <div class="dd" id="gapYDD"></div>
+        </label>
+      </div>
+      <div id="gapKpis" class="kpis"></div>
+      <div id="gapActions" class="row" style="display:none;margin-top:6px">
+        <button class="btn ghost" id="gapCsv">Export CSV</button>
+        <button class="btn ghost" id="gapEmails">Copy Emails</button>
+        <label class="fld" style="max-width:220px;min-width:180px">Apollo sequence
+          <select id="gapSeq"></select>
+        </label>
+        <button class="btn green" id="gapApollo">Add All to Apollo</button>
+      </div>
+      <div class="progress" id="gapProg"><div></div></div>
+      <div class="status" id="gapStatus"></div>
+      <div id="gapList" style="margin-top:14px"></div>
+    </div>
+  </div>
+
+  <!-- ============ SEQUENCES ============ -->
+  <div id="tab-seq" style="display:none">
+    <div class="card">
+      <h2>Purchase Sequences</h2>
+      <div class="sub">After a clinic's first order of X, which products show up in their next invoices? Reveals natural cross-sell timing. Each unique order date counts as one invoice.</div>
+      <div class="row">
+        <label class="fld">Starting product (X)
+          <input type="text" id="seqSearch" placeholder="Search products..." autocomplete="off">
+          <div class="dd" id="seqDD"></div>
+        </label>
+        <label class="fld" style="max-width:200px;min-width:160px">Window
+          <select id="seqWin">
+            <option value="1">Next 1 invoice</option>
+            <option value="2" selected>Next 2 invoices</option>
+            <option value="3">Next 3 invoices</option>
+          </select>
+        </label>
+      </div>
+      <div id="seqKpis" class="kpis"></div>
+      <div class="tblwrap"><div id="seqResult" class="empty">Select a product to see follow-on purchase patterns.</div></div>
+    </div>
+  </div>
+
+  <!-- ============ BUNDLES ============ -->
+  <div id="tab-bundles" style="display:none">
+    <div class="card">
+      <h2>Top 20 Product Pairs</h2>
+      <div class="sub">Most common 2-product combinations across all clinics in scope.</div>
+      <div class="tblwrap" id="pairsTbl"></div>
+    </div>
+    <div class="card">
+      <h2>Top 10 Product Triplets</h2>
+      <div class="sub">Most common 3-product combinations (computed across the 50 most widely-purchased products for speed).</div>
+      <div class="tblwrap" id="tripsTbl"></div>
+    </div>
+  </div>
+
+  <!-- ============ CLINIC ============ -->
+  <div id="tab-clinic" style="display:none">
+    <div class="card">
+      <h2>Clinic-Level Cross-Sell</h2>
+      <div class="sub">Finds the 25 clinics with the most similar purchase profile, then shows what they buy that this clinic doesn't.</div>
+      <div class="row">
+        <label class="fld">Clinic
+          <input type="text" id="clSearch" placeholder="Search clinics..." autocomplete="off">
+          <div class="dd" id="clDD"></div>
+        </label>
+      </div>
+      <div id="clProfile"></div>
+      <div class="tblwrap" id="clResult"></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="data.js"></script>
+<script>
+/* =====================================================================
+   CONFIG
+===================================================================== */
+const WORKER = 'https://fragrant-cloud-6ef2.jp-d4e.workers.dev';
+const SEQUENCES = {
+  'Gone Dark / Win-Back': '6a270cf7368e130018290a9b',
+  'Lapsed 45-90d':        '6a270d07a642c7001892d0d4',
+  'Dropped SKU':          '6a270d18368e130018290aeb'
+};
+// ASSUMPTION: /apollo-proxy accepts POST {path, method, body} and forwards to Apollo.
+// If index.html's callApollo helper uses a different contract, mirror it in apolloCall() below.
+async function apolloCall(path, method, body){
+  const r = await fetch(WORKER + '/apollo-proxy', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({path, method, body})
+  });
+  if(!r.ok) throw new Error('Proxy error ' + r.status);
+  return r.json();
+}
+
+const EXCLUDE = ['vetcove','pet parent','petscript direct','usc','shelters united','vha','vethubrx','mike salsbury','serena patterson'];
+const EPOCH = Date.UTC(2024,0,1);
+
+/* =====================================================================
+   DATA PREP
+===================================================================== */
+let CLINICS = [];           // [{id, name, ka, prods:Set, invoices:[[day,Set]], revByProd:Map}]
+let nameToIdx = new Map();  // clinic name -> CLINICS index
+
+function isExcluded(name){
+  const n = (name||'').toLowerCase();
+  return EXCLUDE.some(e => n.includes(e));
+}
+function clinicName(key){ return (typeof key === 'number') ? (C[key] || ('Clinic '+key)) : key; }
+function clinicKA(key){
+  if(typeof key === 'number') return KA[key] || [];
+  const i = C.indexOf(key); return i >= 0 ? (KA[i]||[]) : [];
+}
+function dayToDate(d){
+  return new Date(EPOCH + d*86400000).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+function money(v){ return '$' + Math.round(v).toLocaleString(); }
+function pct(v){ return (v*100).toFixed(1).replace(/\.0$/,'') + '%'; }
+
+(function buildClinics(){
+  const entries = Array.isArray(D)
+    ? D.map((txs,i)=>[i,txs]).filter(e=>e[1] && e[1].length)
+    : Object.entries(D).map(([k,v])=>[isNaN(+k)?k:+k, v]);
+
+  for(const [key, txs] of entries){
+    const name = clinicName(key);
+    if(isExcluded(name)) continue;
+    const prods = new Set(), revByProd = new Map(), byDay = new Map();
+    for(const t of txs){
+      const [, pi, rev, day] = t;
+      prods.add(pi);
+      revByProd.set(pi, (revByProd.get(pi)||0) + (rev||0));
+      if(!byDay.has(day)) byDay.set(day, new Set());
+      byDay.get(day).add(pi);
+    }
+    const invoices = [...byDay.entries()].sort((a,b)=>a[0]-b[0]);
+    CLINICS.push({id:key, name, ka: clinicKA(key), prods, invoices, revByProd});
+  }
+  CLINICS.forEach((c,i)=>nameToIdx.set(c.name, i));
+})();
+
+/* =====================================================================
+   SCOPE (rep filter)
+===================================================================== */
+let curRep = -1; // -1 = all
+function scopeClinics(rep = curRep){
+  return rep === -1 ? CLINICS : CLINICS.filter(c => c.ka[0] === rep);
+}
+function productCounts(clinics){
+  const m = new Map();
+  for(const c of clinics) for(const p of c.prods) m.set(p, (m.get(p)||0)+1);
+  return m;
+}
+let natCounts = productCounts(CLINICS); // national baseline, computed once
+
+/* =====================================================================
+   PRODUCT / CLINIC SEARCH DROPDOWNS
+===================================================================== */
+function attachDD(inputId, ddId, items, onPick){
+  const inp = document.getElementById(inputId), dd = document.getElementById(ddId);
+  function render(q){
+    q = q.toLowerCase();
+    const matches = items.filter(it => it.label.toLowerCase().includes(q)).slice(0,50);
+    dd.innerHTML = matches.map(it =>
+      `<div data-v="${it.value}">${it.label}${it.count!=null?`<span class="cnt">${it.count} clinics</span>`:''}</div>`).join('') ||
+      '<div style="color:var(--muted)">No matches</div>';
+    dd.style.display = 'block';
+    dd.querySelectorAll('div[data-v]').forEach(el=>{
+      el.onclick = () => { inp.value = items.find(i=>String(i.value)===el.dataset.v).label; dd.style.display='none'; onPick(+el.dataset.v); };
+    });
+  }
+  inp.addEventListener('input', ()=>render(inp.value));
+  inp.addEventListener('focus', ()=>render(inp.value));
+  document.addEventListener('click', e=>{ if(!inp.parentElement.contains(e.target)) dd.style.display='none'; });
+}
+function productItems(){
+  const counts = productCounts(scopeClinics());
+  return [...counts.entries()]
+    .sort((a,b)=>b[1]-a[1])
+    .map(([pi,ct])=>({value:pi, label:P[pi], count:ct}));
+}
+
+/* =====================================================================
+   TAB 1: AFFINITY
+===================================================================== */
+let affX = null;
+function computeAffinity(xProd, clinics){
+  const total = clinics.length;
+  const xClinics = clinics.filter(c=>c.prods.has(xProd));
+  const nX = xClinics.length;
+  const counts = productCounts(clinics);
+  const co = new Map();
+  for(const c of xClinics) for(const p of c.prods) if(p!==xProd) co.set(p,(co.get(p)||0)+1);
+  const rows = [];
+  for(const [y,n] of co){
+    const conf = n/nX, supp = n/total, pY = (counts.get(y)||0)/total;
+    rows.push({y, n, conf, supp, lift: pY>0?conf/pY:0, gap: nX-n});
+  }
+  return {nX, total, rows};
+}
+function renderAffinity(){
+  if(affX==null) return;
+  const {nX, total, rows} = computeAffinity(affX, scopeClinics());
+  // national comparison when rep filter active
+  let natMap = null;
+  if(curRep !== -1){
+    natMap = new Map(computeAffinity(affX, CLINICS).rows.map(r=>[r.y, r.conf]));
+  }
+  document.getElementById('affKpis').innerHTML = `
+    <div class="kpi"><div class="v">${nX.toLocaleString()}</div><div class="l">clinics buy ${P[affX]}</div></div>
+    <div class="kpi"><div class="v">${pct(nX/total)}</div><div class="l">of ${total.toLocaleString()} clinics in scope</div></div>`;
+  const sort = document.getElementById('affSort').value;
+  rows.sort((a,b)=>b[sort]-a[sort]);
+  const top = rows.filter(r=>r.n>=2).slice(0,60);
+  if(!top.length){ document.getElementById('affResult').innerHTML='<div class="empty">Not enough co-purchase data.</div>'; return; }
+  document.getElementById('affResult').innerHTML = `<table>
+    <thead><tr><th class="noclick">Also buy...</th><th class="noclick">Confidence</th><th class="num noclick">Clinics</th><th class="num noclick">Support</th><th class="num noclick">Lift</th><th class="num noclick">Gap</th>${natMap?'<th class="num noclick">vs National</th>':''}<th class="noclick"></th></tr></thead>
+    <tbody>${top.map(r=>{
+      const natDelta = natMap ? (r.conf - (natMap.get(r.y)||0)) : null;
+      return `<tr>
+        <td>${P[r.y]}</td>
+        <td><span class="bar" style="width:${Math.round(r.conf*120)}px"></span><span class="pct">${pct(r.conf)}</span></td>
+        <td class="num">${r.n.toLocaleString()} of ${nX.toLocaleString()}</td>
+        <td class="num">${pct(r.supp)}</td>
+        <td class="num ${r.lift>=1.5?'lift-hi':r.lift<1?'lift-lo':''}">${r.lift.toFixed(2)}x</td>
+        <td class="num"><span class="pill oppty">${r.gap.toLocaleString()}</span></td>
+        ${natDelta!=null?`<td class="num ${natDelta>=0?'delta-pos':'delta-neg'}">${natDelta>=0?'+':''}${(natDelta*100).toFixed(1)} pts</td>`:''}
+        <td><span class="linky" onclick="jumpToGap(${affX},${r.y})">View gap list</span></td>
+      </tr>`;}).join('')}
+    </tbody></table>`;
+}
+
+/* =====================================================================
+   TAB 2: GAP
+===================================================================== */
+let gapX=null, gapY=null, gapClinicList=[];
+function jumpToGap(x,y){
+  gapX=x; gapY=y;
+  document.getElementById('gapXSearch').value = P[x];
+  document.getElementById('gapYSearch').value = P[y];
+  switchTab('gap'); renderGap();
+}
+function renderGap(){
+  if(gapX==null || gapY==null) return;
+  const scope = scopeClinics();
+  const xClinics = scope.filter(c=>c.prods.has(gapX));
+  gapClinicList = xClinics.filter(c=>!c.prods.has(gapY))
+    .sort((a,b)=>(b.revByProd.get(gapX)||0)-(a.revByProd.get(gapX)||0));
+  const both = xClinics.length - gapClinicList.length;
+  document.getElementById('gapKpis').innerHTML = `
+    <div class="kpi"><div class="v">${gapClinicList.length.toLocaleString()}</div><div class="l">buy ${P[gapX]} but not ${P[gapY]}</div></div>
+    <div class="kpi"><div class="v">${both.toLocaleString()}</div><div class="l">already buy both</div></div>
+    <div class="kpi"><div class="v">${pct(xClinics.length? both/xClinics.length : 0)}</div><div class="l">current penetration</div></div>`;
+  document.getElementById('gapActions').style.display = gapClinicList.length ? 'flex' : 'none';
+  document.getElementById('gapList').innerHTML = gapClinicList.slice(0,200).map(c=>{
+    const [ri,email,phone,doctor,,cityzip,lastOrd] = c.ka;
+    return `<div class="clinic-card">
+      <div class="nm">${c.name}</div>
+      <div class="meta">
+        ${doctor?`<span><b>${doctor}</b></span>`:''}
+        ${REPS[ri]?`<span>Rep: <b>${REPS[ri]}</b></span>`:''}
+        ${email?`<span>${email}</span>`:''}
+        ${phone?`<span>${phone}</span>`:''}
+        ${cityzip?`<span>${cityzip}</span>`:''}
+        <span>${P[gapX]} spend: <b>${money(c.revByProd.get(gapX)||0)}</b></span>
+        ${lastOrd?`<span>Last order: <b>${lastOrd}</b></span>`:''}
+      </div>
+    </div>`;
+  }).join('') + (gapClinicList.length>200?`<div class="empty">Showing top 200 of ${gapClinicList.length.toLocaleString()} — export CSV for the full list.</div>`:'');
+}
+// --- Export / Copy / Apollo ---
+document.getElementById('gapCsv').onclick = () => {
+  const rows = [['Clinic','Doctor','Rep','Email','Phone','Street','City/State/Zip','Last Order', P[gapX]+' Spend']];
+  for(const c of gapClinicList){
+    const [ri,email,phone,doctor,street,cityzip,lastOrd] = c.ka;
+    rows.push([c.name,doctor||'',REPS[ri]||'',email||'',phone||'',street||'',cityzip||'',lastOrd||'',Math.round(c.revByProd.get(gapX)||0)]);
+  }
+  const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download = `gap_${P[gapX]}_not_${P[gapY]}.csv`.replace(/[^\w.-]+/g,'_');
+  a.click();
+};
+document.getElementById('gapEmails').onclick = () => {
+  const emails = gapClinicList.map(c=>c.ka[1]).filter(Boolean).join(', ');
+  navigator.clipboard.writeText(emails);
+  document.getElementById('gapStatus').textContent = `Copied ${emails.split(',').filter(Boolean).length} emails to clipboard.`;
+};
+const seqSel = document.getElementById('gapSeq');
+seqSel.innerHTML = Object.entries(SEQUENCES).map(([n,id])=>`<option value="${id}">${n}</option>`).join('');
+document.getElementById('gapApollo').onclick = async () => {
+  const btn = document.getElementById('gapApollo'), prog = document.getElementById('gapProg'),
+        bar = prog.firstElementChild, status = document.getElementById('gapStatus');
+  const seqId = seqSel.value;
+  const targets = gapClinicList.filter(c=>c.ka[1]);
+  if(!targets.length){ status.textContent = 'No clinics with emails in this list.'; return; }
+  if(!confirm(`Add ${targets.length} contacts to this Apollo sequence?`)) return;
+  btn.disabled = true; prog.style.display='block';
+  const contactIds = []; let done=0, failed=0;
+  try{
+    for(const c of targets){
+      try{
+        const [,email,,doctor] = c.ka;
+        const res = await apolloCall('/api/v1/contacts','POST',{
+          first_name: doctor || c.name, email, organization_name: c.name, run_dedupe: true
+        });
+        const id = res?.contact?.id;
+        if(id) contactIds.push(id); else failed++;
+      }catch(e){ failed++; }
+      done++; bar.style.width = Math.round(done/targets.length*90)+'%';
+      status.textContent = `Creating contacts... ${done}/${targets.length}`;
+    }
+    status.textContent = 'Fetching sending account...';
+    const acct = await apolloCall('/api/v1/email_accounts','GET',null);
+    const acctId = acct?.email_accounts?.[0]?.id;  // must be the account ID, not the email string
+    if(!acctId) throw new Error('No Apollo email account found');
+    status.textContent = 'Enrolling in sequence...';
+    await apolloCall(`/api/v1/emailer_campaigns/${seqId}/add_contact_ids`,'POST',{
+      contact_ids: contactIds, emailer_campaign_id: seqId,
+      send_email_from_email_account_id: acctId
+    });
+    bar.style.width='100%';
+    status.textContent = `Done — ${contactIds.length} enrolled${failed?`, ${failed} failed`:''}.`;
+  }catch(e){
+    status.textContent = 'Error: ' + e.message + ' (check /apollo-proxy contract matches index.html)';
+  }
+  btn.disabled = false;
+};
+
+/* =====================================================================
+   TAB 3: SEQUENCES
+===================================================================== */
+let seqX = null;
+function renderSeq(){
+  if(seqX==null) return;
+  const win = +document.getElementById('seqWin').value;
+  const scope = scopeClinics();
+  const follow = new Map(); // y -> {n, dayGaps[]}
+  let denom = 0;
+  for(const c of scope){
+    if(!c.prods.has(seqX)) continue;
+    const fi = c.invoices.findIndex(inv=>inv[1].has(seqX));
+    if(fi === -1 || fi === c.invoices.length-1) continue; // no invoices after first X
+    denom++;
+    const xDay = c.invoices[fi][0];
+    const seen = new Set();
+    for(let i=fi+1; i<=Math.min(fi+win, c.invoices.length-1); i++){
+      const [day, prods] = c.invoices[i];
+      for(const y of prods){
+        if(y===seqX || seen.has(y)) continue;
+        seen.add(y);
+        if(!follow.has(y)) follow.set(y,{n:0,gaps:[]});
+        const f = follow.get(y); f.n++; f.gaps.push(day - xDay);
+      }
+    }
+  }
+  document.getElementById('seqKpis').innerHTML = `
+    <div class="kpi"><div class="v">${denom.toLocaleString()}</div><div class="l">clinics with invoices after first ${P[seqX]} order</div></div>`;
+  const rows = [...follow.entries()]
+    .map(([y,f])=>{
+      f.gaps.sort((a,b)=>a-b);
+      return {y, n:f.n, conf:f.n/denom, med: f.gaps[Math.floor(f.gaps.length/2)]};
+    })
+    .filter(r=>r.n>=2)
+    .sort((a,b)=>b.conf-a.conf).slice(0,40);
+  if(!rows.length){ document.getElementById('seqResult').innerHTML='<div class="empty">Not enough sequence data.</div>'; return; }
+  document.getElementById('seqResult').innerHTML = `<table>
+    <thead><tr><th class="noclick">Product ordered next</th><th class="noclick">% of clinics</th><th class="num noclick">Clinics</th><th class="num noclick">Median days after</th><th class="noclick"></th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td>${P[r.y]}</td>
+      <td><span class="bar" style="width:${Math.round(r.conf*120)}px"></span><span class="pct">${pct(r.conf)}</span></td>
+      <td class="num">${r.n.toLocaleString()} of ${denom.toLocaleString()}</td>
+      <td class="num">${r.med} days</td>
+      <td><span class="linky" onclick="jumpToGap(${seqX},${r.y})">View gap list</span></td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+/* =====================================================================
+   TAB 4: BUNDLES
+===================================================================== */
+let bundlesBuilt = false;
+function renderBundles(){
+  const scope = scopeClinics();
+  const total = scope.length;
+  // pairs
+  const pairCounts = new Map();
+  for(const c of scope){
+    const arr = [...c.prods];
+    for(let i=0;i<arr.length;i++) for(let j=i+1;j<arr.length;j++){
+      const k = arr[i]<arr[j] ? arr[i]+'|'+arr[j] : arr[j]+'|'+arr[i];
+      pairCounts.set(k,(pairCounts.get(k)||0)+1);
+    }
+  }
+  const topPairs = [...pairCounts.entries()].sort((a,b)=>b[1]-a[1]).slice(0,20);
+  document.getElementById('pairsTbl').innerHTML = `<table>
+    <thead><tr><th class="noclick">#</th><th class="noclick">Products</th><th class="num noclick">Clinics</th><th class="num noclick">Support</th></tr></thead>
+    <tbody>${topPairs.map(([k,n],i)=>{
+      const [a,b] = k.split('|').map(Number);
+      return `<tr><td class="small">${i+1}</td><td><span class="pill">${P[a]}</span><span class="pill">${P[b]}</span></td>
+        <td class="num">${n.toLocaleString()}</td><td class="num">${pct(n/total)}</td></tr>`;
+    }).join('')}</tbody></table>`;
+  // triplets (restrict to top-50 prevalent products)
+  const counts = productCounts(scope);
+  const top50 = new Set([...counts.entries()].sort((a,b)=>b[1]-a[1]).slice(0,50).map(e=>e[0]));
+  const tripCounts = new Map();
+  for(const c of scope){
+    const arr = [...c.prods].filter(p=>top50.has(p));
+    for(let i=0;i<arr.length;i++) for(let j=i+1;j<arr.length;j++) for(let k=j+1;k<arr.length;k++){
+      const key = [arr[i],arr[j],arr[k]].sort((a,b)=>a-b).join('|');
+      tripCounts.set(key,(tripCounts.get(key)||0)+1);
+    }
+  }
+  const topTrips = [...tripCounts.entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
+  document.getElementById('tripsTbl').innerHTML = `<table>
+    <thead><tr><th class="noclick">#</th><th class="noclick">Products</th><th class="num noclick">Clinics</th><th class="num noclick">Support</th></tr></thead>
+    <tbody>${topTrips.map(([k,n],i)=>{
+      const ps = k.split('|').map(Number);
+      return `<tr><td class="small">${i+1}</td><td>${ps.map(p=>`<span class="pill">${P[p]}</span>`).join('')}</td>
+        <td class="num">${n.toLocaleString()}</td><td class="num">${pct(n/total)}</td></tr>`;
+    }).join('')}</tbody></table>`;
+  bundlesBuilt = true;
+}
+
+/* =====================================================================
+   TAB 5: CLINIC CROSS-SELL
+===================================================================== */
+let clIdx = null;
+function renderClinic(){
+  if(clIdx==null) return;
+  const me = CLINICS[clIdx];
+  const scope = scopeClinics().filter(c=>c!==me);
+  // Jaccard similarity
+  const sims = [];
+  for(const c of scope){
+    let inter = 0;
+    const [small, big] = me.prods.size <= c.prods.size ? [me.prods,c.prods] : [c.prods,me.prods];
+    for(const p of small) if(big.has(p)) inter++;
+    if(inter < 2) continue;
+    sims.push({c, sim: inter / (me.prods.size + c.prods.size - inter), inter});
+  }
+  sims.sort((a,b)=>b.sim-a.sim);
+  const peers = sims.slice(0,25);
+  const [ri,email,,doctor] = me.ka;
+  document.getElementById('clProfile').innerHTML = `
+    <div class="kpis">
+      <div class="kpi"><div class="v">${me.prods.size}</div><div class="l">products purchased</div></div>
+      <div class="kpi"><div class="v">${me.invoices.length}</div><div class="l">order dates</div></div>
+      <div class="kpi"><div class="v">${peers.length}</div><div class="l">similar clinics found</div></div>
+    </div>
+    <div class="sub" style="margin-top:6px">${doctor?doctor+' &middot; ':''}${REPS[ri]?'Rep: '+REPS[ri]+' &middot; ':''}${email||''}</div>`;
+  if(!peers.length){ document.getElementById('clResult').innerHTML='<div class="empty">No sufficiently similar clinics found in scope.</div>'; return; }
+  // recommendations
+  const rec = new Map();
+  for(const p of peers) for(const prod of p.c.prods)
+    if(!me.prods.has(prod)) rec.set(prod,(rec.get(prod)||0)+1);
+  const total = scopeClinics().length;
+  const counts = productCounts(scopeClinics());
+  const rows = [...rec.entries()]
+    .map(([p,n])=>({p, n, peerPct:n/peers.length, natPct:(counts.get(p)||0)/total}))
+    .filter(r=>r.n>=3)
+    .sort((a,b)=>b.peerPct-a.peerPct).slice(0,25);
+  document.getElementById('clResult').innerHTML = `<table>
+    <thead><tr><th class="noclick">Similar clinics also order...</th><th class="noclick">% of similar clinics</th><th class="num noclick">Peers buying</th><th class="num noclick">All-clinic baseline</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td>${P[r.p]}</td>
+      <td><span class="bar" style="width:${Math.round(r.peerPct*120)}px"></span><span class="pct">${pct(r.peerPct)}</span></td>
+      <td class="num">${r.n} of ${peers.length}</td>
+      <td class="num small">${pct(r.natPct)}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+/* =====================================================================
+   WIRING
+===================================================================== */
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+  ['affinity','gap','seq','bundles','clinic'].forEach(n=>{
+    document.getElementById('tab-'+n).style.display = n===name ? '' : 'none';
+  });
+  if(name==='bundles' && !bundlesBuilt) renderBundles();
+}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>switchTab(t.dataset.tab));
+
+// Rep filter
+const repSel = document.getElementById('repFilter');
+repSel.innerHTML = '<option value="-1">All Reps (National)</option>' +
+  REPS.map((r,i)=>`<option value="${i}">${r}</option>`).join('');
+repSel.onchange = () => {
+  curRep = +repSel.value;
+  bundlesBuilt = false;
+  renderAffinity(); renderGap(); renderSeq(); renderClinic();
+  if(document.getElementById('tab-bundles').style.display !== 'none') renderBundles();
+};
+
+// Dropdowns
+const pItems = productItems();
+attachDD('affSearch','affDD',pItems, v=>{affX=v; renderAffinity();});
+attachDD('gapXSearch','gapXDD',pItems, v=>{gapX=v; renderGap();});
+attachDD('gapYSearch','gapYDD',pItems, v=>{gapY=v; renderGap();});
+attachDD('seqSearch','seqDD',pItems, v=>{seqX=v; renderSeq();});
+attachDD('clSearch','clDD', CLINICS.map((c,i)=>({value:i,label:c.name,count:c.prods.size})), v=>{clIdx=v; renderClinic();});
+document.getElementById('affSort').onchange = renderAffinity;
+document.getElementById('seqWin').onchange = renderSeq;
+</script>
+</body>
+</html>
