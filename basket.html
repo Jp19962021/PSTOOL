@@ -13,7 +13,6 @@
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px}
 
-  /* ---------- Topbar ---------- */
   .topbar{background:var(--navy);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
   .topbar h1{font-size:17px;font-weight:600;letter-spacing:.2px}
   .topbar a.back{color:#aab4d4;text-decoration:none;font-size:13px;padding:4px 10px;border:1px solid #3a4360;border-radius:6px}
@@ -21,7 +20,10 @@
   .topbar .spacer{flex:1}
   .topbar select{background:#252c47;color:#fff;border:1px solid #3a4360;border-radius:6px;padding:6px 10px;font-size:13px;max-width:200px}
 
-  /* ---------- Tabs ---------- */
+  .seg{display:flex;background:#252c47;border-radius:8px;padding:3px;gap:2px}
+  .seg div{padding:5px 14px;font-size:12.5px;color:#aab4d4;border-radius:6px;cursor:pointer;font-weight:600;user-select:none}
+  .seg div.on{background:#fff;color:var(--navy)}
+
   .tabs{display:flex;gap:4px;padding:10px 20px 0;background:var(--navy);overflow-x:auto}
   .tab{padding:9px 16px;color:#aab4d4;cursor:pointer;font-size:13px;font-weight:500;border-radius:8px 8px 0 0;white-space:nowrap;user-select:none}
   .tab:hover{color:#fff}
@@ -33,7 +35,6 @@
   .card .sub{font-size:12.5px;color:var(--muted);margin-bottom:12px}
   .row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
 
-  /* ---------- Controls ---------- */
   label.fld{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:500;min-width:220px;flex:1;max-width:340px;position:relative}
   .fld input[type=text]{border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-size:14px;width:100%;background:#fff}
   .fld input[type=text]:focus{outline:none;border-color:var(--blue)}
@@ -41,7 +42,7 @@
   .dd{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:8px;margin-top:4px;max-height:280px;overflow-y:auto;z-index:40;box-shadow:0 6px 20px rgba(20,25,50,.12);display:none}
   .dd div{padding:8px 12px;cursor:pointer;font-size:13px;color:var(--text)}
   .dd div:hover{background:var(--chip)}
-  .dd .cnt{color:var(--muted);font-size:11.5px;float:right}
+  .dd .cnt{color:var(--muted);font-size:11.5px;float:right;margin-left:10px}
 
   button.btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer}
   button.btn:hover{filter:brightness(1.08)}
@@ -49,17 +50,14 @@
   button.btn.green{background:var(--green)}
   button.btn:disabled{opacity:.5;cursor:default}
 
-  /* ---------- KPI chips ---------- */
   .kpis{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0 4px}
   .kpi{background:var(--chip);border-radius:10px;padding:10px 16px;min-width:130px}
   .kpi .v{font-size:20px;font-weight:700;color:var(--navy)}
   .kpi .l{font-size:11.5px;color:var(--muted);margin-top:2px}
 
-  /* ---------- Tables ---------- */
   .tblwrap{overflow-x:auto;margin-top:8px}
   table{width:100%;border-collapse:collapse;font-size:13px}
-  th{text-align:left;padding:8px 10px;color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
-  th.noclick{cursor:default}
+  th{text-align:left;padding:8px 10px;color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid var(--border);white-space:nowrap}
   td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
   tr:hover td{background:#fafbfe}
   .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -75,7 +73,6 @@
   .pill{display:inline-block;background:var(--chip);border-radius:20px;padding:2px 10px;font-size:11.5px;color:var(--navy);margin:2px 3px 2px 0}
   .oppty{background:#fef3e7;color:var(--amber)}
 
-  /* ---------- Clinic list ---------- */
   .clinic-card{border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#fff}
   .clinic-card .nm{font-weight:600;font-size:14px}
   .clinic-card .meta{font-size:12.5px;color:var(--muted);margin-top:4px;display:flex;gap:14px;flex-wrap:wrap}
@@ -84,8 +81,6 @@
   .progress{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:10px;display:none}
   .progress>div{height:100%;background:var(--green);width:0%;transition:width .2s}
   .status{font-size:12.5px;color:var(--muted);margin-top:6px}
-
-  .note{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:12.5px;color:#92400e;margin-top:10px}
   .empty{padding:30px;text-align:center;color:var(--muted);font-size:13px}
 
   @media(max-width:640px){
@@ -101,6 +96,10 @@
   <a class="back" href="index.html">&larr; PSTOOL</a>
   <h1>Market Basket Analysis</h1>
   <div class="spacer"></div>
+  <div class="seg" id="modeSeg" title="Rollup groups all SKUs of an ingredient together">
+    <div data-m="ing" class="on">Rollup</div>
+    <div data-m="sku">SKU</div>
+  </div>
   <select id="repFilter" title="Filter all views by rep territory"></select>
 </div>
 <div class="tabs">
@@ -246,13 +245,41 @@ async function apolloCall(path, method, body){
 }
 
 const EXCLUDE = ['vetcove','pet parent','petscript direct','usc','shelters united','vha','vethubrx','mike salsbury','serena patterson'];
-const EPOCH = Date.UTC(2024,0,1);
 
 /* =====================================================================
-   DATA PREP
+   INGREDIENT ROLLUP
+   "Pimobendan 5mg Quadrisect Tablet - 100ct" -> "Pimobendan"
+   Cut at the first token that starts with a digit (the strength).
 ===================================================================== */
-let CLINICS = [];           // [{id, name, ka, prods:Set, invoices:[[day,Set]], revByProd:Map}]
-let nameToIdx = new Map();  // clinic name -> CLINICS index
+function ingredientOf(name){
+  const tokens = String(name).split(' ');
+  const out = [];
+  for(const t of tokens){
+    if(/^\d/.test(t)) break;
+    out.push(t);
+  }
+  let ing = out.join(' ').replace(/[\s,\-–—]+$/,'').trim();
+  return ing || name;
+}
+const ING = [];                    // ingredient names
+const skuToIng = new Array(P.length);
+{
+  const seen = new Map();
+  P.forEach((name, i) => {
+    const ing = ingredientOf(name);
+    if(!seen.has(ing)){ seen.set(ing, ING.length); ING.push(ing); }
+    skuToIng[i] = seen.get(ing);
+  });
+}
+
+let MODE = 'ing'; // 'ing' = rollup (default), 'sku' = raw SKUs
+function PN(id){ return MODE === 'ing' ? ING[id] : P[id]; }
+function toId(pi){ return MODE === 'ing' ? skuToIng[pi] : pi; }
+
+/* =====================================================================
+   DATA PREP — each clinic gets both SKU-level and ingredient-level sets
+===================================================================== */
+let CLINICS = [];
 
 function isExcluded(name){
   const n = (name||'').toLowerCase();
@@ -262,9 +289,6 @@ function clinicName(key){ return (typeof key === 'number') ? (C[key] || ('Clinic
 function clinicKA(key){
   if(typeof key === 'number') return KA[key] || [];
   const i = C.indexOf(key); return i >= 0 ? (KA[i]||[]) : [];
-}
-function dayToDate(d){
-  return new Date(EPOCH + d*86400000).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 }
 function money(v){ return '$' + Math.round(v).toLocaleString(); }
 function pct(v){ return (v*100).toFixed(1).replace(/\.0$/,'') + '%'; }
@@ -277,48 +301,58 @@ function pct(v){ return (v*100).toFixed(1).replace(/\.0$/,'') + '%'; }
   for(const [key, txs] of entries){
     const name = clinicName(key);
     if(isExcluded(name)) continue;
-    const prods = new Set(), revByProd = new Map(), byDay = new Map();
+    const prods = {sku:new Set(), ing:new Set()};
+    const rev   = {sku:new Map(), ing:new Map()};
+    const byDay = new Map();
     for(const t of txs){
-      const [, pi, rev, day] = t;
-      prods.add(pi);
-      revByProd.set(pi, (revByProd.get(pi)||0) + (rev||0));
-      if(!byDay.has(day)) byDay.set(day, new Set());
-      byDay.get(day).add(pi);
+      const [, pi, r, day] = t;
+      const gi = skuToIng[pi];
+      prods.sku.add(pi); prods.ing.add(gi);
+      rev.sku.set(pi,(rev.sku.get(pi)||0)+(r||0));
+      rev.ing.set(gi,(rev.ing.get(gi)||0)+(r||0));
+      if(!byDay.has(day)) byDay.set(day,{sku:new Set(), ing:new Set()});
+      const d = byDay.get(day); d.sku.add(pi); d.ing.add(gi);
     }
     const invoices = [...byDay.entries()].sort((a,b)=>a[0]-b[0]);
-    CLINICS.push({id:key, name, ka: clinicKA(key), prods, invoices, revByProd});
+    CLINICS.push({id:key, name, ka: clinicKA(key), prods, rev, invoices});
   }
-  CLINICS.forEach((c,i)=>nameToIdx.set(c.name, i));
 })();
+
+function cProds(c){ return c.prods[MODE]; }
+function cRev(c){ return c.rev[MODE]; }
+function invSet(inv){ return inv[1][MODE]; }
 
 /* =====================================================================
    SCOPE (rep filter)
 ===================================================================== */
-let curRep = -1; // -1 = all
+let curRep = -1;
 function scopeClinics(rep = curRep){
   return rep === -1 ? CLINICS : CLINICS.filter(c => c.ka[0] === rep);
 }
 function productCounts(clinics){
   const m = new Map();
-  for(const c of clinics) for(const p of c.prods) m.set(p, (m.get(p)||0)+1);
+  for(const c of clinics) for(const p of cProds(c)) m.set(p,(m.get(p)||0)+1);
   return m;
 }
-let natCounts = productCounts(CLINICS); // national baseline, computed once
 
 /* =====================================================================
-   PRODUCT / CLINIC SEARCH DROPDOWNS
+   SEARCH DROPDOWNS (itemsFn so mode/rep switches refresh live)
 ===================================================================== */
-function attachDD(inputId, ddId, items, onPick){
+function attachDD(inputId, ddId, itemsFn, onPick){
   const inp = document.getElementById(inputId), dd = document.getElementById(ddId);
   function render(q){
     q = q.toLowerCase();
+    const items = itemsFn();
     const matches = items.filter(it => it.label.toLowerCase().includes(q)).slice(0,50);
     dd.innerHTML = matches.map(it =>
       `<div data-v="${it.value}">${it.label}${it.count!=null?`<span class="cnt">${it.count} clinics</span>`:''}</div>`).join('') ||
       '<div style="color:var(--muted)">No matches</div>';
     dd.style.display = 'block';
     dd.querySelectorAll('div[data-v]').forEach(el=>{
-      el.onclick = () => { inp.value = items.find(i=>String(i.value)===el.dataset.v).label; dd.style.display='none'; onPick(+el.dataset.v); };
+      el.onclick = () => {
+        const it = items.find(i=>String(i.value)===el.dataset.v);
+        inp.value = it.label; dd.style.display='none'; onPick(+el.dataset.v);
+      };
     });
   }
   inp.addEventListener('input', ()=>render(inp.value));
@@ -329,7 +363,7 @@ function productItems(){
   const counts = productCounts(scopeClinics());
   return [...counts.entries()]
     .sort((a,b)=>b[1]-a[1])
-    .map(([pi,ct])=>({value:pi, label:P[pi], count:ct}));
+    .map(([id,ct])=>({value:id, label:PN(id), count:ct}));
 }
 
 /* =====================================================================
@@ -338,11 +372,11 @@ function productItems(){
 let affX = null;
 function computeAffinity(xProd, clinics){
   const total = clinics.length;
-  const xClinics = clinics.filter(c=>c.prods.has(xProd));
+  const xClinics = clinics.filter(c=>cProds(c).has(xProd));
   const nX = xClinics.length;
   const counts = productCounts(clinics);
   const co = new Map();
-  for(const c of xClinics) for(const p of c.prods) if(p!==xProd) co.set(p,(co.get(p)||0)+1);
+  for(const c of xClinics) for(const p of cProds(c)) if(p!==xProd) co.set(p,(co.get(p)||0)+1);
   const rows = [];
   for(const [y,n] of co){
     const conf = n/nX, supp = n/total, pY = (counts.get(y)||0)/total;
@@ -353,24 +387,23 @@ function computeAffinity(xProd, clinics){
 function renderAffinity(){
   if(affX==null) return;
   const {nX, total, rows} = computeAffinity(affX, scopeClinics());
-  // national comparison when rep filter active
   let natMap = null;
   if(curRep !== -1){
     natMap = new Map(computeAffinity(affX, CLINICS).rows.map(r=>[r.y, r.conf]));
   }
   document.getElementById('affKpis').innerHTML = `
-    <div class="kpi"><div class="v">${nX.toLocaleString()}</div><div class="l">clinics buy ${P[affX]}</div></div>
+    <div class="kpi"><div class="v">${nX.toLocaleString()}</div><div class="l">clinics buy ${PN(affX)}</div></div>
     <div class="kpi"><div class="v">${pct(nX/total)}</div><div class="l">of ${total.toLocaleString()} clinics in scope</div></div>`;
   const sort = document.getElementById('affSort').value;
   rows.sort((a,b)=>b[sort]-a[sort]);
   const top = rows.filter(r=>r.n>=2).slice(0,60);
   if(!top.length){ document.getElementById('affResult').innerHTML='<div class="empty">Not enough co-purchase data.</div>'; return; }
   document.getElementById('affResult').innerHTML = `<table>
-    <thead><tr><th class="noclick">Also buy...</th><th class="noclick">Confidence</th><th class="num noclick">Clinics</th><th class="num noclick">Support</th><th class="num noclick">Lift</th><th class="num noclick">Gap</th>${natMap?'<th class="num noclick">vs National</th>':''}<th class="noclick"></th></tr></thead>
+    <thead><tr><th>Also buy...</th><th>Confidence</th><th class="num">Clinics</th><th class="num">Support</th><th class="num">Lift</th><th class="num">Gap</th>${natMap?'<th class="num">vs National</th>':''}<th></th></tr></thead>
     <tbody>${top.map(r=>{
       const natDelta = natMap ? (r.conf - (natMap.get(r.y)||0)) : null;
       return `<tr>
-        <td>${P[r.y]}</td>
+        <td>${PN(r.y)}</td>
         <td><span class="bar" style="width:${Math.round(r.conf*120)}px"></span><span class="pct">${pct(r.conf)}</span></td>
         <td class="num">${r.n.toLocaleString()} of ${nX.toLocaleString()}</td>
         <td class="num">${pct(r.supp)}</td>
@@ -388,19 +421,19 @@ function renderAffinity(){
 let gapX=null, gapY=null, gapClinicList=[];
 function jumpToGap(x,y){
   gapX=x; gapY=y;
-  document.getElementById('gapXSearch').value = P[x];
-  document.getElementById('gapYSearch').value = P[y];
+  document.getElementById('gapXSearch').value = PN(x);
+  document.getElementById('gapYSearch').value = PN(y);
   switchTab('gap'); renderGap();
 }
 function renderGap(){
   if(gapX==null || gapY==null) return;
   const scope = scopeClinics();
-  const xClinics = scope.filter(c=>c.prods.has(gapX));
-  gapClinicList = xClinics.filter(c=>!c.prods.has(gapY))
-    .sort((a,b)=>(b.revByProd.get(gapX)||0)-(a.revByProd.get(gapX)||0));
+  const xClinics = scope.filter(c=>cProds(c).has(gapX));
+  gapClinicList = xClinics.filter(c=>!cProds(c).has(gapY))
+    .sort((a,b)=>(cRev(b).get(gapX)||0)-(cRev(a).get(gapX)||0));
   const both = xClinics.length - gapClinicList.length;
   document.getElementById('gapKpis').innerHTML = `
-    <div class="kpi"><div class="v">${gapClinicList.length.toLocaleString()}</div><div class="l">buy ${P[gapX]} but not ${P[gapY]}</div></div>
+    <div class="kpi"><div class="v">${gapClinicList.length.toLocaleString()}</div><div class="l">buy ${PN(gapX)} but not ${PN(gapY)}</div></div>
     <div class="kpi"><div class="v">${both.toLocaleString()}</div><div class="l">already buy both</div></div>
     <div class="kpi"><div class="v">${pct(xClinics.length? both/xClinics.length : 0)}</div><div class="l">current penetration</div></div>`;
   document.getElementById('gapActions').style.display = gapClinicList.length ? 'flex' : 'none';
@@ -414,23 +447,22 @@ function renderGap(){
         ${email?`<span>${email}</span>`:''}
         ${phone?`<span>${phone}</span>`:''}
         ${cityzip?`<span>${cityzip}</span>`:''}
-        <span>${P[gapX]} spend: <b>${money(c.revByProd.get(gapX)||0)}</b></span>
+        <span>${PN(gapX)} spend: <b>${money(cRev(c).get(gapX)||0)}</b></span>
         ${lastOrd?`<span>Last order: <b>${lastOrd}</b></span>`:''}
       </div>
     </div>`;
   }).join('') + (gapClinicList.length>200?`<div class="empty">Showing top 200 of ${gapClinicList.length.toLocaleString()} — export CSV for the full list.</div>`:'');
 }
-// --- Export / Copy / Apollo ---
 document.getElementById('gapCsv').onclick = () => {
-  const rows = [['Clinic','Doctor','Rep','Email','Phone','Street','City/State/Zip','Last Order', P[gapX]+' Spend']];
+  const rows = [['Clinic','Doctor','Rep','Email','Phone','Street','City/State/Zip','Last Order', PN(gapX)+' Spend']];
   for(const c of gapClinicList){
     const [ri,email,phone,doctor,street,cityzip,lastOrd] = c.ka;
-    rows.push([c.name,doctor||'',REPS[ri]||'',email||'',phone||'',street||'',cityzip||'',lastOrd||'',Math.round(c.revByProd.get(gapX)||0)]);
+    rows.push([c.name,doctor||'',REPS[ri]||'',email||'',phone||'',street||'',cityzip||'',lastOrd||'',Math.round(cRev(c).get(gapX)||0)]);
   }
   const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download = `gap_${P[gapX]}_not_${P[gapY]}.csv`.replace(/[^\w.-]+/g,'_');
+  a.download = `gap_${PN(gapX)}_not_${PN(gapY)}.csv`.replace(/[^\w.-]+/g,'_');
   a.click();
 };
 document.getElementById('gapEmails').onclick = () => {
@@ -487,17 +519,17 @@ function renderSeq(){
   if(seqX==null) return;
   const win = +document.getElementById('seqWin').value;
   const scope = scopeClinics();
-  const follow = new Map(); // y -> {n, dayGaps[]}
+  const follow = new Map();
   let denom = 0;
   for(const c of scope){
-    if(!c.prods.has(seqX)) continue;
-    const fi = c.invoices.findIndex(inv=>inv[1].has(seqX));
-    if(fi === -1 || fi === c.invoices.length-1) continue; // no invoices after first X
+    if(!cProds(c).has(seqX)) continue;
+    const fi = c.invoices.findIndex(inv=>invSet(inv).has(seqX));
+    if(fi === -1 || fi === c.invoices.length-1) continue;
     denom++;
     const xDay = c.invoices[fi][0];
     const seen = new Set();
     for(let i=fi+1; i<=Math.min(fi+win, c.invoices.length-1); i++){
-      const [day, prods] = c.invoices[i];
+      const day = c.invoices[i][0], prods = invSet(c.invoices[i]);
       for(const y of prods){
         if(y===seqX || seen.has(y)) continue;
         seen.add(y);
@@ -507,7 +539,7 @@ function renderSeq(){
     }
   }
   document.getElementById('seqKpis').innerHTML = `
-    <div class="kpi"><div class="v">${denom.toLocaleString()}</div><div class="l">clinics with invoices after first ${P[seqX]} order</div></div>`;
+    <div class="kpi"><div class="v">${denom.toLocaleString()}</div><div class="l">clinics with invoices after first ${PN(seqX)} order</div></div>`;
   const rows = [...follow.entries()]
     .map(([y,f])=>{
       f.gaps.sort((a,b)=>a-b);
@@ -517,9 +549,9 @@ function renderSeq(){
     .sort((a,b)=>b.conf-a.conf).slice(0,40);
   if(!rows.length){ document.getElementById('seqResult').innerHTML='<div class="empty">Not enough sequence data.</div>'; return; }
   document.getElementById('seqResult').innerHTML = `<table>
-    <thead><tr><th class="noclick">Product ordered next</th><th class="noclick">% of clinics</th><th class="num noclick">Clinics</th><th class="num noclick">Median days after</th><th class="noclick"></th></tr></thead>
+    <thead><tr><th>Product ordered next</th><th>% of clinics</th><th class="num">Clinics</th><th class="num">Median days after</th><th></th></tr></thead>
     <tbody>${rows.map(r=>`<tr>
-      <td>${P[r.y]}</td>
+      <td>${PN(r.y)}</td>
       <td><span class="bar" style="width:${Math.round(r.conf*120)}px"></span><span class="pct">${pct(r.conf)}</span></td>
       <td class="num">${r.n.toLocaleString()} of ${denom.toLocaleString()}</td>
       <td class="num">${r.med} days</td>
@@ -534,10 +566,9 @@ let bundlesBuilt = false;
 function renderBundles(){
   const scope = scopeClinics();
   const total = scope.length;
-  // pairs
   const pairCounts = new Map();
   for(const c of scope){
-    const arr = [...c.prods];
+    const arr = [...cProds(c)];
     for(let i=0;i<arr.length;i++) for(let j=i+1;j<arr.length;j++){
       const k = arr[i]<arr[j] ? arr[i]+'|'+arr[j] : arr[j]+'|'+arr[i];
       pairCounts.set(k,(pairCounts.get(k)||0)+1);
@@ -545,18 +576,17 @@ function renderBundles(){
   }
   const topPairs = [...pairCounts.entries()].sort((a,b)=>b[1]-a[1]).slice(0,20);
   document.getElementById('pairsTbl').innerHTML = `<table>
-    <thead><tr><th class="noclick">#</th><th class="noclick">Products</th><th class="num noclick">Clinics</th><th class="num noclick">Support</th></tr></thead>
+    <thead><tr><th>#</th><th>Products</th><th class="num">Clinics</th><th class="num">Support</th></tr></thead>
     <tbody>${topPairs.map(([k,n],i)=>{
       const [a,b] = k.split('|').map(Number);
-      return `<tr><td class="small">${i+1}</td><td><span class="pill">${P[a]}</span><span class="pill">${P[b]}</span></td>
+      return `<tr><td class="small">${i+1}</td><td><span class="pill">${PN(a)}</span><span class="pill">${PN(b)}</span></td>
         <td class="num">${n.toLocaleString()}</td><td class="num">${pct(n/total)}</td></tr>`;
     }).join('')}</tbody></table>`;
-  // triplets (restrict to top-50 prevalent products)
   const counts = productCounts(scope);
   const top50 = new Set([...counts.entries()].sort((a,b)=>b[1]-a[1]).slice(0,50).map(e=>e[0]));
   const tripCounts = new Map();
   for(const c of scope){
-    const arr = [...c.prods].filter(p=>top50.has(p));
+    const arr = [...cProds(c)].filter(p=>top50.has(p));
     for(let i=0;i<arr.length;i++) for(let j=i+1;j<arr.length;j++) for(let k=j+1;k<arr.length;k++){
       const key = [arr[i],arr[j],arr[k]].sort((a,b)=>a-b).join('|');
       tripCounts.set(key,(tripCounts.get(key)||0)+1);
@@ -564,10 +594,10 @@ function renderBundles(){
   }
   const topTrips = [...tripCounts.entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
   document.getElementById('tripsTbl').innerHTML = `<table>
-    <thead><tr><th class="noclick">#</th><th class="noclick">Products</th><th class="num noclick">Clinics</th><th class="num noclick">Support</th></tr></thead>
+    <thead><tr><th>#</th><th>Products</th><th class="num">Clinics</th><th class="num">Support</th></tr></thead>
     <tbody>${topTrips.map(([k,n],i)=>{
       const ps = k.split('|').map(Number);
-      return `<tr><td class="small">${i+1}</td><td>${ps.map(p=>`<span class="pill">${P[p]}</span>`).join('')}</td>
+      return `<tr><td class="small">${i+1}</td><td>${ps.map(p=>`<span class="pill">${PN(p)}</span>`).join('')}</td>
         <td class="num">${n.toLocaleString()}</td><td class="num">${pct(n/total)}</td></tr>`;
     }).join('')}</tbody></table>`;
   bundlesBuilt = true;
@@ -581,30 +611,28 @@ function renderClinic(){
   if(clIdx==null) return;
   const me = CLINICS[clIdx];
   const scope = scopeClinics().filter(c=>c!==me);
-  // Jaccard similarity
   const sims = [];
   for(const c of scope){
     let inter = 0;
-    const [small, big] = me.prods.size <= c.prods.size ? [me.prods,c.prods] : [c.prods,me.prods];
+    const [small, big] = cProds(me).size <= cProds(c).size ? [cProds(me),cProds(c)] : [cProds(c),cProds(me)];
     for(const p of small) if(big.has(p)) inter++;
     if(inter < 2) continue;
-    sims.push({c, sim: inter / (me.prods.size + c.prods.size - inter), inter});
+    sims.push({c, sim: inter / (cProds(me).size + cProds(c).size - inter)});
   }
   sims.sort((a,b)=>b.sim-a.sim);
   const peers = sims.slice(0,25);
   const [ri,email,,doctor] = me.ka;
   document.getElementById('clProfile').innerHTML = `
     <div class="kpis">
-      <div class="kpi"><div class="v">${me.prods.size}</div><div class="l">products purchased</div></div>
+      <div class="kpi"><div class="v">${cProds(me).size}</div><div class="l">${MODE==='ing'?'ingredients':'SKUs'} purchased</div></div>
       <div class="kpi"><div class="v">${me.invoices.length}</div><div class="l">order dates</div></div>
       <div class="kpi"><div class="v">${peers.length}</div><div class="l">similar clinics found</div></div>
     </div>
     <div class="sub" style="margin-top:6px">${doctor?doctor+' &middot; ':''}${REPS[ri]?'Rep: '+REPS[ri]+' &middot; ':''}${email||''}</div>`;
   if(!peers.length){ document.getElementById('clResult').innerHTML='<div class="empty">No sufficiently similar clinics found in scope.</div>'; return; }
-  // recommendations
   const rec = new Map();
-  for(const p of peers) for(const prod of p.c.prods)
-    if(!me.prods.has(prod)) rec.set(prod,(rec.get(prod)||0)+1);
+  for(const p of peers) for(const prod of cProds(p.c))
+    if(!cProds(me).has(prod)) rec.set(prod,(rec.get(prod)||0)+1);
   const total = scopeClinics().length;
   const counts = productCounts(scopeClinics());
   const rows = [...rec.entries()]
@@ -612,9 +640,9 @@ function renderClinic(){
     .filter(r=>r.n>=3)
     .sort((a,b)=>b.peerPct-a.peerPct).slice(0,25);
   document.getElementById('clResult').innerHTML = `<table>
-    <thead><tr><th class="noclick">Similar clinics also order...</th><th class="noclick">% of similar clinics</th><th class="num noclick">Peers buying</th><th class="num noclick">All-clinic baseline</th></tr></thead>
+    <thead><tr><th>Similar clinics also order...</th><th>% of similar clinics</th><th class="num">Peers buying</th><th class="num">All-clinic baseline</th></tr></thead>
     <tbody>${rows.map(r=>`<tr>
-      <td>${P[r.p]}</td>
+      <td>${PN(r.p)}</td>
       <td><span class="bar" style="width:${Math.round(r.peerPct*120)}px"></span><span class="pct">${pct(r.peerPct)}</span></td>
       <td class="num">${r.n} of ${peers.length}</td>
       <td class="num small">${pct(r.natPct)}</td>
@@ -633,6 +661,26 @@ function switchTab(name){
 }
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>switchTab(t.dataset.tab));
 
+// Rollup / SKU toggle
+document.querySelectorAll('#modeSeg div').forEach(el=>{
+  el.onclick = () => {
+    if(el.dataset.m === MODE) return;
+    MODE = el.dataset.m;
+    document.querySelectorAll('#modeSeg div').forEach(d=>d.classList.toggle('on', d.dataset.m===MODE));
+    // product IDs change meaning between modes — reset selections
+    affX = gapX = gapY = seqX = null;
+    ['affSearch','gapXSearch','gapYSearch','seqSearch'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('affKpis').innerHTML=''; document.getElementById('gapKpis').innerHTML='';
+    document.getElementById('seqKpis').innerHTML=''; document.getElementById('gapList').innerHTML='';
+    document.getElementById('gapActions').style.display='none';
+    document.getElementById('affResult').innerHTML='<div class="empty">Select a product to run affinity analysis.</div>';
+    document.getElementById('seqResult').innerHTML='<div class="empty">Select a product to see follow-on purchase patterns.</div>';
+    bundlesBuilt = false;
+    if(document.getElementById('tab-bundles').style.display !== 'none') renderBundles();
+    renderClinic();
+  };
+});
+
 // Rep filter
 const repSel = document.getElementById('repFilter');
 repSel.innerHTML = '<option value="-1">All Reps (National)</option>' +
@@ -644,13 +692,12 @@ repSel.onchange = () => {
   if(document.getElementById('tab-bundles').style.display !== 'none') renderBundles();
 };
 
-// Dropdowns
-const pItems = productItems();
-attachDD('affSearch','affDD',pItems, v=>{affX=v; renderAffinity();});
-attachDD('gapXSearch','gapXDD',pItems, v=>{gapX=v; renderGap();});
-attachDD('gapYSearch','gapYDD',pItems, v=>{gapY=v; renderGap();});
-attachDD('seqSearch','seqDD',pItems, v=>{seqX=v; renderSeq();});
-attachDD('clSearch','clDD', CLINICS.map((c,i)=>({value:i,label:c.name,count:c.prods.size})), v=>{clIdx=v; renderClinic();});
+// Dropdowns (itemsFn = live, so they follow mode + rep changes)
+attachDD('affSearch','affDD', productItems, v=>{affX=v; renderAffinity();});
+attachDD('gapXSearch','gapXDD', productItems, v=>{gapX=v; renderGap();});
+attachDD('gapYSearch','gapYDD', productItems, v=>{gapY=v; renderGap();});
+attachDD('seqSearch','seqDD', productItems, v=>{seqX=v; renderSeq();});
+attachDD('clSearch','clDD', ()=>CLINICS.map((c,i)=>({value:i,label:c.name,count:cProds(c).size})), v=>{clIdx=v; renderClinic();});
 document.getElementById('affSort').onchange = renderAffinity;
 document.getElementById('seqWin').onchange = renderSeq;
 </script>
