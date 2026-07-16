@@ -228,10 +228,16 @@
 ===================================================================== */
 const WORKER = 'https://fragrant-cloud-6ef2.jp-d4e.workers.dev';
 const SEQUENCES = {
+  'Cross-Sell Gap (X/Y)': '6a59227e992d4300169eb4e1',
   'Gone Dark / Win-Back': '6a270cf7368e130018290a9b',
   'Lapsed 45-90d':        '6a270d07a642c7001892d0d4',
   'Dropped SKU':          '6a270d18368e130018290aeb'
 };
+// Apollo CONTACT custom field IDs for the Cross-Sell Gap merge variables.
+// Create two text fields in Apollo (Settings > Custom Fields > Contact) named
+// exactly "product_x" and "product_y", then paste their field IDs here:
+const FIELD_PRODUCT_X = '';  // e.g. '69138e99a29dc50001f3605f'
+const FIELD_PRODUCT_Y = '';
 // ASSUMPTION: /apollo-proxy accepts POST {path, method, body} and forwards to Apollo.
 // If index.html's callApollo helper uses a different contract, mirror it in apolloCall() below.
 async function apolloCall(path, method, body){
@@ -485,9 +491,15 @@ document.getElementById('gapApollo').onclick = async () => {
     for(const c of targets){
       try{
         const [,email,,doctor] = c.ka;
-        const res = await apolloCall('/api/v1/contacts','POST',{
-          first_name: doctor || c.name, email, organization_name: c.name, run_dedupe: true
-        });
+        // "Dr. Jane Smith" -> first: Jane, last: Smith (so {{last_name}} merges correctly)
+        const parts = (doctor||'').replace(/^Dr\.?\s*/i,'').trim().split(/\s+/).filter(Boolean);
+        const lastName = parts.length>1 ? parts[parts.length-1] : (parts[0]||'');
+        const firstName = parts.length>1 ? parts.slice(0,-1).join(' ') : (parts[0]||c.name);
+        const payload = { first_name:firstName, last_name:lastName, email, organization_name:c.name, run_dedupe:true };
+        if(FIELD_PRODUCT_X && FIELD_PRODUCT_Y){
+          payload.typed_custom_fields = { [FIELD_PRODUCT_X]: PN(gapX), [FIELD_PRODUCT_Y]: PN(gapY) };
+        }
+        const res = await apolloCall('/api/v1/contacts','POST',payload);
         const id = res?.contact?.id;
         if(id) contactIds.push(id); else failed++;
       }catch(e){ failed++; }
