@@ -83,6 +83,26 @@
   .status{font-size:12.5px;color:var(--muted);margin-top:6px}
   .empty{padding:30px;text-align:center;color:var(--muted);font-size:13px}
 
+  /* ---------- Clinic profile drawer ---------- */
+  .drawer-bg{position:fixed;inset:0;background:rgba(15,20,40,.35);z-index:90;display:none}
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,94vw);background:#fff;z-index:95;
+    box-shadow:-8px 0 30px rgba(15,20,40,.25);transform:translateX(105%);transition:transform .22s ease;
+    overflow-y:auto;padding:26px 28px}
+  .drawer.open{transform:translateX(0)}
+  .drawer .x{position:absolute;top:18px;right:20px;font-size:22px;color:var(--muted);cursor:pointer;line-height:1}
+  .drawer h3{font-size:22px;font-weight:700;margin-bottom:4px;padding-right:30px}
+  .drawer .addr{color:var(--muted);font-size:13px;margin-bottom:4px}
+  .drawer .lastord{font-size:13px;margin-bottom:14px}
+  .drawer .agopill{background:#fdf3d7;color:#92600e;border-radius:14px;padding:2px 10px;font-size:12px;font-weight:600;margin-left:6px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+  .chips span{background:#f1f3f9;border-radius:18px;padding:6px 13px;font-size:12.5px;font-weight:500}
+  .statgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+  .stat{border:1px solid var(--border);border-radius:12px;padding:14px 16px;background:#fafbfe}
+  .stat.hot{border:2px solid #f97316;background:#fff}
+  .stat .t{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+  .stat .m{font-size:21px;font-weight:700;margin-top:4px}
+  .stat .d{font-size:12px;margin-top:2px;font-weight:600}
+
   @media(max-width:640px){
     .wrap{padding:14px 12px 60px}
     label.fld{max-width:none}
@@ -230,6 +250,9 @@
 
 </div>
 
+<div class="drawer-bg" id="drawerBg" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer"></div>
+
 <script src="data.js"></script>
 <script>
 /* =====================================================================
@@ -259,9 +282,13 @@ async function apolloCall(path, method, body){
   return r.json();
 }
 
-// Klaviyo goes through the worker too — add the /klaviyo-proxy route + KLAVIYO_API_KEY secret (snippet provided).
+// Klaviyo goes through the worker. If your worker ALREADY has a Klaviyo route
+// (you said PSTOOL can push to Klaviyo), put its path here and skip the new
+// secret entirely — paste index.html's Klaviyo fetch call to me if the request
+// shape differs and I'll match it.
+const KLAVIYO_PROXY_PATH = '/klaviyo-proxy';
 async function klaviyoCall(path, method, body){
-  const r = await fetch(WORKER + '/klaviyo-proxy', {
+  const r = await fetch(WORKER + KLAVIYO_PROXY_PATH, {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({path, method, body})
@@ -364,22 +391,96 @@ async function unignoreClinic(name){
 function toggleShowIgnored(){ showIgnored = !showIgnored; renderGap(); }
 
 /* =====================================================================
-   CLINIC OVERVIEW (inline expand in gap list)
+   CONTACTED LOG — same outreach_log table the Outreach tab writes to.
+   Clinics already pushed to Apollo get badged and excluded from re-pushes
+   (any gap combo, not just this one).
 ===================================================================== */
-function toggleOverview(idx, el){
-  const div = document.getElementById('ov-'+idx);
-  if(div.style.display === 'block'){ div.style.display='none'; el.textContent='View products ▸'; return; }
+let contacted = new Map();   // clinic name (lowercase) -> date string
+let logNameCol = 'clinic', logDateCol = 'created_at';
+async function loadContacted(){
+  try{
+    const r = await fetch(`${SUPA_URL}/rest/v1/outreach_log?select=*&order=created_at.desc`, {
+      headers:{...SUPA_HEADERS, 'Range':'0-9999'}
+    });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const rows = await r.json();
+    if(rows.length){
+      const keys = Object.keys(rows[0]);
+      logNameCol = ['clinic','clinic_name','name'].find(k=>keys.includes(k)) || logNameCol;
+      logDateCol = ['created_at','contacted_at','inserted_at','date'].find(k=>keys.includes(k)) || logDateCol;
+    }
+    for(const row of rows){
+      const nm = String(row[logNameCol]||'').toLowerCase();
+      if(nm && !contacted.has(nm)){
+        const d = row[logDateCol] ? new Date(row[logDateCol]).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
+        contacted.set(nm, d);
+      }
+    }
+  }catch(e){ console.warn('Could not load outreach_log:', e); }
+  if(gapX!=null && gapY!=null) renderGap();
+}
+async function logContacted(clinics){
+  if(!clinics.length) return;
+  try{
+    const body = clinics.map(c=>({[logNameCol]: c.name}));
+    const r = await fetch(`${SUPA_URL}/rest/v1/outreach_log`, {
+      method:'POST', headers:SUPA_HEADERS, body: JSON.stringify(body)
+    });
+    if(!r.ok){ const t = await r.text(); throw new Error(t.slice(0,200)); }
+    const today = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    clinics.forEach(c=>contacted.set(c.name.toLowerCase(), today));
+  }catch(e){
+    document.getElementById('gapStatus').textContent += ' (Warning: could not log to outreach_log: '+e.message+')';
+  }
+}
+
+/* =====================================================================
+   CLINIC PROFILE DRAWER (slides in from the right, like PSTOOL)
+===================================================================== */
+const EP = Date.UTC(2024,0,1);
+const fmtDay = d => d==null?'—':new Date(EP+d*86400000).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+function openDrawer(idx){
   const c = CLINICS[idx];
-  const rows = [...cRev(c).entries()].sort((a,b)=>b[1]-a[1]).slice(0,15);
-  const firstDay = c.invoices[0]?.[0], lastDay = c.invoices[c.invoices.length-1]?.[0];
-  const EPOCH = Date.UTC(2024,0,1);
-  const fmt = d => d==null?'—':new Date(EPOCH+d*86400000).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  div.innerHTML = `
-    <div class="small" style="margin:8px 0 6px">${c.invoices.length} order dates &middot; first ${fmt(firstDay)} &middot; latest ${fmt(lastDay)} &middot; total ${money([...cRev(c).values()].reduce((a,b)=>a+b,0))}</div>
-    <table style="font-size:12.5px"><thead><tr><th>Product</th><th class="num">Spend</th></tr></thead>
-    <tbody>${rows.map(([p,v])=>`<tr><td>${PN(p)}</td><td class="num">${money(v)}</td></tr>`).join('')}</tbody></table>`;
-  div.style.display='block';
-  el.textContent='Hide products ▾';
+  const [ri,email,phone,doctor,street,cityzip] = c.ka;
+  const lastDay = c.invoices[c.invoices.length-1]?.[0];
+  const daysAgo = lastDay!=null ? Math.round((Date.now()-(EP+lastDay*86400000))/86400000) : null;
+  const y24=c.revYr[4], y25=c.revYr[5], y26=c.revYr[6], tot=y24+y25+y26;
+  const yoy26 = y25? ((y26-y25)/y25*100) : null;   // 2026 pace vs 2025 (partial year, so rough)
+  const yoy25 = y24? ((y25-y24)/y24*100) : null;
+  const dd = v => v==null?'':`<div class="d" style="color:${v>=0?'var(--green)':'var(--red)'}">${v>=0?'▲':'▼'}${Math.abs(v).toFixed(1)}% vs ${v===yoy26?'2025':'2024'}</div>`;
+  const topProds = [...cRev(c).entries()].sort((a,b)=>b[1]-a[1]).slice(0,12);
+  document.getElementById('drawer').innerHTML = `
+    <span class="x" onclick="closeDrawer()">✕</span>
+    <h3>${c.name}</h3>
+    <div class="addr">${[street,cityzip].filter(Boolean).join(', ')||''}</div>
+    <div class="lastord">Last order: <b>${fmtDay(lastDay)}</b>${daysAgo!=null?`<span class="agopill">${daysAgo} days ago</span>`:''}</div>
+    <div class="chips">
+      ${doctor?`<span>👤 ${doctor}</span>`:''}
+      ${REPS[ri]?`<span>🧑‍💼 ${REPS[ri]}</span>`:''}
+      ${email?`<span>✉️ ${email}</span>`:''}
+      ${phone?`<span>📞 ${phone}</span>`:''}
+      ${contacted.has(c.name.toLowerCase())?`<span style="background:#dcfce7;color:#166534">✓ In Apollo since ${contacted.get(c.name.toLowerCase())}</span>`:''}
+      ${ignored.has(c.name.toLowerCase())?`<span style="background:#fef3e7;color:var(--amber)">🚫 Ignored: ${ignored.get(c.name.toLowerCase())?.reason||''}</span>`:''}
+    </div>
+    <div class="statgrid">
+      <div class="stat hot"><div class="t">2026 YTD</div><div class="m">${money(y26)}</div>${dd(yoy26)}</div>
+      <div class="stat"><div class="t">2025</div><div class="m">${money(y25)}</div>${dd(yoy25)}</div>
+      <div class="stat"><div class="t">2024</div><div class="m">${money(y24)}</div></div>
+      <div class="stat"><div class="t">3-Year Total</div><div class="m">${money(tot)}</div></div>
+    </div>
+    ${gapX!=null?`<div class="sub" style="margin-bottom:10px">${PN(gapX)} spend: <b>${money(cRev(c).get(gapX)||0)}</b>${gapY!=null?` &middot; has never ordered <b>${PN(gapY)}</b>`:''}</div>`:''}
+    <table style="font-size:13px"><thead><tr><th>Top products</th><th class="num">Spend</th></tr></thead>
+    <tbody>${topProds.map(([p,v])=>`<tr><td>${PN(p)}</td><td class="num">${money(v)}</td></tr>`).join('')}</tbody></table>
+    <div class="row" style="margin-top:18px">
+      <a class="btn" style="text-decoration:none" href="index.html?clinic=${encodeURIComponent(c.name)}" target="_blank">Open full profile in PSTOOL ↗</a>
+      <button class="btn ghost" onclick="closeDrawer()">Close</button>
+    </div>`;
+  document.getElementById('drawerBg').style.display='block';
+  document.getElementById('drawer').classList.add('open');
+}
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawerBg').style.display='none';
 }
 
 /* =====================================================================
@@ -409,18 +510,20 @@ function pct(v){ return (v*100).toFixed(1).replace(/\.0$/,'') + '%'; }
     if(isExcluded(name)) continue;
     const prods = {sku:new Set(), ing:new Set()};
     const rev   = {sku:new Map(), ing:new Map()};
+    const revYr = {4:0, 5:0, 6:0}; // 2024 / 2025 / 2026
     const byDay = new Map();
     for(const t of txs){
-      const [, pi, r, day] = t;
+      const [yr, pi, r, day] = t;
       const gi = skuToIng[pi];
       prods.sku.add(pi); prods.ing.add(gi);
       rev.sku.set(pi,(rev.sku.get(pi)||0)+(r||0));
       rev.ing.set(gi,(rev.ing.get(gi)||0)+(r||0));
+      if(revYr[yr]!=null) revYr[yr]+=(r||0);
       if(!byDay.has(day)) byDay.set(day,{sku:new Set(), ing:new Set()});
       const d = byDay.get(day); d.sku.add(pi); d.ing.add(gi);
     }
     const invoices = [...byDay.entries()].sort((a,b)=>a[0]-b[0]);
-    CLINICS.push({id:key, name, ka: clinicKA(key), prods, rev, invoices});
+    CLINICS.push({id:key, name, ka: clinicKA(key), prods, rev, revYr, invoices});
   }
   CLINICS.forEach((c,i)=>c.idx=i);
 })();
@@ -539,19 +642,25 @@ function renderGap(){
   const rawGap = xClinics.filter(c=>!cProds(c).has(gapY))
     .sort((a,b)=>(cRev(b).get(gapX)||0)-(cRev(a).get(gapX)||0));
   const ignoredInList = rawGap.filter(c=>ignored.has(c.name.toLowerCase()));
-  gapClinicList = rawGap.filter(c=>!ignored.has(c.name.toLowerCase()));
+  const contactedInList = rawGap.filter(c=>!ignored.has(c.name.toLowerCase()) && contacted.has(c.name.toLowerCase()));
+  gapClinicList = rawGap.filter(c=>!ignored.has(c.name.toLowerCase()) && !contacted.has(c.name.toLowerCase()));
   const both = xClinics.length - rawGap.length;
   document.getElementById('gapKpis').innerHTML = `
     <div class="kpi"><div class="v">${gapClinicList.length.toLocaleString()}</div><div class="l">buy ${PN(gapX)} but not ${PN(gapY)}</div></div>
     <div class="kpi"><div class="v">${both.toLocaleString()}</div><div class="l">already buy both</div></div>
     <div class="kpi"><div class="v">${pct(xClinics.length? both/xClinics.length : 0)}</div><div class="l">current penetration</div></div>
+    ${contactedInList.length?`<div class="kpi" style="background:#dcfce7"><div class="v">${contactedInList.length}</div><div class="l"><span class="linky" onclick="toggleShowIgnored()" style="color:#166534">already in Apollo — ${showIgnored?'hide':'show'}</span></div></div>`:''}
     ${ignoredInList.length?`<div class="kpi" style="background:#fef3e7"><div class="v">${ignoredInList.length}</div><div class="l"><span class="linky" onclick="toggleShowIgnored()">${showIgnored?'hide':'show'} ignored</span></div></div>`:''}`;
   document.getElementById('gapActions').style.display = gapClinicList.length ? 'flex' : 'none';
 
-  const card = (c, isIgnored) => {
+  const card = (c, kind) => {
     const [ri,email,phone,doctor,,cityzip,lastOrd] = c.ka;
-    return `<div class="clinic-card" ${isIgnored?'style="opacity:.65;background:#fffbf5"':''}>
-      <div class="nm">${c.name}${isIgnored?` <span class="pill oppty">Ignored: ${ignored.get(c.name.toLowerCase())?.reason||''}</span>`:''}</div>
+    const isIgnored = kind==='ignored', isContacted = kind==='contacted';
+    return `<div class="clinic-card" ${isIgnored?'style="opacity:.65;background:#fffbf5"':isContacted?'style="opacity:.75;background:#f6fdf8"':''}>
+      <div class="nm"><span class="linky" style="color:var(--text)" onclick="openDrawer(${c.idx})">${c.name}</span>
+        ${isIgnored?` <span class="pill oppty">Ignored: ${ignored.get(c.name.toLowerCase())?.reason||''}</span>`:''}
+        ${isContacted?` <span class="pill" style="background:#dcfce7;color:#166534">✓ Added to Apollo ${contacted.get(c.name.toLowerCase())||''}</span>`:''}
+      </div>
       <div class="meta">
         ${doctor?`<span><b>${doctor}</b></span>`:''}
         ${REPS[ri]?`<span>Rep: <b>${REPS[ri]}</b></span>`:''}
@@ -562,23 +671,23 @@ function renderGap(){
         ${lastOrd?`<span>Last order: <b>${lastOrd}</b></span>`:''}
       </div>
       <div class="meta" style="margin-top:8px">
-        <span class="linky" onclick="toggleOverview(${c.idx}, this)">View products ▸</span>
+        <span class="linky" onclick="openDrawer(${c.idx})">View clinic ▸</span>
         <a class="linky" href="index.html?clinic=${encodeURIComponent(c.name)}" target="_blank" style="text-decoration:none">Open in PSTOOL ↗</a>
         ${isIgnored
           ? `<span class="linky" onclick="unignoreClinic('${c.name.replace(/'/g,"\\'")}')" style="color:var(--green)">↩ Un-ignore</span>`
           : `<span class="linky" onclick="ignoreClinic(${c.idx})" style="color:var(--red)">🚫 Ignore</span>`}
       </div>
-      <div class="ov" id="ov-${c.idx}" style="display:none"></div>
     </div>`;
   };
 
-  document.getElementById('gapList').innerHTML =
-    (showIgnored && ignoredInList.length
-      ? `<div class="sub" style="margin-bottom:8px">Ignored (${ignoredInList.length}) — excluded from CSV, emails, and Apollo:</div>`
-        + ignoredInList.map(c=>card(c,true)).join('')
-        + `<div class="sub" style="margin:14px 0 8px">Active list:</div>`
-      : '')
-    + gapClinicList.slice(0,200).map(c=>card(c,false)).join('')
+  const hiddenSection = showIgnored && (ignoredInList.length || contactedInList.length)
+    ? (contactedInList.length?`<div class="sub" style="margin-bottom:8px">Already in Apollo (${contactedInList.length}) — won't be re-added by any push:</div>`+contactedInList.map(c=>card(c,'contacted')).join(''):'')
+      + (ignoredInList.length?`<div class="sub" style="margin:14px 0 8px">Ignored (${ignoredInList.length}) — excluded from CSV, emails, Apollo, Klaviyo:</div>`+ignoredInList.map(c=>card(c,'ignored')).join(''):'')
+      + `<div class="sub" style="margin:14px 0 8px">Active list:</div>`
+    : '';
+
+  document.getElementById('gapList').innerHTML = hiddenSection
+    + gapClinicList.slice(0,200).map(c=>card(c,'active')).join('')
     + (gapClinicList.length>200?`<div class="empty">Showing top 200 of ${gapClinicList.length.toLocaleString()} — export CSV for the full list.</div>`:'');
 }
 document.getElementById('gapCsv').onclick = () => {
@@ -615,7 +724,7 @@ document.getElementById('gapApollo').onclick = async () => {
   if(!targets.length){ status.textContent = 'No clinics with emails in this list.'; return; }
   if(!confirm(`Add ${targets.length} contacts to this Apollo sequence?\n(Use "Push top" to change batch size — spend-ranked, biggest first.)`)) return;
   btn.disabled = true; prog.style.display='block';
-  const contactIds = []; let done=0, failed=0;
+  const contactIds = [], enrolledClinics = []; let done=0, failed=0;
   try{
     for(const c of targets){
       try{
@@ -629,7 +738,7 @@ document.getElementById('gapApollo').onclick = async () => {
         }
         const res = await apolloCall('/api/v1/contacts','POST',payload);
         const id = res?.contact?.id;
-        if(id) contactIds.push(id); else failed++;
+        if(id){ contactIds.push(id); enrolledClinics.push(c); } else failed++;
       }catch(e){ failed++; }
       done++; bar.style.width = Math.round(done/targets.length*80)+'%';
       status.textContent = `Creating contacts... ${done}/${targets.length}`;
@@ -652,7 +761,10 @@ document.getElementById('gapApollo').onclick = async () => {
       await sleep(400);
     }
     bar.style.width='100%';
-    status.textContent = `Done — ${contactIds.length} enrolled${failed?`, ${failed} failed`:''}.`;
+    status.textContent = `Done — ${contactIds.length} enrolled${failed?`, ${failed} failed`:''}. Logging...`;
+    await logContacted(enrolledClinics);
+    status.textContent = `Done — ${contactIds.length} enrolled${failed?`, ${failed} failed`:''}. Logged to outreach_log; they won't be re-added.`;
+    renderGap();
   }catch(e){
     status.textContent = 'Error: ' + e.message + ' (check /apollo-proxy contract matches index.html)';
   }
@@ -907,6 +1019,7 @@ attachDD('clSearch','clDD', ()=>CLINICS.map((c,i)=>({value:i,label:c.name,count:
 document.getElementById('affSort').onchange = renderAffinity;
 document.getElementById('seqWin').onchange = renderSeq;
 loadIgnored();
+loadContacted();
 </script>
 </body>
 </html>
