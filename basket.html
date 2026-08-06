@@ -266,40 +266,56 @@ const SEQUENCES = {
   'Lapsed 45-90d':        '6a270d07a642c7001892d0d4',
   'Dropped SKU':          '6a270d18368e130018290aeb'
 };
-// Apollo CONTACT custom field IDs for the Cross-Sell Gap merge variables.
-// Create two text fields in Apollo (Settings > Custom Fields > Contact) named
-// exactly "product_x" and "product_y", then paste their field IDs here:
-const FIELD_PRODUCT_X = '';  // e.g. '69138e99a29dc50001f3605f'
-const FIELD_PRODUCT_Y = '';
-// ASSUMPTION: /apollo-proxy accepts POST {path, method, body} and forwards to Apollo.
-// If index.html's callApollo helper uses a different contract, mirror it in apolloCall() below.
-async function apolloCall(path, method, body){
+// Worker contract (matches index.html): /apollo-proxy does the full enroll per
+// clinic — {action:'enroll', email, first_name, last_name, organization_name,
+// sequence_id} with X-API-Key header. Returns {success} or {error}.
+async function apolloEnroll(c, seqId){
+  const [,email,,doctor] = c.ka;
+  const parts = (doctor||'').replace(/^Dr\.?\s*/i,'').trim().split(/\s+/).filter(Boolean);
   const r = await fetch(WORKER + '/apollo-proxy', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({path, method, body})
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-API-Key':'petscript2026'},
+    body: JSON.stringify({
+      action:'enroll',
+      email,
+      first_name: parts[0] || c.name.split(' ')[0],
+      last_name: parts.length>1 ? parts[parts.length-1] : '',
+      organization_name: c.name.replace(/\*/g,'').trim(),
+      sequence_id: seqId,
+      // extra context — harmless if the worker ignores them; needed for the
+      // {{product_x}}/{{product_y}} merge fields if the worker forwards them
+      product_x: gapX!=null ? PN(gapX) : '',
+      product_y: gapY!=null ? PN(gapY) : ''
+    })
   });
-  if(!r.ok) throw new Error('Proxy error ' + r.status);
-  return r.json();
+  const j = await r.json();
+  if(!j.success) throw new Error(j.error || 'Apollo enrollment failed');
+  return j;
 }
-
-// Klaviyo goes through the worker. If your worker ALREADY has a Klaviyo route
-// (you said PSTOOL can push to Klaviyo), put its path here and skip the new
-// secret entirely — paste index.html's Klaviyo fetch call to me if the request
-// shape differs and I'll match it.
-const KLAVIYO_PROXY_PATH = '/klaviyo-proxy';
-async function klaviyoCall(path, method, body){
-  const r = await fetch(WORKER + KLAVIYO_PROXY_PATH, {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({path, method, body})
+// HubSpot note via worker (same as index.html, non-fatal)
+function hubspotNote(c, seqLabel){
+  const email = c.ka[1];
+  if(!email) return;
+  fetch(WORKER + '/hubspot', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      action:'note', email,
+      rep_name:'Basket Tool', clinic_name:c.name,
+      note:'Added to Apollo sequence: '+seqLabel+'\nSource: Market Basket gap ('+PN(gapX)+' → '+PN(gapY)+')'
+    })
+  }).catch(e=>console.warn('HubSpot note failed (non-fatal):', e));
+}
+// Klaviyo via the worker's existing /klaviyo route (same key it already has).
+// index.html sends {clinics:[{name,email,tier,...}]} — we use tier 'cross_sell'.
+async function klaviyoPush(clinics){
+  const r = await fetch(WORKER + '/klaviyo', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({clinics})
   });
-  const text = await r.text();
-  if(!r.ok) throw new Error('Klaviyo proxy ' + r.status + ': ' + text.slice(0,200));
-  return text ? JSON.parse(text) : {};
+  const j = await r.json();
+  if(j.errors && j.errors.length) throw new Error(j.errors.slice(0,3).join('; '));
+  return j;
 }
-const KLAVIYO_LIST_NAME = 'PSTOOL Cross-Sell Gaps';
-let KLAVIYO_LIST_ID = localStorage.getItem('ps_klaviyo_gap_list') || '';
 
 const EXCLUDE = ['vetcove','pet parent','petscript direct','usc','shelters united','vha','vethubrx','mike salsbury','serena patterson'];
 
@@ -340,20 +356,21 @@ const SUPA_URL = 'https://kijoonuxbkpzejnqxnwl.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtpam9vbnV4YmtwemVqbnF4bndsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMzkyOTAsImV4cCI6MjA5MTkxNTI5MH0.tdTwDNLpY2jq16-NhmFwOj326d_UYpT4BlTyYoYSYVM';
 const SUPA_HEADERS = {'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'};
 
-let ignored = new Map();     // clinic name (lowercase) -> {reason, row}
-let ignoreNameCol = 'clinic';// detected from existing rows; fallback 'clinic'
+let ignored = new Map();     // clinic name (lowercase) -> {reason}
 let showIgnored = false;
 
 async function loadIgnored(){
   try{
-    const r = await fetch(`${SUPA_URL}/rest/v1/outreach_ignored?select=*`, {headers:SUPA_HEADERS});
+    const r = await fetch(`${SUPA_URL}/rest/v1/outreach_ignored?select=*`, {headers:{...SUPA_HEADERS,'Range':'0-9999'}});
     if(!r.ok) throw new Error('HTTP '+r.status);
     const rows = await r.json();
-    if(rows.length){
-      const keys = Object.keys(rows[0]);
-      ignoreNameCol = ['clinic','clinic_name','name'].find(k=>keys.includes(k)) || keys.find(k=>k!=='id'&&k!=='reason') || 'clinic';
+    const now = Date.now();
+    ignored = new Map();
+    for(const row of rows){
+      // honor temporary ignores: skip if ignored_until has passed
+      if(row.ignored_until && new Date(row.ignored_until).getTime() < now) continue;
+      ignored.set(String(row.clinic_name||'').toLowerCase(), {reason: row.reason||''});
     }
-    ignored = new Map(rows.map(row => [String(row[ignoreNameCol]||'').toLowerCase(), {reason: row.reason||'', row}]));
   }catch(e){ console.warn('Could not load outreach_ignored:', e); }
   if(gapX!=null && gapY!=null) renderGap();
 }
@@ -362,26 +379,21 @@ async function ignoreClinic(idx){
   const reason = prompt(`Why ignore ${c.name}?\n(e.g. "State we can't ship to", "Asked not to contact")`);
   if(reason===null) return;
   try{
-    const r = await fetch(`${SUPA_URL}/rest/v1/outreach_ignored`, {
-      method:'POST', headers:{...SUPA_HEADERS,'Prefer':'return=representation'},
-      body: JSON.stringify({[ignoreNameCol]: c.name, reason})
+    const r = await fetch(`${SUPA_URL}/rest/v1/outreach_ignored?on_conflict=clinic_name`, {
+      method:'POST', headers:{...SUPA_HEADERS,'Prefer':'resolution=merge-duplicates'},
+      body: JSON.stringify({clinic_name: c.name, reason, ignored_until: null, rep_username:'basket'})
     });
-    if(!r.ok){ const t = await r.text(); throw new Error(t); }
-    const [row] = await r.json();
-    ignored.set(c.name.toLowerCase(), {reason, row});
+    if(!r.ok){ const t = await r.text(); throw new Error(t.slice(0,200)); }
+    ignored.set(c.name.toLowerCase(), {reason});
     renderGap();
   }catch(e){
-    document.getElementById('gapStatus').textContent = 'Ignore failed: '+e.message+' — paste this error to fix the column mapping.';
+    document.getElementById('gapStatus').textContent = 'Ignore failed: '+e.message;
   }
 }
 async function unignoreClinic(name){
-  const entry = ignored.get(name.toLowerCase());
-  if(!entry) return;
   try{
-    const del = entry.row && entry.row.id != null
-      ? `${SUPA_URL}/rest/v1/outreach_ignored?id=eq.${entry.row.id}`
-      : `${SUPA_URL}/rest/v1/outreach_ignored?${ignoreNameCol}=eq.${encodeURIComponent(name)}`;
-    const r = await fetch(del, {method:'DELETE', headers:SUPA_HEADERS});
+    const r = await fetch(`${SUPA_URL}/rest/v1/outreach_ignored?clinic_name=eq.${encodeURIComponent(name)}`,
+      {method:'DELETE', headers:SUPA_HEADERS});
     if(!r.ok) throw new Error('HTTP '+r.status);
     ignored.delete(name.toLowerCase());
     renderGap();
@@ -397,42 +409,33 @@ function toggleShowIgnored(){ showIgnored = !showIgnored; renderGap(); }
    (any gap combo, not just this one).
 ===================================================================== */
 let contacted = new Map();   // clinic name (lowercase) -> date string
-let logNameCol = 'clinic', logDateCol = 'created_at';
 async function loadContacted(){
   try{
-    const r = await fetch(`${SUPA_URL}/rest/v1/outreach_log?select=*&order=created_at.desc`, {
+    const r = await fetch(`${SUPA_URL}/rest/v1/outreach_log?select=clinic_name,contacted_at&order=contacted_at.desc`, {
       headers:{...SUPA_HEADERS, 'Range':'0-9999'}
     });
     if(!r.ok) throw new Error('HTTP '+r.status);
     const rows = await r.json();
-    if(rows.length){
-      const keys = Object.keys(rows[0]);
-      logNameCol = ['clinic','clinic_name','name'].find(k=>keys.includes(k)) || logNameCol;
-      logDateCol = ['created_at','contacted_at','inserted_at','date'].find(k=>keys.includes(k)) || logDateCol;
-    }
     for(const row of rows){
-      const nm = String(row[logNameCol]||'').toLowerCase();
+      const nm = String(row.clinic_name||'').toLowerCase();
       if(nm && !contacted.has(nm)){
-        const d = row[logDateCol] ? new Date(row[logDateCol]).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
+        const d = row.contacted_at ? new Date(row.contacted_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
         contacted.set(nm, d);
       }
     }
   }catch(e){ console.warn('Could not load outreach_log:', e); }
   if(gapX!=null && gapY!=null) renderGap();
 }
-async function logContacted(clinics){
-  if(!clinics.length) return;
+async function logContacted(c, seqLabel){
   try{
-    const body = clinics.map(c=>({[logNameCol]: c.name}));
+    const now = new Date().toISOString();
     const r = await fetch(`${SUPA_URL}/rest/v1/outreach_log`, {
-      method:'POST', headers:SUPA_HEADERS, body: JSON.stringify(body)
+      method:'POST', headers:SUPA_HEADERS,
+      body: JSON.stringify({clinic_name:c.name, rep_username:'basket', subject:'Apollo: '+seqLabel+' ('+PN(gapX)+' → '+PN(gapY)+')', contacted_at:now})
     });
-    if(!r.ok){ const t = await r.text(); throw new Error(t.slice(0,200)); }
-    const today = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-    clinics.forEach(c=>contacted.set(c.name.toLowerCase(), today));
-  }catch(e){
-    document.getElementById('gapStatus').textContent += ' (Warning: could not log to outreach_log: '+e.message+')';
-  }
+    if(!r.ok){ const t = await r.text(); throw new Error(t.slice(0,150)); }
+    contacted.set(c.name.toLowerCase(), new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}));
+  }catch(e){ console.warn('outreach_log write failed:', e); }
 }
 
 /* =====================================================================
@@ -721,111 +724,60 @@ document.getElementById('gapApollo').onclick = async () => {
   const btn = document.getElementById('gapApollo'), prog = document.getElementById('gapProg'),
         bar = prog.firstElementChild, status = document.getElementById('gapStatus');
   const seqId = seqSel.value;
+  const seqLabel = seqSel.options[seqSel.selectedIndex].text;
   const targets = pushTargets();
   if(!targets.length){ status.textContent = 'No clinics with emails in this list.'; return; }
-  if(!confirm(`Add ${targets.length} contacts to this Apollo sequence?\n(Use "Push top" to change batch size — spend-ranked, biggest first.)`)) return;
+  if(!confirm(`Add ${targets.length} contacts to "${seqLabel}"?\n(Spend-ranked, biggest first. Already-added clinics are auto-skipped.)`)) return;
   btn.disabled = true; prog.style.display='block';
-  const contactIds = [], enrolledClinics = []; let done=0, failed=0;
-  try{
-    for(const c of targets){
-      try{
-        const [,email,,doctor] = c.ka;
-        const parts = (doctor||'').replace(/^Dr\.?\s*/i,'').trim().split(/\s+/).filter(Boolean);
-        const lastName = parts.length>1 ? parts[parts.length-1] : (parts[0]||'');
-        const firstName = parts.length>1 ? parts.slice(0,-1).join(' ') : (parts[0]||c.name);
-        const payload = { first_name:firstName, last_name:lastName, email, organization_name:c.name, run_dedupe:true };
-        if(FIELD_PRODUCT_X && FIELD_PRODUCT_Y){
-          payload.typed_custom_fields = { [FIELD_PRODUCT_X]: PN(gapX), [FIELD_PRODUCT_Y]: PN(gapY) };
-        }
-        const res = await apolloCall('/api/v1/contacts','POST',payload);
-        const id = res?.contact?.id;
-        if(id){ contactIds.push(id); enrolledClinics.push(c); } else failed++;
-      }catch(e){ failed++; }
-      done++; bar.style.width = Math.round(done/targets.length*80)+'%';
-      status.textContent = `Creating contacts... ${done}/${targets.length}`;
-      await sleep(150); // pace to stay under Apollo rate limits
+  let ok=0, failed=0, done=0;
+  for(const c of targets){
+    status.textContent = `Adding ${done+1}/${targets.length}: ${c.name.slice(0,50)}...`;
+    try{
+      await apolloEnroll(c, seqId);
+      ok++;
+      await logContacted(c, seqLabel);   // Supabase outreach_log — blocks re-adds everywhere
+      hubspotNote(c, seqLabel);          // HubSpot note, non-blocking
+    }catch(e){
+      failed++;
+      console.warn('Enroll failed for', c.name, e.message);
     }
-    status.textContent = 'Fetching sending account...';
-    const acct = await apolloCall('/api/v1/email_accounts','GET',null);
-    const acctId = acct?.email_accounts?.[0]?.id;  // must be the account ID, not the email string
-    if(!acctId) throw new Error('No Apollo email account found');
-    // Enroll in chunks — Apollo rejects oversized contact_ids batches
-    const CHUNK = 200;
-    for(let i=0; i<contactIds.length; i+=CHUNK){
-      const chunk = contactIds.slice(i, i+CHUNK);
-      status.textContent = `Enrolling ${i+1}–${Math.min(i+CHUNK, contactIds.length)} of ${contactIds.length}...`;
-      await apolloCall(`/api/v1/emailer_campaigns/${seqId}/add_contact_ids`,'POST',{
-        contact_ids: chunk, emailer_campaign_id: seqId,
-        send_email_from_email_account_id: acctId
-      });
-      bar.style.width = Math.round(80 + (i+chunk.length)/contactIds.length*20)+'%';
-      await sleep(400);
-    }
-    bar.style.width='100%';
-    status.textContent = `Done — ${contactIds.length} enrolled${failed?`, ${failed} failed`:''}. Logging...`;
-    await logContacted(enrolledClinics);
-    status.textContent = `Done — ${contactIds.length} enrolled${failed?`, ${failed} failed`:''}. Logged to outreach_log; they won't be re-added.`;
-    renderGap();
-  }catch(e){
-    status.textContent = 'Error: ' + e.message + ' (check /apollo-proxy contract matches index.html)';
+    done++;
+    bar.style.width = Math.round(done/targets.length*100)+'%';
+    await sleep(400); // pace the worker
   }
+  status.textContent = `Done — ${ok} enrolled${failed?`, ${failed} failed (see console)`:''}. Logged; they won't be re-added.`;
   btn.disabled = false;
+  renderGap();
 };
 
-/* ---- Klaviyo: bulk import gap list into a Klaviyo list for newsletters ---- */
+/* ---- Klaviyo: push gap list through the worker's existing /klaviyo route ---- */
 document.getElementById('gapKlaviyo').onclick = async () => {
   const btn = document.getElementById('gapKlaviyo'), prog = document.getElementById('gapProg'),
         bar = prog.firstElementChild, status = document.getElementById('gapStatus');
   const targets = pushTargets();
   if(!targets.length){ status.textContent = 'No clinics with emails in this list.'; return; }
-  if(!confirm(`Add ${targets.length} profiles to Klaviyo list "${KLAVIYO_LIST_NAME}"?\nEach gets gap_product_x / gap_product_y properties so you can segment.`)) return;
-  btn.disabled = true; prog.style.display='block'; bar.style.width='10%';
+  if(!confirm(`Push ${targets.length} clinics to Klaviyo (tier: cross_sell)?`)) return;
+  btn.disabled = true; prog.style.display='block'; bar.style.width='30%';
   try{
-    // Get or create the list once
-    if(!KLAVIYO_LIST_ID){
-      status.textContent = 'Finding Klaviyo list...';
-      const found = await klaviyoCall(`/api/lists/?filter=equals(name,"${KLAVIYO_LIST_NAME}")`, 'GET', null);
-      if(found?.data?.length){
-        KLAVIYO_LIST_ID = found.data[0].id;
-      }else{
-        const made = await klaviyoCall('/api/lists/','POST',{
-          data:{type:'list', attributes:{name:KLAVIYO_LIST_NAME}}
-        });
-        KLAVIYO_LIST_ID = made?.data?.id;
-      }
-      if(!KLAVIYO_LIST_ID) throw new Error('Could not get/create list');
-      localStorage.setItem('ps_klaviyo_gap_list', KLAVIYO_LIST_ID);
-    }
-    bar.style.width='30%';
-    status.textContent = `Importing ${targets.length} profiles...`;
-    const profiles = targets.map(c=>{
-      const [ri,email,phone,doctor,,cityzip] = c.ka;
-      const parts = (doctor||'').replace(/^Dr\.?\s*/i,'').trim().split(/\s+/).filter(Boolean);
-      return {type:'profile', attributes:{
-        email,
-        first_name: parts.length>1 ? parts.slice(0,-1).join(' ') : (parts[0]||''),
-        last_name: parts.length>1 ? parts[parts.length-1] : '',
-        organization: c.name,
-        properties: {
-          gap_product_x: PN(gapX),
-          gap_product_y: PN(gapY),
-          pstool_rep: REPS[ri]||'',
-          gap_x_spend: Math.round(cRev(c).get(gapX)||0)
-        }
-      }};
+    const clinics = targets.map(c=>{
+      const [ri,email,,,,,lastOrd] = c.ka;
+      return {
+        name: c.name, email: (email||'').trim(),
+        tier: 'cross_sell',
+        score: 0, estLoss: 0,
+        lastOrder: lastOrd||'', avgGap: 0,
+        rep: REPS[ri]||'',
+        gap_product_x: PN(gapX), gap_product_y: PN(gapY),
+        gap_x_spend: Math.round(cRev(c).get(gapX)||0)
+      };
     });
-    // One bulk import job handles up to 10,000 profiles
-    await klaviyoCall('/api/profile-bulk-import-jobs/','POST',{
-      data:{
-        type:'profile-bulk-import-job',
-        attributes:{ profiles:{ data: profiles } },
-        relationships:{ lists:{ data:[{type:'list', id:KLAVIYO_LIST_ID}] } }
-      }
-    });
+    status.textContent = `Pushing ${clinics.length} to Klaviyo...`;
+    const j = await klaviyoPush(clinics);
     bar.style.width='100%';
-    status.textContent = `Done — ${profiles.length} profiles queued into "${KLAVIYO_LIST_NAME}". Klaviyo processes the import in the background (usually under a minute).`;
+    status.textContent = `✓ Klaviyo push done — ${clinics.length} sent (tier cross_sell). ` +
+      (j.pushed ? JSON.stringify(j.pushed) : 'Check your Klaviyo lists.');
   }catch(e){
-    status.textContent = 'Klaviyo error: ' + e.message;
+    status.textContent = 'Klaviyo error: ' + e.message + ' — if the worker only knows critical/slipping/watch tiers, paste me its /klaviyo section and I\'ll give you the cross_sell patch.';
   }
   btn.disabled = false;
 };
