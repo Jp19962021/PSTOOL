@@ -719,6 +719,34 @@ table.ptbl tr:last-child td{border-bottom:none}
 #ai-page-send:disabled{background:#ccc;cursor:not-allowed}
 @media(max-width:800px){.ai-page-side{width:200px}}
 @media(max-width:650px){.ai-page-wrap{flex-direction:column;height:auto}.ai-page-side{width:100%;max-height:180px;border-right:none;border-bottom:1px solid #edf0f5}}
+
+/* ---- CEO tab ---- */
+.ceo-asof{font-size:11px;color:#888;margin-bottom:12px}
+.ceo-hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);color:#fff;border-radius:14px;padding:20px 24px;margin-bottom:18px;display:grid;grid-template-columns:repeat(4,1fr);gap:18px;box-shadow:0 4px 18px rgba(26,32,53,.18)}
+.ceo-hero .tr-tt{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#a4adc7;font-weight:600;margin-bottom:6px;white-space:nowrap}
+.ceo-hero .tr-tv{font-size:24px;font-weight:700;color:#fff;line-height:1.1}
+.ceo-delta{font-size:11px;font-weight:600}
+.ceo-delta.up{color:#16a34a}.ceo-delta.down{color:#dc2626}.ceo-delta.flat{color:#888}
+.ceo-hero .ceo-delta.up{color:#86efac}.ceo-hero .ceo-delta.down{color:#fca5a5}
+.ceo-sub{font-size:11px;color:#a4adc7;margin-top:4px;line-height:1.4}
+.ceo-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:18px}
+.ceo-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.ceo-card .cc-t{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:600;margin-bottom:4px}
+.ceo-card .cc-v{font-size:22px;font-weight:700;color:#111827}
+.ceo-card .cc-s{font-size:11px;color:#6b7280;margin-top:2px}
+.ceo-section{margin-bottom:20px}
+.ceo-section-title{font-size:14px;font-weight:700;margin-bottom:8px;color:#111827}
+.ceo-tbl{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;font-size:12px}
+.ceo-tbl th{text-align:left;background:#f9fafb;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#6b7280}
+.ceo-tbl td{padding:8px 12px;border-top:1px solid #f1f2f4}
+.ceo-tbl td.num,.ceo-tbl th.num{text-align:right}
+.ceo-row{cursor:pointer}.ceo-row:hover{background:#f8fafc}
+.ceo-bkt-tabs{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.ceo-bkt-tab{padding:6px 14px;border-radius:20px;background:#f1f2f4;font-size:12px;font-weight:600;cursor:pointer;color:#374151}
+.ceo-bkt-tab.active{background:#0f172a;color:#fff}
+.ceo-crossed{background:#fef3c7;color:#92400e;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:.03em}
+.ceo-qb{opacity:.55}
+@media(max-width:900px){.ceo-hero{grid-template-columns:repeat(2,1fr)}.ceo-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -874,6 +902,7 @@ table.ptbl tr:last-child td{border-bottom:none}
     <div class="tab" data-page="churn">&#128302; Churn</div>
     <div class="tab admin-tab" data-page="outreach" id="outreachtab" style="display:none">&#9993; Outreach</div>
     <div class="tab admin-tab" data-page="trends" id="trtab" style="display:none">&#128200; Trends</div>
+    <div class="tab admin-tab" data-page="ceo" id="ceotab" style="display:none">&#128081; CEO</div>
     <div class="tab admin-tab" data-page="actionplan" id="aptab" style="display:none">&#127919; Action Plan</div>
     <div class="tab admin-tab" data-page="drugsearch" id="dstab" style="display:none">&#128269; Drug Search</div>
     <div class="tab admin-tab" data-page="inventory" id="invtab" style="display:none">&#128230; Inventory</div>
@@ -900,6 +929,7 @@ table.ptbl tr:last-child td{border-bottom:none}
     <div class="mob-nav-tab" data-page="notestasks">&#128221; Notes &amp; Tasks</div>
     <div class="mob-nav-sep admin-tab" style="display:none">— Admin —</div>
     <div class="mob-nav-tab admin-tab" data-page="trends" style="display:none">&#128200; Trends</div>
+    <div class="mob-nav-tab admin-tab" data-page="ceo" style="display:none">&#128081; CEO</div>
     <div class="mob-nav-tab admin-tab" data-page="actionplan" style="display:none">&#127919; Action Plan</div>
     <div class="mob-nav-tab admin-tab" data-page="drugsearch" style="display:none">&#128269; Drug Search</div>
     <div class="mob-nav-tab admin-tab" data-page="inventory" style="display:none">&#128230; Drug Inventory</div>
@@ -1249,6 +1279,76 @@ table.ptbl tr:last-child td{border-bottom:none}
 </div></div>
 
 <!-- DRUG SEARCH (admin only) -->
+<div id="page-ceo" class="page"><div class="container">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <div class="ceo-asof" id="ceo-asof">Loading...</div>
+    <button class="ceo-bkt-tab" id="ceo-refresh" style="margin-left:auto">&#8635; Recompute</button>
+  </div>
+
+  <div class="ceo-hero">
+    <div>
+      <div class="tr-tt">Last 7 Days</div>
+      <div class="tr-tv" id="ceo-wk-val">$0</div>
+      <div class="ceo-sub" id="ceo-wk-d1"></div>
+      <div class="ceo-sub" id="ceo-wk-d2"></div>
+    </div>
+    <div>
+      <div class="tr-tt">Month to Date</div>
+      <div class="tr-tv" id="ceo-mo-val">$0</div>
+      <div class="ceo-sub" id="ceo-mo-d1"></div>
+      <div class="ceo-sub" id="ceo-mo-d2"></div>
+    </div>
+    <div>
+      <div class="tr-tt" id="ceo-lm-lbl">Last Month</div>
+      <div class="tr-tv" id="ceo-lm-val">$0</div>
+      <div class="ceo-sub" id="ceo-lm-d1"></div>
+    </div>
+    <div>
+      <div class="tr-tt">YTD</div>
+      <div class="tr-tv" id="ceo-ytd-val">$0</div>
+      <div class="ceo-sub" id="ceo-ytd-d1"></div>
+    </div>
+  </div>
+
+  <div class="ceo-grid">
+    <div class="ceo-card"><div class="cc-t">Orders This Month</div><div class="cc-v" id="ceo-ord-val">0</div><div class="cc-s" id="ceo-ord-d1"></div></div>
+    <div class="ceo-card"><div class="cc-t">Avg Order Value</div><div class="cc-v" id="ceo-aov-val">$0</div><div class="cc-s" id="ceo-aov-d1"></div></div>
+    <div class="ceo-card"><div class="cc-t">New Clinics This Week</div><div class="cc-v" id="ceo-newwk">0</div><div class="cc-s">first-ever order</div></div>
+    <div class="ceo-card"><div class="cc-t">New Clinics This Month</div><div class="cc-v" id="ceo-newmo">0</div><div class="cc-s" id="ceo-newmo-d"></div></div>
+    <div class="ceo-card"><div class="cc-t">New Clinics YTD</div><div class="cc-v" id="ceo-newytd">0</div><div class="cc-s">since Jan 1</div></div>
+    <div class="ceo-card"><div class="cc-t">Active Clinics (This Mo)</div><div class="cc-v" id="ceo-active">0</div><div class="cc-s" id="ceo-active-d"></div></div>
+  </div>
+
+  <div class="ceo-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="ceo-card"><div class="cc-t">Total Clinics (since 2024)</div><div class="cc-v" id="ceo-total">0</div><div class="cc-s">ever ordered</div></div>
+    <div class="ceo-card"><div class="cc-t">Dormant 180d+</div><div class="cc-v" id="ceo-dormant">0</div><div class="cc-s">excluded from buckets</div></div>
+    <div class="ceo-card ceo-qb"><div class="cc-t">Cash</div><div class="cc-v">&mdash;</div><div class="cc-s">QuickBooks &mdash; phase 2</div></div>
+    <div class="ceo-card ceo-qb"><div class="cc-t">A/R</div><div class="cc-v">&mdash;</div><div class="cc-s">QuickBooks &mdash; phase 2</div></div>
+  </div>
+
+  <div class="ceo-section">
+    <div class="ceo-section-title">&#128138; Top Products This Month</div>
+    <table class="ceo-tbl"><thead><tr><th>Product</th><th class="num">Revenue</th><th class="num">Units</th><th class="num">Last Month</th><th class="num">Change</th></tr></thead><tbody id="ceo-prod-body"></tbody></table>
+  </div>
+
+  <div class="ceo-section">
+    <div class="ceo-section-title">&#127942; Reps This Month</div>
+    <table class="ceo-tbl"><thead><tr><th>Rep</th><th class="num">MTD Revenue</th><th class="num">vs Last Mo</th><th class="num">vs Last Yr</th><th class="num">Active Clinics</th></tr></thead><tbody id="ceo-rep-body"></tbody></table>
+  </div>
+
+  <div class="ceo-section">
+    <div class="ceo-section-title">&#9200; Lapsed Clinics</div>
+    <div class="ceo-bkt-tabs">
+      <div class="ceo-bkt-tab active" data-bkt="b30">30&ndash;44 days (<span id="ceo-b30-n">0</span>)</div>
+      <div class="ceo-bkt-tab" data-bkt="b45">45&ndash;89 days (<span id="ceo-b45-n">0</span>)</div>
+      <div class="ceo-bkt-tab" data-bkt="b90">90&ndash;179 days (<span id="ceo-b90-n">0</span>)</div>
+    </div>
+    <table class="ceo-tbl"><thead><tr><th>Clinic</th><th>Rep</th><th>Last Order</th><th class="num">Days</th><th class="num">Lifetime Rev</th></tr></thead><tbody id="ceo-bkt-body"></tbody></table>
+    <div style="font-size:11px;color:#888;margin-top:6px">NEW badge = crossed the threshold within the last 7 days. Click a row to open the clinic. Sorted by lifetime revenue.</div>
+  </div>
+
+</div></div>
+
 <div id="page-drugsearch" class="page"><div class="container">
   <div class="tr-section-title">&#128269; Drug Search <span class="tr-sub">Filter and compare ingredient performance across your entire territory</span>
     <div class="ds-view-toggle" id="ds-view-toggle">
@@ -1850,6 +1950,7 @@ var TAB_CATALOG=[
   {key:'atrisk',      label:'At-Risk',           adminOnly:false},
   {key:'churn',       label:'Churn Predictor',   adminOnly:false},
   {key:'trends',      label:'Trends',            adminOnly:true},
+  {key:'ceo',         label:'CEO Scorecard',     adminOnly:true},
   {key:'actionplan',  label:'Action Plan',       adminOnly:true},
   {key:'drugsearch',  label:'Drug Search',       adminOnly:true},
   {key:'inventory',   label:'Drug Inventory',    adminOnly:true},
@@ -1973,6 +2074,7 @@ document.querySelectorAll('.tab,.mob-nav-tab').forEach(function(t){
     if(t.dataset.page==='notestasks'){loadMyTasks();loadMyNotes();}
     if(t.dataset.page==='churn'){loadChurn();}
     if(t.dataset.page==='trends'){loadTrends();}
+    if(t.dataset.page==='ceo'){loadCeo();}
     if(t.dataset.page==='actionplan'){loadActionPlan();}
     if(t.dataset.page==='drugsearch'){loadDrugSearch();}
     if(t.dataset.page==='inventory'){loadInventory();}
@@ -7417,5 +7519,289 @@ document.addEventListener('click', function(e) {
 });
 
 </script>
+<script>
+/* ============================================================
+   CEO TAB — computed entirely from data.js, no external calls
+   ============================================================ */
+function ceoFmtK(n){
+  if(n>=1000000)return '$'+(n/1000000).toFixed(2)+'M';
+  if(n>=1000)return '$'+(n/1000).toFixed(1)+'k';
+  return '$'+Math.round(n);
+}
+function ceoPct(cur,prev){
+  if(!prev)return '<span class="ceo-delta flat">&mdash;</span>';
+  var p=((cur-prev)/prev)*100;
+  var cls=p>=0?'up':'down';
+  var arrow=p>=0?'&#9650;':'&#9660;';
+  return '<span class="ceo-delta '+cls+'">'+arrow+' '+Math.abs(p).toFixed(1)+'%</span>';
+}
+function ceoEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+var CEO_CACHE=null;
+function ceoCompute(){
+  if(CEO_CACHE)return CEO_CACHE;
+  var now=new Date();
+  var todayEp=Math.floor((Date.now()-EP0)/86400000);
+  var thisYr=now.getUTCFullYear();
+  var thisMo=now.getUTCMonth();
+  var lastMoDate=new Date(Date.UTC(thisYr,thisMo-1,1));
+  var lastMoYr=lastMoDate.getUTCFullYear();
+  var lastMo=lastMoDate.getUTCMonth();
+
+  function monthKeyOf(ep){var d=new Date(EP0+ep*86400000);return d.getUTCFullYear()*100+d.getUTCMonth();}
+  var kThisMo=thisYr*100+thisMo;
+  var kLastMo=lastMoYr*100+lastMo;
+  var kThisMoLY=(thisYr-1)*100+thisMo;
+  var kLastMoLY=(lastMoYr-1)*100+lastMo;
+
+  var wkStart=todayEp-6;                 /* rolling 7 days incl today */
+  var wkPrevStart=todayEp-13,wkPrevEnd=todayEp-7;
+  var wkLYStart=todayEp-364-6,wkLYEnd=todayEp-364; /* 52 weeks back, same weekdays */
+
+  var domToday=now.getUTCDate();
+
+  var agg={
+    revWk:0,revWkPrev:0,revWkLY:0,
+    revThisMo:0,revLastMo:0,revThisMoLY:0,revLastMoLY:0,
+    mtdLY:0,
+    ytd:0,ytdLY:0,
+    ordThisMo:{},ordLastMo:{},ordThisMoLY:{},
+    maxEp:0
+  };
+  var prodThis={},prodLast={};
+  var repThis={},repLast={},repThisLY={},repClinics={};
+  var activeThis={},activeLast={};
+  var i,j,name,rows,r,ep,rev,mk;
+
+  var firstEp={};/* clinic -> first order ep */
+  var lastEp={}; /* clinic -> last order ep  */
+  var lifeRev={};
+
+  for(i=0;i<C.length;i++){
+    name=C[i];rows=D[name]||[];
+    if(!rows.length)continue;
+    var k=KA[i]||[-1];
+    var rep=k[0]>=0?REPS[k[0]]:'(unassigned)';
+    for(j=0;j<rows.length;j++){
+      r=rows[j];ep=r[3];rev=r[2];
+      if(ep>agg.maxEp)agg.maxEp=ep;
+      if(firstEp[name]===undefined||ep<firstEp[name])firstEp[name]=ep;
+      if(lastEp[name]===undefined||ep>lastEp[name])lastEp[name]=ep;
+      lifeRev[name]=(lifeRev[name]||0)+rev;
+
+      var d=new Date(EP0+ep*86400000);
+      var yr=d.getUTCFullYear();
+      mk=yr*100+d.getUTCMonth();
+
+      if(ep>=wkStart&&ep<=todayEp)agg.revWk+=rev;
+      if(ep>=wkPrevStart&&ep<=wkPrevEnd)agg.revWkPrev+=rev;
+      if(ep>=wkLYStart&&ep<=wkLYEnd)agg.revWkLY+=rev;
+
+      if(mk===kThisMo){
+        agg.revThisMo+=rev;
+        agg.ordThisMo[i+'_'+ep]=1;
+        activeThis[i]=1;
+        prodThis[r[1]]=prodThis[r[1]]||{rev:0,qty:0};
+        prodThis[r[1]].rev+=rev;prodThis[r[1]].qty+=(r[4]||0);
+        repThis[rep]=(repThis[rep]||0)+rev;
+        repClinics[rep]=repClinics[rep]||{};repClinics[rep][i]=1;
+      }
+      if(mk===kLastMo){
+        agg.revLastMo+=rev;
+        agg.ordLastMo[i+'_'+ep]=1;
+        activeLast[i]=1;
+        prodLast[r[1]]=prodLast[r[1]]||{rev:0,qty:0};
+        prodLast[r[1]].rev+=rev;prodLast[r[1]].qty+=(r[4]||0);
+        repLast[rep]=(repLast[rep]||0)+rev;
+      }
+      if(mk===kThisMoLY){
+        agg.revThisMoLY+=rev;
+        agg.ordThisMoLY[i+'_'+ep]=1;
+        repThisLY[rep]=(repThisLY[rep]||0)+rev;
+        if(d.getUTCDate()<=domToday)agg.mtdLY+=rev;
+      }
+      if(mk===kLastMoLY)agg.revLastMoLY+=rev;
+      if(yr===thisYr)agg.ytd+=rev;
+      if(yr===thisYr-1){
+        var doy=Math.floor((Date.UTC(yr,d.getUTCMonth(),d.getUTCDate())-Date.UTC(yr,0,1))/86400000);
+        var doyToday=Math.floor((Date.UTC(thisYr,thisMo,domToday)-Date.UTC(thisYr,0,1))/86400000);
+        if(doy<=doyToday)agg.ytdLY+=rev;
+      }
+    }
+  }
+
+  /* clinic counts */
+  var moStartEp=Math.floor((Date.UTC(thisYr,thisMo,1)-EP0)/86400000);
+  var yrStartEp=Math.floor((Date.UTC(thisYr,0,1)-EP0)/86400000);
+  var lastMoStartEp=Math.floor((Date.UTC(lastMoYr,lastMo,1)-EP0)/86400000);
+  var newWk=0,newMo=0,newYTD=0,newLastMo=0,totalClinics=0;
+  var cn;
+  for(cn in firstEp){
+    totalClinics++;
+    var f=firstEp[cn];
+    if(f>=wkStart)newWk++;
+    if(f>=moStartEp)newMo++;
+    if(f>=yrStartEp)newYTD++;
+    if(f>=lastMoStartEp&&f<moStartEp)newLastMo++;
+  }
+
+  /* lapsed buckets */
+  var buckets={b30:[],b45:[],b90:[]};
+  var dormant=0;
+  for(i=0;i<C.length;i++){
+    name=C[i];
+    if(lastEp[name]===undefined)continue;
+    var days=todayEp-lastEp[name];
+    if(days<30)continue;
+    if(days>=180){dormant++;continue;}
+    var k2=KA[i]||[-1];
+    var entry={
+      name:name,idx:i,days:days,
+      last:epDate(lastEp[name]),
+      rep:k2[0]>=0?REPS[k2[0]]:'',
+      rev:lifeRev[name]||0,
+      crossed:''
+    };
+    if(days>=90){if(days<97)entry.crossed='90d';buckets.b90.push(entry);}
+    else if(days>=45){if(days<52)entry.crossed='45d';buckets.b45.push(entry);}
+    else{if(days<37)entry.crossed='30d';buckets.b30.push(entry);}
+  }
+  function bucketSort(a,b){
+    if(a.crossed&&!b.crossed)return -1;
+    if(!a.crossed&&b.crossed)return 1;
+    return b.rev-a.rev;
+  }
+  buckets.b30.sort(bucketSort);buckets.b45.sort(bucketSort);buckets.b90.sort(bucketSort);
+
+  CEO_CACHE={
+    agg:agg,
+    ordersThisMo:Object.keys(agg.ordThisMo).length,
+    ordersLastMo:Object.keys(agg.ordLastMo).length,
+    ordersThisMoLY:Object.keys(agg.ordThisMoLY).length,
+    activeThis:Object.keys(activeThis).length,
+    activeLast:Object.keys(activeLast).length,
+    newWk:newWk,newMo:newMo,newLastMo:newLastMo,newYTD:newYTD,totalClinics:totalClinics,
+    prodThis:prodThis,prodLast:prodLast,
+    repThis:repThis,repLast:repLast,repThisLY:repThisLY,repClinics:repClinics,
+    buckets:buckets,dormant:dormant,
+    monthName:now.toLocaleDateString('en-US',{month:'long',timeZone:'UTC'}),
+    lastMonthName:lastMoDate.toLocaleDateString('en-US',{month:'long',timeZone:'UTC'})
+  };
+  return CEO_CACHE;
+}
+
+function loadCeo(){
+  var x=ceoCompute();
+  var a=x.agg;
+
+  document.getElementById('ceo-asof').textContent='Data through '+epDate(a.maxEp)+' \u00b7 syncs nightly from Zoho';
+
+  /* hero strip */
+  document.getElementById('ceo-wk-val').textContent=ceoFmtK(a.revWk);
+  document.getElementById('ceo-wk-d1').innerHTML=ceoPct(a.revWk,a.revWkPrev)+' vs prior 7d';
+  document.getElementById('ceo-wk-d2').innerHTML=ceoPct(a.revWk,a.revWkLY)+' vs same wk last yr';
+
+  document.getElementById('ceo-mo-val').textContent=ceoFmtK(a.revThisMo);
+  document.getElementById('ceo-mo-d1').innerHTML=ceoPct(a.revThisMo,a.revLastMo)+' vs '+x.lastMonthName;
+  document.getElementById('ceo-mo-d2').innerHTML=ceoPct(a.revThisMo,a.mtdLY)+' vs same days last yr';
+
+  document.getElementById('ceo-lm-val').textContent=ceoFmtK(a.revLastMo);
+  document.getElementById('ceo-lm-lbl').textContent=x.lastMonthName;
+  document.getElementById('ceo-lm-d1').innerHTML=ceoPct(a.revLastMo,a.revLastMoLY)+' vs last yr';
+
+  document.getElementById('ceo-ytd-val').textContent=ceoFmtK(a.ytd);
+  document.getElementById('ceo-ytd-d1').innerHTML=ceoPct(a.ytd,a.ytdLY)+' vs same point last yr';
+
+  /* orders + AOV */
+  var aov=x.ordersThisMo?a.revThisMo/x.ordersThisMo:0;
+  var aovLast=x.ordersLastMo?a.revLastMo/x.ordersLastMo:0;
+  document.getElementById('ceo-ord-val').textContent=x.ordersThisMo.toLocaleString();
+  document.getElementById('ceo-ord-d1').innerHTML=ceoPct(x.ordersThisMo,x.ordersLastMo)+' vs '+x.lastMonthName+' \u00b7 '+ceoPct(x.ordersThisMo,x.ordersThisMoLY)+' YoY';
+  document.getElementById('ceo-aov-val').textContent='$'+aov.toFixed(0);
+  document.getElementById('ceo-aov-d1').innerHTML=ceoPct(aov,aovLast)+' vs '+x.lastMonthName;
+
+  /* clinic cards */
+  document.getElementById('ceo-newwk').textContent=x.newWk;
+  document.getElementById('ceo-newmo').textContent=x.newMo;
+  document.getElementById('ceo-newmo-d').innerHTML=ceoPct(x.newMo,x.newLastMo)+' vs '+x.lastMonthName;
+  document.getElementById('ceo-newytd').textContent=x.newYTD;
+  document.getElementById('ceo-total').textContent=x.totalClinics.toLocaleString();
+  document.getElementById('ceo-active').textContent=x.activeThis.toLocaleString();
+  document.getElementById('ceo-active-d').innerHTML=ceoPct(x.activeThis,x.activeLast)+' vs '+x.lastMonthName;
+
+  /* top products */
+  var pids=Object.keys(x.prodThis);
+  pids.sort(function(a2,b2){return x.prodThis[b2].rev-x.prodThis[a2].rev;});
+  var html='';
+  var lim=Math.min(10,pids.length);
+  for(var i=0;i<lim;i++){
+    var pid=pids[i];
+    var t=x.prodThis[pid];
+    var lastRow=x.prodLast[pid];
+    html+='<tr><td>'+ceoEsc(P[pid]||'')+'</td>'+
+      '<td class="num">'+fmt(t.rev)+'</td>'+
+      '<td class="num">'+Math.round(t.qty).toLocaleString()+'</td>'+
+      '<td class="num">'+(lastRow?fmt(lastRow.rev):'\u2014')+'</td>'+
+      '<td class="num">'+ceoPct(t.rev,lastRow?lastRow.rev:0)+'</td></tr>';
+  }
+  document.getElementById('ceo-prod-body').innerHTML=html||'<tr><td colspan="5">No orders yet this month.</td></tr>';
+
+  /* rep table */
+  var reps=Object.keys(x.repThis);
+  reps.sort(function(a2,b2){return x.repThis[b2]-x.repThis[a2];});
+  html='';
+  for(i=0;i<reps.length;i++){
+    var rn=reps[i];
+    html+='<tr><td>'+ceoEsc(rn)+'</td>'+
+      '<td class="num">'+fmt(x.repThis[rn])+'</td>'+
+      '<td class="num">'+ceoPct(x.repThis[rn],x.repLast[rn]||0)+'</td>'+
+      '<td class="num">'+ceoPct(x.repThis[rn],x.repThisLY[rn]||0)+'</td>'+
+      '<td class="num">'+Object.keys(x.repClinics[rn]||{}).length+'</td></tr>';
+  }
+  document.getElementById('ceo-rep-body').innerHTML=html||'<tr><td colspan="5">No rep activity this month.</td></tr>';
+
+  /* lapsed buckets */
+  document.getElementById('ceo-b30-n').textContent=x.buckets.b30.length;
+  document.getElementById('ceo-b45-n').textContent=x.buckets.b45.length;
+  document.getElementById('ceo-b90-n').textContent=x.buckets.b90.length;
+  document.getElementById('ceo-dormant').textContent=x.dormant.toLocaleString();
+  ceoRenderBucket('b30');
+}
+function ceoRenderBucket(which){
+  var x=ceoCompute();
+  var list=x.buckets[which]||[];
+  var tabs=document.querySelectorAll('.ceo-bkt-tab');
+  for(var i=0;i<tabs.length;i++){
+    if(tabs[i].getAttribute('data-bkt')===which)tabs[i].className='ceo-bkt-tab active';
+    else tabs[i].className='ceo-bkt-tab';
+  }
+  var html='';
+  var lim=Math.min(75,list.length);
+  for(i=0;i<lim;i++){
+    var e=list[i];
+    html+='<tr class="ceo-row" data-cidx="'+e.idx+'">'+
+      '<td>'+(e.crossed?'<span class="ceo-crossed">NEW '+e.crossed+'</span> ':'')+ceoEsc(e.name)+'</td>'+
+      '<td>'+ceoEsc(e.rep)+'</td>'+
+      '<td>'+e.last+'</td>'+
+      '<td class="num">'+e.days+'</td>'+
+      '<td class="num">'+fmt(e.rev)+'</td></tr>';
+  }
+  if(list.length>lim)html+='<tr><td colspan="5" style="color:#888;font-size:11px">Showing top '+lim+' of '+list.length+' (by lifetime revenue)</td></tr>';
+  document.getElementById('ceo-bkt-body').innerHTML=html||'<tr><td colspan="5">Nothing in this bucket. Good.</td></tr>';
+  var rows=document.querySelectorAll('#ceo-bkt-body .ceo-row');
+  for(i=0;i<rows.length;i++){
+    rows[i].addEventListener('click',function(){openPanel(parseInt(this.getAttribute('data-cidx'),10));});
+  }
+}
+document.addEventListener('DOMContentLoaded',function(){
+  var tabs=document.querySelectorAll('.ceo-bkt-tab');
+  for(var i=0;i<tabs.length;i++){
+    tabs[i].addEventListener('click',function(){ceoRenderBucket(this.getAttribute('data-bkt'));});
+  }
+  var rb=document.getElementById('ceo-refresh');
+  if(rb)rb.addEventListener('click',function(){CEO_CACHE=null;loadCeo();});
+});
+</script>
+
 </body>
 </html>
