@@ -85,6 +85,7 @@ def zoho_get(token, path, params=None):
 # ── Fetch new line items from Zoho ─────────────────────────────
 def fetch_new_lines(token, start_date, end_date):
     all_lines = []
+    new_refs  = []   # [{'customer':..., 'date':...}] for invoices whose reference contains NEW
     chunk_start = start_date
     while chunk_start <= end_date:
         chunk_end = min(chunk_start + timedelta(days=90), end_date)
@@ -103,23 +104,37 @@ def fetch_new_lines(token, start_date, end_date):
             inv_id       = inv.get('invoice_id', '')
             if not inv_date_str or not customer:
                 continue
+            try:
+                inv_total = float(inv.get('total') or 0)
+            except (TypeError, ValueError):
+                inv_total = 0.0
+            ref = (inv.get('reference_number') or '').strip()
             line_items = inv.get('line_items', [])
             if not line_items:
                 try:
                     detail = zoho_get(token, f'/invoices/{inv_id}')
                     if detail:
-                        line_items = (detail[0].get('line_items', [])
-                                      if isinstance(detail, list)
-                                      else detail.get('line_items', []))
+                        det = detail[0] if isinstance(detail, list) else detail
+                        line_items = det.get('line_items', [])
+                        try:
+                            inv_total = float(det.get('total') or inv_total)
+                        except (TypeError, ValueError):
+                            pass
+                        if not ref:
+                            ref = (det.get('reference_number') or '').strip()
                 except Exception as e:
                     print(f'  [warn] detail fetch failed for {inv_id}: {e}')
                     continue
+            if 'NEW' in ref.upper():
+                new_refs.append({'customer': customer, 'date': inv_date_str})
+            line_sum = 0.0
             for li in line_items:
                 name  = (li.get('name') or li.get('item_name') or '').strip()
                 qty   = float(li.get('quantity', 0) or 0)
                 total = float(li.get('item_total') or li.get('line_total') or 0)
                 if not name or total <= 0:
                     continue
+                line_sum += total
                 all_lines.append({
                     'date':     inv_date_str,
                     'customer': customer,
@@ -127,10 +142,19 @@ def fetch_new_lines(token, start_date, end_date):
                     'qty':      qty,
                     'total':    total,
                 })
+            ship_adj = round(inv_total - line_sum, 2)
+            if inv_total > 0 and abs(ship_adj) >= 0.01:
+                all_lines.append({
+                    'date':     inv_date_str,
+                    'customer': customer,
+                    'item':     '~Shipping & Adjustments',
+                    'qty':      0,
+                    'total':    ship_adj,
+                })
         chunk_start = chunk_end + timedelta(days=1)
 
-    print(f'[fetch] total new line items: {len(all_lines)}')
-    return all_lines
+    print(f'[fetch] total new line items: {len(all_lines)} | NEW-ref invoices: {len(new_refs)}')
+    return all_lines, new_refs
 
 # ── Load existing data.js into Python structures ───────────────
 def load_existing_data(path='data.js'):
@@ -164,6 +188,7 @@ def load_existing_data(path='data.js'):
     REPS = extract('REPS')
     P    = extract('P')
     T    = extract('T')
+    NC   = extract('NC')
 
     if C is None or D is None or P is None:
         print('[load] could not parse required arrays — will build from scratch')
@@ -174,10 +199,10 @@ def load_existing_data(path='data.js'):
         D[k] = [list(row) for row in D[k]]
 
     print(f'[load] loaded {len(C)} clinics, {len(P)} products from existing data.js')
-    return C, D, KA or [], REPS or [], P, T or []
+    return C, D, KA or [], REPS or [], P, T or [], NC or {}
 
 # ── Merge new lines into existing data structures ──────────────
-def merge_new_lines(existing, new_lines):
+def merge_new_lines(existing, new_lines, new_refs=None):
     """
     Takes existing (C, D, KA, REPS, P, T) and new_lines list.
     Returns updated (C, D, KA, REPS, P, T) with new rows merged in.
@@ -189,7 +214,16 @@ def merge_new_lines(existing, new_lines):
     - KA lastOrderISO is updated for any clinic that has new orders
     - New clinics get a blank KA entry
     """
-    C_list, D, KA, REPS, P, T = existing
+    C_list, D, KA, REPS, P, T, NC = existing
+    NC = dict(NC or {})
+    for nr in (new_refs or []):
+        try:
+            ep_nr = epoch_day(date.fromisoformat(nr['date']))
+        except Exception:
+            continue
+        cust = nr['customer']
+        if cust not in NC or ep_nr < NC[cust]:
+            NC[cust] = ep_nr
 
     # Build mutable product index
     prod_map = {name: idx for idx, name in enumerate(P)}
@@ -276,10 +310,11 @@ def merge_new_lines(existing, new_lines):
     top30 = sorted(prod_rev.items(), key=lambda x: -x[1])[:30]
     T_new = [[pidx, 0, rev] for pidx, rev in top30]
 
-    return C_new, D, KA_new, REPS, P, T_new
+    return C_new, D, KA_new, REPS, P, T_new, NC
 
 # ── Write data.js ──────────────────────────────────────────────
-def write_data_js(C, D, KA, REPS, P, T, out_path='data.js'):
+def write_data_js(C, D, KA, REPS, P, T, NC=None, out_path='data.js'):
+    NC = NC or {}
     now = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
 
     d_parts = []
@@ -300,6 +335,7 @@ def write_data_js(C, D, KA, REPS, P, T, out_path='data.js'):
         f'var REPS={json.dumps(REPS, separators=(",", ":"))};' + '\n'
         f'var P={json.dumps(P, separators=(",", ":"))};' + '\n'
         f'var T={json.dumps(T, separators=(",", ":"))};' + '\n'
+        f'var NC={json.dumps(NC, separators=(",", ":"))};' + '\n'
     )
 
     with open(out_path, 'w', encoding='utf-8') as f:
@@ -324,7 +360,7 @@ def main():
 
     # Step 2: Fetch new lines from Zoho
     token     = get_access_token()
-    new_lines = fetch_new_lines(token, start, end)
+    new_lines, new_refs = fetch_new_lines(token, start, end)
 
     if not new_lines:
         if existing is None:
@@ -367,12 +403,20 @@ def main():
                     prod_rev[r[1]] += r[2]
         top30 = sorted(prod_rev.items(), key=lambda x: -x[1])[:30]
         T = [[pidx, 0, rev] for pidx, rev in top30]
+        NC = {}
+        for nr in new_refs:
+            try:
+                ep_nr = epoch_day(date.fromisoformat(nr['date']))
+            except Exception:
+                continue
+            if nr['customer'] not in NC or ep_nr < NC[nr['customer']]:
+                NC[nr['customer']] = ep_nr
     else:
         # Step 4: Merge new lines into existing data
-        C, D, KA, REPS, P, T = merge_new_lines(existing, new_lines)
+        C, D, KA, REPS, P, T, NC = merge_new_lines(existing, new_lines, new_refs)
 
     # Step 5: Write merged data.js
-    write_data_js(C, D, KA, REPS, P, T, 'data.js')
+    write_data_js(C, D, KA, REPS, P, T, NC, 'data.js')
     print(f'[done] sync complete')
 
 if __name__ == '__main__':
