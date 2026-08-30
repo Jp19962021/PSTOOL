@@ -61,6 +61,7 @@ def fetch_invoice_headers(token):
                 'date': d,
                 'total': total,
                 'ref': (inv.get('reference_number') or '').strip(),
+                'rep': (inv.get('salesperson_name') or '').strip(),
             })
         chunk_start = chunk_end + timedelta(days=1)
     print(f'[fetch] {len(headers)} invoice headers')
@@ -78,8 +79,20 @@ def main():
     token = get_access_token()
     headers = fetch_invoice_headers(token)
 
-    # aggregate invoice totals by clinic+epoch day; collect NEW refs
+    # aggregate invoice totals by clinic+epoch day; collect NEW refs;
+    # pick the rep of the largest invoice per clinic+day
     inv_totals = defaultdict(float)
+    day_rep = {}
+    day_rep_amt = {}
+    rep_map = {name: idx for idx, name in enumerate(REPS)}
+    def rep_idx(name):
+        name = (name or '').strip()
+        if not name:
+            return -1
+        if name not in rep_map:
+            rep_map[name] = len(REPS)
+            REPS.append(name)
+        return rep_map[name]
     for h in headers:
         try:
             ep = epoch_day(date.fromisoformat(h['date']))
@@ -87,7 +100,11 @@ def main():
             continue
         if ep < 0:
             continue
-        inv_totals[(h['customer'], ep)] += h['total']
+        key = (h['customer'], ep)
+        inv_totals[key] += h['total']
+        if h['rep'] and h['total'] >= day_rep_amt.get(key, -1):
+            day_rep[key] = rep_idx(h['rep'])
+            day_rep_amt[key] = h['total']
         if 'NEW' in h['ref'].upper():
             if h['customer'] not in NC or ep < NC[h['customer']]:
                 NC[h['customer']] = ep
@@ -110,13 +127,22 @@ def main():
         for r in rows:
             line_sum_by_ep[r[3]] += r[2]
             yr_by_ep[r[3]] = r[0]
+        # stamp rep-at-invoice-time onto every row (6th element)
+        for r in rows:
+            ri = day_rep.get((clinic, r[3]), -1)
+            if len(r) >= 6:
+                r[5] = ri
+            else:
+                while len(r) < 5:
+                    r.append(0)
+                r.append(ri)
         for ep, lsum in line_sum_by_ep.items():
             inv_total = inv_totals.get((clinic, ep))
             if inv_total is None or inv_total <= 0:
                 continue
             diff = round(inv_total - lsum, 2)
             if abs(diff) >= 0.01:
-                rows.append([yr_by_ep[ep], ship_idx, diff, ep, 0])
+                rows.append([yr_by_ep[ep], ship_idx, diff, ep, 0, day_rep.get((clinic, ep), -1)])
                 added += 1
                 total_ship += diff
         rows.sort(key=lambda r: r[3])
