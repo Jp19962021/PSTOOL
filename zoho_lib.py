@@ -360,6 +360,7 @@ def parse_existing_data_js(path: Path = DATA_JS_PATH) -> dict:
             "T": [],
             "KA": [],
             "REPS": [],
+            "NC": {},
         }
     txt = path.read_text(encoding="utf-8")
     return {
@@ -369,6 +370,7 @@ def parse_existing_data_js(path: Path = DATA_JS_PATH) -> dict:
         "T": _extract_var(txt, "T"),
         "KA": _extract_var(txt, "KA"),
         "REPS": _extract_var(txt, "REPS"),
+        "NC": _extract_var(txt, "NC") or {},
     }
 
 
@@ -391,6 +393,7 @@ def write_data_js(state: dict, path: Path = DATA_JS_PATH, note: str = "") -> Non
         f"var T={jdump(state['T'])};",
         f"var KA={jdump(state['KA'])};",
         f"var REPS={jdump(state['REPS'])};",
+        f"var NC={jdump(state.get('NC') or {})};",
         "",
     ]
     path.write_text("\n".join(parts), encoding="utf-8")
@@ -451,6 +454,7 @@ def process_invoices_into_state(
         invoices_by_clinic.setdefault(clinic, []).append(inv)
 
     latest_order_by_clinic: dict[str, str] = {}
+    NC: dict[str, int] = dict(state.get("NC") or {})
 
     for clinic, invs in invoices_by_clinic.items():
         if replace_clinic:
@@ -473,6 +477,17 @@ def process_invoices_into_state(
             if inv_date > prev:
                 latest_order_by_clinic[clinic] = inv_date
 
+            ref = (inv.get("reference_number") or "").strip()
+            if "NEW" in ref.upper():
+                if clinic not in NC or ep < NC[clinic]:
+                    NC[clinic] = ep
+
+            try:
+                inv_total = float(inv.get("total") or 0)
+            except (TypeError, ValueError):
+                inv_total = 0.0
+            line_sum = 0.0
+
             for li in inv.get("line_items", []) or []:
                 pname = (li.get("name") or li.get("description") or "").strip()
                 if not pname:
@@ -488,7 +503,12 @@ def process_invoices_into_state(
                 except (TypeError, ValueError):
                     qty = 0.0
                 pidx = get_product_idx(pname)
+                line_sum += rev
                 bucket.append([yr, pidx, round(rev, 2), ep, round(qty, 2)])
+
+            ship_adj = round(inv_total - line_sum, 2)
+            if inv_total > 0 and abs(ship_adj) >= 0.01:
+                bucket.append([yr, get_product_idx("~Shipping & Adjustments"), ship_adj, ep, 0])
 
     old_C = state["C"]
     old_KA = state["KA"]
@@ -535,6 +555,7 @@ def process_invoices_into_state(
     state["KA"] = new_KA
     state["REPS"] = reps
     state["T"] = T
+    state["NC"] = NC
     return state
 
 
