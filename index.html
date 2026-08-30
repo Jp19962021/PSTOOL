@@ -7621,9 +7621,10 @@ function ceoCompute(){
     name=C[i];rows=D[name]||[];
     if(!rows.length)continue;
     var k=KA[i]||[-1];
-    var repName=k[0]>=0?REPS[k[0]]:'(unassigned)';
+    var kaRep=k[0]>=0?REPS[k[0]]:'(unassigned)';
     for(j=0;j<rows.length;j++){
       r=rows[j];ep=r[3];rev=r[2];
+      var repName=(r.length>5&&r[5]>=0&&REPS[r[5]])?REPS[r[5]]:kaRep;
       if(ep>agg.maxEp)agg.maxEp=ep;
       if(firstEp[name]===undefined||ep<firstEp[name])firstEp[name]=ep;
       if(lastEp[name]===undefined||ep>lastEp[name])lastEp[name]=ep;
