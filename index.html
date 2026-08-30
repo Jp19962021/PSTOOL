@@ -7977,6 +7977,7 @@ function ceoExportRepDrill(){
 
 /* ---------- new-clinic drilldowns ---------- */
 var CEO_NEW_PERIOD=null;
+var CEO_NEW_REP='';
 function ceoNewClinicList(period){
   var x=ceoCompute();
   var floor=period==='wk'?x.wkStart:(period==='mo'?x.moStartEp:x.yrStartEp);
@@ -7988,9 +7989,15 @@ function ceoNewClinicList(period){
     var ci=x.cIdx[nm];
     if(ci===undefined)continue;
     var k=KA[ci]||[-1];
+    var rp=k[0]>=0?REPS[k[0]]:'';
+    var rws=D[nm]||[],bestEp=-1;
+    for(var q=0;q<rws.length;q++){
+      var rq=rws[q];
+      if(rq.length>5&&rq[5]>=0&&REPS[rq[5]]&&(bestEp<0||rq[3]<bestEp)){bestEp=rq[3];rp=REPS[rq[5]];}
+    }
     out.push({
       idx:ci,name:nm,first:epDate(f),firstEp:f,
-      rep:k[0]>=0?REPS[k[0]]:'',
+      rep:rp,
       rev:x.lifeRev[nm]||0
     });
   }
@@ -8000,15 +8007,37 @@ function ceoNewClinicList(period){
 function ceoRenderNewClinics(period){
   CEO_NEW_PERIOD=period;
   var x=ceoCompute();
-  var list=ceoNewClinicList(period);
+  var full=ceoNewClinicList(period);
+  /* summary by rep */
+  var byRep={},rn;
+  for(var i=0;i<full.length;i++){
+    rn=full[i].rep||'(no rep)';
+    if(!byRep[rn])byRep[rn]={n:0,rev:0};
+    byRep[rn].n++;byRep[rn].rev+=full[i].rev;
+  }
+  var repNames=Object.keys(byRep);
+  repNames.sort(function(a2,b2){return byRep[b2].n-byRep[a2].n;});
+  if(CEO_NEW_REP&&!byRep[CEO_NEW_REP])CEO_NEW_REP='';
+  var list=CEO_NEW_REP?full.filter(function(o){return (o.rep||'(no rep)')===CEO_NEW_REP;}):full;
+
   var lbl=period==='wk'?'this week':(period==='mo'?'this month':'YTD');
   var basis=x.hasNC?'NEW reference on invoice':'first-ever order in data';
   var h='<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">'+
-    '<div class="ceo-section-title" style="margin:0">&#127381; New clinics '+lbl+' — '+list.length+' <span class="ceo-tiny">('+basis+')</span></div>'+
+    '<div class="ceo-section-title" style="margin:0">&#127381; New clinics '+lbl+' — '+list.length+(CEO_NEW_REP?' of '+full.length:'')+' <span class="ceo-tiny">('+basis+')</span></div>'+
+    '<span class="ceo-bkt-tab" data-newper="wk'+'">'+(period==='wk'?'<b>Week</b>':'Week')+'</span>'+
+    '<span class="ceo-bkt-tab" data-newper="mo">'+(period==='mo'?'<b>Month</b>':'Month')+'</span>'+
+    '<span class="ceo-bkt-tab" data-newper="yr">'+(period==='yr'?'<b>Year</b>':'Year')+'</span>'+
     '<span class="ceo-bkt-tab" id="ceo-new-export">⤓ Export CSV</span>'+
-    '<span class="ceo-bkt-tab" id="ceo-new-close">× Close</span></div>'+
-    '<table class="ceo-tbl"><thead><tr><th>Clinic</th><th>Rep</th><th>First order</th><th class="num">Revenue to date</th></tr></thead><tbody>';
-  for(var i=0;i<list.length;i++){
+    '<span class="ceo-bkt-tab" id="ceo-new-close">× Close</span></div>';
+  h+='<div class="ceo-bkt-tabs" style="margin-bottom:10px">'+
+    '<span class="ceo-bkt-tab ceo-new-repf'+(CEO_NEW_REP===''?' active':'')+'" data-repf="">All reps ('+full.length+')</span>';
+  for(i=0;i<repNames.length;i++){
+    rn=repNames[i];
+    h+='<span class="ceo-bkt-tab ceo-new-repf'+(CEO_NEW_REP===rn?' active':'')+'" data-repf="'+ceoEsc(rn)+'">'+ceoEsc(rn)+' ('+byRep[rn].n+')</span>';
+  }
+  h+='</div>';
+  h+='<table class="ceo-tbl"><thead><tr><th>Clinic</th><th>Rep</th><th>First order</th><th class="num">Revenue to date</th></tr></thead><tbody>';
+  for(i=0;i<list.length;i++){
     var o=list[i];
     h+='<tr class="ceo-row ceo-new-row" data-cidx="'+o.idx+'">'+
       '<td>'+ceoEsc(o.name)+'</td><td>'+ceoEsc(o.rep)+'</td><td>'+o.first+'</td>'+
@@ -8024,8 +8053,16 @@ function ceoRenderNewClinics(period){
       var o2=list[i2];var k2=KA[o2.idx]||[];
       rows.push([o2.name,o2.rep,o2.first,o2.rev.toFixed(2),k2[1]||'',k2[2]||'',k2[5]||'']);
     }
-    ceoDownloadCsv('new_clinics_'+period+'.csv',['Clinic','Rep','First order','Revenue to date','Email','Phone','City/State'],rows);
+    ceoDownloadCsv('new_clinics_'+period+(CEO_NEW_REP?'_'+CEO_NEW_REP.replace(/[^A-Za-z0-9]/g,'_'):'')+'.csv',['Clinic','Rep','First order','Revenue to date','Email','Phone','City/State'],rows);
   });
+  var pers=box.querySelectorAll('[data-newper]');
+  for(i=0;i<pers.length;i++){
+    pers[i].addEventListener('click',function(){ceoRenderNewClinics(this.getAttribute('data-newper'));});
+  }
+  var repfs=box.querySelectorAll('.ceo-new-repf');
+  for(i=0;i<repfs.length;i++){
+    repfs[i].addEventListener('click',function(){CEO_NEW_REP=this.getAttribute('data-repf');ceoRenderNewClinics(CEO_NEW_PERIOD);});
+  }
   document.getElementById('ceo-new-close').addEventListener('click',function(){
     box.style.display='none';CEO_NEW_PERIOD=null;
   });
