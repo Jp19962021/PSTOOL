@@ -1,0 +1,32 @@
+name: Zoho Backfill Fast (one-shot)
+on:
+  workflow_dispatch:
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install requests
+      - name: Run fast backfill
+        env:
+          ZOHO_CLIENT_ID: ${{ secrets.ZOHO_CLIENT_ID }}
+          ZOHO_CLIENT_SECRET: ${{ secrets.ZOHO_CLIENT_SECRET }}
+          ZOHO_REFRESH_TOKEN: ${{ secrets.ZOHO_REFRESH_TOKEN }}
+          ZOHO_ORG_ID: '691451730'
+        run: python sync_backfill_fast.py
+      - name: Commit updated data.js
+        run: |
+          git config user.name "PSTOOL Sync Bot"
+          git config user.email "sync-bot@pstool"
+          git pull --rebase
+          git add data.js
+          git diff --cached --quiet || git commit -m "data: fast shipping/NEW-ref backfill $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push
