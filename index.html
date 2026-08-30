@@ -746,6 +746,8 @@ table.ptbl tr:last-child td{border-bottom:none}
 .ceo-bkt-tab.active{background:#0f172a;color:#fff}
 .ceo-crossed{background:#fef3c7;color:#92400e;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:.03em}
 .ceo-qb{opacity:.55}
+.ceo-dim{opacity:.5}
+.ceo-expected{color:#6b7280;font-size:11px;font-weight:600}
 @media(max-width:900px){.ceo-hero{grid-template-columns:repeat(2,1fr)}.ceo-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
@@ -1291,12 +1293,14 @@ table.ptbl tr:last-child td{border-bottom:none}
       <div class="tr-tv" id="ceo-wk-val">$0</div>
       <div class="ceo-sub" id="ceo-wk-d1"></div>
       <div class="ceo-sub" id="ceo-wk-d2"></div>
+      <div class="ceo-sub" id="ceo-wk-ship"></div>
     </div>
     <div>
       <div class="tr-tt">Month to Date</div>
       <div class="tr-tv" id="ceo-mo-val">$0</div>
       <div class="ceo-sub" id="ceo-mo-d1"></div>
       <div class="ceo-sub" id="ceo-mo-d2"></div>
+      <div class="ceo-sub" id="ceo-mo-ship"></div>
     </div>
     <div>
       <div class="tr-tt" id="ceo-lm-lbl">Last Month</div>
@@ -1307,15 +1311,16 @@ table.ptbl tr:last-child td{border-bottom:none}
       <div class="tr-tt">YTD</div>
       <div class="tr-tv" id="ceo-ytd-val">$0</div>
       <div class="ceo-sub" id="ceo-ytd-d1"></div>
+      <div class="ceo-sub" id="ceo-ytd-ship"></div>
     </div>
   </div>
 
   <div class="ceo-grid">
     <div class="ceo-card"><div class="cc-t">Orders This Month</div><div class="cc-v" id="ceo-ord-val">0</div><div class="cc-s" id="ceo-ord-d1"></div></div>
     <div class="ceo-card"><div class="cc-t">Avg Order Value</div><div class="cc-v" id="ceo-aov-val">$0</div><div class="cc-s" id="ceo-aov-d1"></div></div>
-    <div class="ceo-card"><div class="cc-t">New Clinics This Week</div><div class="cc-v" id="ceo-newwk">0</div><div class="cc-s">first-ever order</div></div>
+    <div class="ceo-card"><div class="cc-t">New Clinics This Week</div><div class="cc-v" id="ceo-newwk">0</div><div class="cc-s" id="ceo-newwk-s">first-ever order</div></div>
     <div class="ceo-card"><div class="cc-t">New Clinics This Month</div><div class="cc-v" id="ceo-newmo">0</div><div class="cc-s" id="ceo-newmo-d"></div></div>
-    <div class="ceo-card"><div class="cc-t">New Clinics YTD</div><div class="cc-v" id="ceo-newytd">0</div><div class="cc-s">since Jan 1</div></div>
+    <div class="ceo-card"><div class="cc-t">New Clinics YTD</div><div class="cc-v" id="ceo-newytd">0</div><div class="cc-s" id="ceo-newytd-s">since Jan 1</div></div>
     <div class="ceo-card"><div class="cc-t">Active Clinics (This Mo)</div><div class="cc-v" id="ceo-active">0</div><div class="cc-s" id="ceo-active-d"></div></div>
   </div>
 
@@ -1343,8 +1348,8 @@ table.ptbl tr:last-child td{border-bottom:none}
       <div class="ceo-bkt-tab" data-bkt="b45">45&ndash;89 days (<span id="ceo-b45-n">0</span>)</div>
       <div class="ceo-bkt-tab" data-bkt="b90">90&ndash;179 days (<span id="ceo-b90-n">0</span>)</div>
     </div>
-    <table class="ceo-tbl"><thead><tr><th>Clinic</th><th>Rep</th><th>Last Order</th><th class="num">Days</th><th class="num">Lifetime Rev</th></tr></thead><tbody id="ceo-bkt-body"></tbody></table>
-    <div style="font-size:11px;color:#888;margin-top:6px">NEW badge = crossed the threshold within the last 7 days. Click a row to open the clinic. Sorted by lifetime revenue.</div>
+    <table class="ceo-tbl"><thead><tr><th>Clinic</th><th>Rep</th><th>Last Order</th><th class="num">Days</th><th>Cadence</th><th>Status</th><th class="num">Lifetime Rev</th></tr></thead><tbody id="ceo-bkt-body"></tbody></table>
+    <div style="font-size:11px;color:#888;margin-top:6px">NEW badge = crossed the threshold within the last 7 days. Cadence = median gap between their orders; "expected" (dimmed) = gap is under 1.5x their normal rhythm. Click a row to open the clinic. Sorted by lifetime revenue.</div>
   </div>
 
 </div></div>
@@ -7538,8 +7543,12 @@ function ceoPct(cur,prev){
 function ceoEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 var CEO_CACHE=null;
+var CEO_SHIP_IDX=-1;
 function ceoCompute(){
   if(CEO_CACHE)return CEO_CACHE;
+  CEO_SHIP_IDX=-1;
+  for(var si=0;si<P.length;si++){if(P[si]==='~Shipping & Adjustments'){CEO_SHIP_IDX=si;break;}}
+  var HAS_NC=(typeof NC!=='undefined')&&NC&&Object.keys(NC).length>0;
   var now=new Date();
   var todayEp=Math.floor((Date.now()-EP0)/86400000);
   var thisYr=now.getUTCFullYear();
@@ -7563,6 +7572,7 @@ function ceoCompute(){
   var agg={
     revWk:0,revWkPrev:0,revWkLY:0,
     revThisMo:0,revLastMo:0,revThisMoLY:0,revLastMoLY:0,
+    shipThisMo:0,shipLastMo:0,shipWk:0,shipYTD:0,
     mtdLY:0,
     ytd:0,ytdLY:0,
     ordThisMo:{},ordLastMo:{},ordThisMoLY:{},
@@ -7576,6 +7586,7 @@ function ceoCompute(){
   var firstEp={};/* clinic -> first order ep */
   var lastEp={}; /* clinic -> last order ep  */
   var lifeRev={};
+  var orderDays={};/* clinic -> {ep:1} for cadence */
 
   for(i=0;i<C.length;i++){
     name=C[i];rows=D[name]||[];
@@ -7588,40 +7599,41 @@ function ceoCompute(){
       if(firstEp[name]===undefined||ep<firstEp[name])firstEp[name]=ep;
       if(lastEp[name]===undefined||ep>lastEp[name])lastEp[name]=ep;
       lifeRev[name]=(lifeRev[name]||0)+rev;
+      orderDays[name]=orderDays[name]||{};orderDays[name][ep]=1;
+      var isShip=(r[1]===CEO_SHIP_IDX);
 
       var d=new Date(EP0+ep*86400000);
       var yr=d.getUTCFullYear();
       mk=yr*100+d.getUTCMonth();
 
-      if(ep>=wkStart&&ep<=todayEp)agg.revWk+=rev;
+      if(ep>=wkStart&&ep<=todayEp){agg.revWk+=rev;if(isShip)agg.shipWk+=rev;}
       if(ep>=wkPrevStart&&ep<=wkPrevEnd)agg.revWkPrev+=rev;
       if(ep>=wkLYStart&&ep<=wkLYEnd)agg.revWkLY+=rev;
 
       if(mk===kThisMo){
         agg.revThisMo+=rev;
+        if(isShip)agg.shipThisMo+=rev;
         agg.ordThisMo[i+'_'+ep]=1;
         activeThis[i]=1;
-        prodThis[r[1]]=prodThis[r[1]]||{rev:0,qty:0};
-        prodThis[r[1]].rev+=rev;prodThis[r[1]].qty+=(r[4]||0);
+        if(!isShip){prodThis[r[1]]=prodThis[r[1]]||{rev:0,qty:0};prodThis[r[1]].rev+=rev;prodThis[r[1]].qty+=(r[4]||0);}
         repThis[rep]=(repThis[rep]||0)+rev;
         repClinics[rep]=repClinics[rep]||{};repClinics[rep][i]=1;
       }
       if(mk===kLastMo){
         agg.revLastMo+=rev;
+        if(isShip)agg.shipLastMo+=rev;
         agg.ordLastMo[i+'_'+ep]=1;
         activeLast[i]=1;
-        prodLast[r[1]]=prodLast[r[1]]||{rev:0,qty:0};
-        prodLast[r[1]].rev+=rev;prodLast[r[1]].qty+=(r[4]||0);
+        if(!isShip){prodLast[r[1]]=prodLast[r[1]]||{rev:0,qty:0};prodLast[r[1]].rev+=rev;prodLast[r[1]].qty+=(r[4]||0);}
         repLast[rep]=(repLast[rep]||0)+rev;
       }
       if(mk===kThisMoLY){
         agg.revThisMoLY+=rev;
         agg.ordThisMoLY[i+'_'+ep]=1;
-        repThisLY[rep]=(repThisLY[rep]||0)+rev;
-        if(d.getUTCDate()<=domToday)agg.mtdLY+=rev;
+        if(d.getUTCDate()<=domToday){agg.mtdLY+=rev;repThisLY[rep]=(repThisLY[rep]||0)+rev;}
       }
       if(mk===kLastMoLY)agg.revLastMoLY+=rev;
-      if(yr===thisYr)agg.ytd+=rev;
+      if(yr===thisYr){agg.ytd+=rev;if(isShip)agg.shipYTD+=rev;}
       if(yr===thisYr-1){
         var doy=Math.floor((Date.UTC(yr,d.getUTCMonth(),d.getUTCDate())-Date.UTC(yr,0,1))/86400000);
         var doyToday=Math.floor((Date.UTC(thisYr,thisMo,domToday)-Date.UTC(thisYr,0,1))/86400000);
@@ -7635,6 +7647,7 @@ function ceoCompute(){
   var yrStartEp=Math.floor((Date.UTC(thisYr,0,1)-EP0)/86400000);
   var lastMoStartEp=Math.floor((Date.UTC(lastMoYr,lastMo,1)-EP0)/86400000);
   var newWk=0,newMo=0,newYTD=0,newLastMo=0,totalClinics=0;
+  var ncWk=0,ncMo=0,ncYTD=0,ncLastMo=0,ncTotal=0;
   var cn;
   for(cn in firstEp){
     totalClinics++;
@@ -7643,6 +7656,26 @@ function ceoCompute(){
     if(f>=moStartEp)newMo++;
     if(f>=yrStartEp)newYTD++;
     if(f>=lastMoStartEp&&f<moStartEp)newLastMo++;
+  }
+  if(HAS_NC){
+    for(cn in NC){
+      var nf=NC[cn];
+      ncTotal++;
+      if(nf>=wkStart)ncWk++;
+      if(nf>=moStartEp)ncMo++;
+      if(nf>=yrStartEp)ncYTD++;
+      if(nf>=lastMoStartEp&&nf<moStartEp)ncLastMo++;
+    }
+  }
+  function cadence(nm){
+    var days=Object.keys(orderDays[nm]||{}).map(Number).sort(function(a2,b2){return a2-b2;});
+    if(days.length<3)return 0;
+    var recent=days.slice(-13);
+    var gaps=[];
+    for(var g=1;g<recent.length;g++)gaps.push(recent[g]-recent[g-1]);
+    gaps.sort(function(a2,b2){return a2-b2;});
+    var mid=Math.floor(gaps.length/2);
+    return gaps.length%2?gaps[mid]:Math.round((gaps[mid-1]+gaps[mid])/2);
   }
 
   /* lapsed buckets */
@@ -7655,11 +7688,15 @@ function ceoCompute(){
     if(days<30)continue;
     if(days>=180){dormant++;continue;}
     var k2=KA[i]||[-1];
+    var cad=cadence(name);
+    var over=cad>0?days/cad:0;
     var entry={
       name:name,idx:i,days:days,
       last:epDate(lastEp[name]),
       rep:k2[0]>=0?REPS[k2[0]]:'',
       rev:lifeRev[name]||0,
+      cad:cad,over:over,
+      expected:(cad>0&&over<1.5),
       crossed:''
     };
     if(days>=90){if(days<97)entry.crossed='90d';buckets.b90.push(entry);}
@@ -7667,6 +7704,7 @@ function ceoCompute(){
     else{if(days<37)entry.crossed='30d';buckets.b30.push(entry);}
   }
   function bucketSort(a,b){
+    if(a.expected!==b.expected)return a.expected?1:-1;
     if(a.crossed&&!b.crossed)return -1;
     if(!a.crossed&&b.crossed)return 1;
     return b.rev-a.rev;
@@ -7681,6 +7719,7 @@ function ceoCompute(){
     activeThis:Object.keys(activeThis).length,
     activeLast:Object.keys(activeLast).length,
     newWk:newWk,newMo:newMo,newLastMo:newLastMo,newYTD:newYTD,totalClinics:totalClinics,
+    hasNC:HAS_NC,ncWk:ncWk,ncMo:ncMo,ncLastMo:ncLastMo,ncYTD:ncYTD,ncTotal:ncTotal,
     prodThis:prodThis,prodLast:prodLast,
     repThis:repThis,repLast:repLast,repThisLY:repThisLY,repClinics:repClinics,
     buckets:buckets,dormant:dormant,
@@ -7704,6 +7743,15 @@ function loadCeo(){
   document.getElementById('ceo-mo-val').textContent=ceoFmtK(a.revThisMo);
   document.getElementById('ceo-mo-d1').innerHTML=ceoPct(a.revThisMo,a.revLastMo)+' vs '+x.lastMonthName;
   document.getElementById('ceo-mo-d2').innerHTML=ceoPct(a.revThisMo,a.mtdLY)+' vs same days last yr';
+  var shipEl=document.getElementById('ceo-mo-ship');
+  if(shipEl){
+    if(a.shipThisMo||a.shipLastMo)shipEl.textContent='Products '+ceoFmtK(a.revThisMo-a.shipThisMo)+' \u00b7 Ship/adj '+ceoFmtK(a.shipThisMo);
+    else shipEl.textContent='Ship/adj: run full rebuild to backfill';
+  }
+  var shipWkEl=document.getElementById('ceo-wk-ship');
+  if(shipWkEl&&a.shipWk)shipWkEl.textContent='incl. ship/adj '+ceoFmtK(a.shipWk);
+  var shipYEl=document.getElementById('ceo-ytd-ship');
+  if(shipYEl&&a.shipYTD)shipYEl.textContent='incl. ship/adj '+ceoFmtK(a.shipYTD);
 
   document.getElementById('ceo-lm-val').textContent=ceoFmtK(a.revLastMo);
   document.getElementById('ceo-lm-lbl').textContent=x.lastMonthName;
@@ -7720,11 +7768,20 @@ function loadCeo(){
   document.getElementById('ceo-aov-val').textContent='$'+aov.toFixed(0);
   document.getElementById('ceo-aov-d1').innerHTML=ceoPct(aov,aovLast)+' vs '+x.lastMonthName;
 
-  /* clinic cards */
-  document.getElementById('ceo-newwk').textContent=x.newWk;
-  document.getElementById('ceo-newmo').textContent=x.newMo;
-  document.getElementById('ceo-newmo-d').innerHTML=ceoPct(x.newMo,x.newLastMo)+' vs '+x.lastMonthName;
-  document.getElementById('ceo-newytd').textContent=x.newYTD;
+  /* clinic cards — NEW ref counts primary when available, first-order fallback */
+  if(x.hasNC){
+    document.getElementById('ceo-newwk').textContent=x.ncWk;
+    document.getElementById('ceo-newmo').textContent=x.ncMo;
+    document.getElementById('ceo-newmo-d').innerHTML=ceoPct(x.ncMo,x.ncLastMo)+' vs '+x.lastMonthName+' \u00b7 first-order: '+x.newMo;
+    document.getElementById('ceo-newytd').textContent=x.ncYTD;
+    document.getElementById('ceo-newytd-s').textContent='by NEW ref \u00b7 first-order: '+x.newYTD;
+    document.getElementById('ceo-newwk-s').textContent='by NEW ref';
+  }else{
+    document.getElementById('ceo-newwk').textContent=x.newWk;
+    document.getElementById('ceo-newmo').textContent=x.newMo;
+    document.getElementById('ceo-newmo-d').innerHTML=ceoPct(x.newMo,x.newLastMo)+' vs '+x.lastMonthName;
+    document.getElementById('ceo-newytd').textContent=x.newYTD;
+  }
   document.getElementById('ceo-total').textContent=x.totalClinics.toLocaleString();
   document.getElementById('ceo-active').textContent=x.activeThis.toLocaleString();
   document.getElementById('ceo-active-d').innerHTML=ceoPct(x.activeThis,x.activeLast)+' vs '+x.lastMonthName;
@@ -7778,16 +7835,23 @@ function ceoRenderBucket(which){
   var html='';
   var lim=Math.min(75,list.length);
   for(i=0;i<lim;i++){
-    var e=list[i];
-    html+='<tr class="ceo-row" data-cidx="'+e.idx+'">'+
-      '<td>'+(e.crossed?'<span class="ceo-crossed">NEW '+e.crossed+'</span> ':'')+ceoEsc(e.name)+'</td>'+
-      '<td>'+ceoEsc(e.rep)+'</td>'+
-      '<td>'+e.last+'</td>'+
-      '<td class="num">'+e.days+'</td>'+
-      '<td class="num">'+fmt(e.rev)+'</td></tr>';
+    var e2=list[i];
+    var cadTxt2=e2.cad>0?'every ~'+e2.cad+'d':'\u2014';
+    var overTxt2;
+    if(!e2.cad)overTxt2='<span class="ceo-delta flat">\u2014</span>';
+    else if(e2.expected)overTxt2='<span class="ceo-expected">expected</span>';
+    else overTxt2='<span class="ceo-delta down">'+e2.over.toFixed(1)+'x overdue</span>';
+    html+='<tr class="ceo-row'+(e2.expected?' ceo-dim':'')+'" data-cidx="'+e2.idx+'">'+
+      '<td>'+(e2.crossed?'<span class="ceo-crossed">NEW '+e2.crossed+'</span> ':'')+ceoEsc(e2.name)+'</td>'+
+      '<td>'+ceoEsc(e2.rep)+'</td>'+
+      '<td>'+e2.last+'</td>'+
+      '<td class="num">'+e2.days+'</td>'+
+      '<td>'+cadTxt2+'</td>'+
+      '<td>'+overTxt2+'</td>'+
+      '<td class="num">'+fmt(e2.rev)+'</td></tr>';
   }
-  if(list.length>lim)html+='<tr><td colspan="5" style="color:#888;font-size:11px">Showing top '+lim+' of '+list.length+' (by lifetime revenue)</td></tr>';
-  document.getElementById('ceo-bkt-body').innerHTML=html||'<tr><td colspan="5">Nothing in this bucket. Good.</td></tr>';
+  if(list.length>lim)html+='<tr><td colspan="7" style="color:#888;font-size:11px">Showing top '+lim+' of '+list.length+' \u2014 overdue-vs-cadence first, then lifetime revenue; expected-cadence clinics sink to the bottom</td></tr>';
+  document.getElementById('ceo-bkt-body').innerHTML=html||'<tr><td colspan="7">Nothing in this bucket. Good.</td></tr>';
   var rows=document.querySelectorAll('#ceo-bkt-body .ceo-row');
   for(i=0;i<rows.length;i++){
     rows[i].addEventListener('click',function(){openPanel(parseInt(this.getAttribute('data-cidx'),10));});
