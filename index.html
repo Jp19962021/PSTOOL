@@ -749,6 +749,8 @@ table.ptbl tr:last-child td{border-bottom:none}
 .ceo-dim{opacity:.5}
 .ceo-expected{color:#6b7280;font-size:11px;font-weight:600}
 .ceo-tiny{font-size:10px;color:#9ca3af;font-weight:400}
+.ceo-click{cursor:pointer;transition:border-color .15s}
+.ceo-click:hover{border-color:#0f172a}
 @media(max-width:900px){.ceo-hero{grid-template-columns:repeat(2,1fr)}.ceo-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
@@ -1319,9 +1321,9 @@ table.ptbl tr:last-child td{border-bottom:none}
   <div class="ceo-grid">
     <div class="ceo-card"><div class="cc-t">Orders This Month</div><div class="cc-v" id="ceo-ord-val">0</div><div class="cc-s" id="ceo-ord-d1"></div></div>
     <div class="ceo-card"><div class="cc-t">Avg Order Value</div><div class="cc-v" id="ceo-aov-val">$0</div><div class="cc-s" id="ceo-aov-d1"></div></div>
-    <div class="ceo-card"><div class="cc-t">New Clinics This Week</div><div class="cc-v" id="ceo-newwk">0</div><div class="cc-s" id="ceo-newwk-s">first-ever order</div></div>
-    <div class="ceo-card"><div class="cc-t">New Clinics This Month</div><div class="cc-v" id="ceo-newmo">0</div><div class="cc-s" id="ceo-newmo-d"></div></div>
-    <div class="ceo-card"><div class="cc-t">New Clinics YTD</div><div class="cc-v" id="ceo-newytd">0</div><div class="cc-s" id="ceo-newytd-s">since Jan 1</div></div>
+    <div class="ceo-card ceo-click" id="ceo-card-newwk"><div class="cc-t">New Clinics This Week</div><div class="cc-v" id="ceo-newwk">0</div><div class="cc-s" id="ceo-newwk-s">first-ever order</div></div>
+    <div class="ceo-card ceo-click" id="ceo-card-newmo"><div class="cc-t">New Clinics This Month</div><div class="cc-v" id="ceo-newmo">0</div><div class="cc-s" id="ceo-newmo-d"></div></div>
+    <div class="ceo-card ceo-click" id="ceo-card-newytd"><div class="cc-t">New Clinics YTD</div><div class="cc-v" id="ceo-newytd">0</div><div class="cc-s" id="ceo-newytd-s">since Jan 1</div></div>
     <div class="ceo-card"><div class="cc-t">Active Clinics (This Mo)</div><div class="cc-v" id="ceo-active">0</div><div class="cc-s" id="ceo-active-d"></div></div>
   </div>
 
@@ -1331,6 +1333,8 @@ table.ptbl tr:last-child td{border-bottom:none}
     <div class="ceo-card ceo-qb"><div class="cc-t">Cash</div><div class="cc-v">&mdash;</div><div class="cc-s">QuickBooks &mdash; phase 2</div></div>
     <div class="ceo-card ceo-qb"><div class="cc-t">A/R</div><div class="cc-v">&mdash;</div><div class="cc-s">QuickBooks &mdash; phase 2</div></div>
   </div>
+
+  <div class="ceo-section" id="ceo-new-drill" style="display:none"></div>
 
   <div class="ceo-section">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
@@ -7740,8 +7744,11 @@ function ceoCompute(){
   }
   buckets.b30.sort(bucketSort);buckets.b45.sort(bucketSort);buckets.b90.sort(bucketSort);
 
+  var cIdx={};for(i=0;i<C.length;i++)cIdx[C[i]]=i;
   CEO_CACHE={
     agg:agg,
+    firstEp:firstEp,lifeRev:lifeRev,cIdx:cIdx,
+    wkStart:wkStart,moStartEp:moStartEp,yrStartEp:yrStartEp,
     ordersThisMo:Object.keys(agg.ordThisMo).length,
     ordersLastMo:Object.keys(agg.ordLastMo).length,
     ordersThisMoLY:Object.keys(agg.ordThisMoLY).length,
@@ -7968,6 +7975,66 @@ function ceoExportRepDrill(){
     ['Clinic','This Mo $','Last Mo $','Delta Mo $','Same Mo LY $','YTD $','LY same period $','Delta Yr $','Email','Phone'],rows);
 }
 
+/* ---------- new-clinic drilldowns ---------- */
+var CEO_NEW_PERIOD=null;
+function ceoNewClinicList(period){
+  var x=ceoCompute();
+  var floor=period==='wk'?x.wkStart:(period==='mo'?x.moStartEp:x.yrStartEp);
+  var src=x.hasNC?NC:x.firstEp;
+  var out=[];
+  for(var nm in src){
+    var f=src[nm];
+    if(f<floor)continue;
+    var ci=x.cIdx[nm];
+    if(ci===undefined)continue;
+    var k=KA[ci]||[-1];
+    out.push({
+      idx:ci,name:nm,first:epDate(f),firstEp:f,
+      rep:k[0]>=0?REPS[k[0]]:'',
+      rev:x.lifeRev[nm]||0
+    });
+  }
+  out.sort(function(a2,b2){return b2.firstEp-a2.firstEp;});
+  return out;
+}
+function ceoRenderNewClinics(period){
+  CEO_NEW_PERIOD=period;
+  var x=ceoCompute();
+  var list=ceoNewClinicList(period);
+  var lbl=period==='wk'?'this week':(period==='mo'?'this month':'YTD');
+  var basis=x.hasNC?'NEW reference on invoice':'first-ever order in data';
+  var h='<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">'+
+    '<div class="ceo-section-title" style="margin:0">&#127381; New clinics '+lbl+' — '+list.length+' <span class="ceo-tiny">('+basis+')</span></div>'+
+    '<span class="ceo-bkt-tab" id="ceo-new-export">⤓ Export CSV</span>'+
+    '<span class="ceo-bkt-tab" id="ceo-new-close">× Close</span></div>'+
+    '<table class="ceo-tbl"><thead><tr><th>Clinic</th><th>Rep</th><th>First order</th><th class="num">Revenue to date</th></tr></thead><tbody>';
+  for(var i=0;i<list.length;i++){
+    var o=list[i];
+    h+='<tr class="ceo-row ceo-new-row" data-cidx="'+o.idx+'">'+
+      '<td>'+ceoEsc(o.name)+'</td><td>'+ceoEsc(o.rep)+'</td><td>'+o.first+'</td>'+
+      '<td class="num">'+fmt(o.rev)+'</td></tr>';
+  }
+  h+='</tbody></table>';
+  var box=document.getElementById('ceo-new-drill');
+  box.innerHTML=h;box.style.display='block';
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
+  document.getElementById('ceo-new-export').addEventListener('click',function(){
+    var rows=[];
+    for(var i2=0;i2<list.length;i2++){
+      var o2=list[i2];var k2=KA[o2.idx]||[];
+      rows.push([o2.name,o2.rep,o2.first,o2.rev.toFixed(2),k2[1]||'',k2[2]||'',k2[5]||'']);
+    }
+    ceoDownloadCsv('new_clinics_'+period+'.csv',['Clinic','Rep','First order','Revenue to date','Email','Phone','City/State'],rows);
+  });
+  document.getElementById('ceo-new-close').addEventListener('click',function(){
+    box.style.display='none';CEO_NEW_PERIOD=null;
+  });
+  var rows2=document.querySelectorAll('.ceo-new-row');
+  for(i=0;i<rows2.length;i++){
+    rows2[i].addEventListener('click',function(){openPanel(parseInt(this.getAttribute('data-cidx'),10));});
+  }
+}
+
 /* ---------- lapsed buckets ---------- */
 function ceoRenderBucket(which){
   CEO_CUR_BKT=which;
@@ -8030,6 +8097,13 @@ document.addEventListener('DOMContentLoaded',function(){
   if(eb)eb.addEventListener('click',ceoExportBucket);
   var pe=document.getElementById('ceo-prod-export');
   if(pe)pe.addEventListener('click',ceoExportProducts);
+  var cards=[['ceo-card-newwk','wk'],['ceo-card-newmo','mo'],['ceo-card-newytd','yr']];
+  for(var c=0;c<cards.length;c++){
+    (function(id,per){
+      var el2=document.getElementById(id);
+      if(el2)el2.addEventListener('click',function(){ceoRenderNewClinics(per);});
+    })(cards[c][0],cards[c][1]);
+  }
 });
 </script>
 
