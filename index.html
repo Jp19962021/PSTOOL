@@ -748,6 +748,7 @@ table.ptbl tr:last-child td{border-bottom:none}
 .ceo-qb{opacity:.55}
 .ceo-dim{opacity:.5}
 .ceo-expected{color:#6b7280;font-size:11px;font-weight:600}
+.ceo-tiny{font-size:10px;color:#9ca3af;font-weight:400}
 @media(max-width:900px){.ceo-hero{grid-template-columns:repeat(2,1fr)}.ceo-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
@@ -1332,21 +1333,26 @@ table.ptbl tr:last-child td{border-bottom:none}
   </div>
 
   <div class="ceo-section">
-    <div class="ceo-section-title">&#128138; Top Products This Month</div>
-    <table class="ceo-tbl"><thead><tr><th>Product</th><th class="num">Revenue</th><th class="num">Units</th><th class="num">Last Month</th><th class="num">Change</th></tr></thead><tbody id="ceo-prod-body"></tbody></table>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
+      <div class="ceo-section-title" style="margin:0">&#128138; Top Products This Month</div>
+      <span class="ceo-bkt-tab" id="ceo-prod-export">&#10515; Export all (CSV)</span>
+    </div>
+    <div style="overflow-x:auto"><table class="ceo-tbl" style="min-width:1050px"><thead><tr><th>Product</th><th class="num">MTD $</th><th class="num">Units</th><th class="num">Avg $</th><th class="num">Last Mo</th><th class="num">&Delta; Mo</th><th class="num">Same Mo LY</th><th class="num">YTD</th><th class="num">LY same period</th><th class="num">&Delta; Yr</th></tr></thead><tbody id="ceo-prod-body"></tbody></table></div>
   </div>
 
   <div class="ceo-section">
-    <div class="ceo-section-title">&#127942; Reps This Month</div>
-    <table class="ceo-tbl"><thead><tr><th>Rep</th><th class="num">MTD Revenue</th><th class="num">vs Last Mo</th><th class="num">vs Last Yr</th><th class="num">Active Clinics</th></tr></thead><tbody id="ceo-rep-body"></tbody></table>
+    <div class="ceo-section-title">&#127942; Reps This Month <span class="ceo-tiny">(click a rep to see their down clinics + export)</span></div>
+    <div style="overflow-x:auto"><table class="ceo-tbl" style="min-width:1000px"><thead><tr><th>Rep</th><th class="num">MTD $</th><th class="num">Last Mo $</th><th class="num">&Delta; Mo</th><th class="num">Same Mo LY $</th><th class="num">&Delta; YoY</th><th class="num">YTD $</th><th class="num">LY same period $</th><th class="num">&Delta; Yr</th><th class="num">Clinics</th></tr></thead><tbody id="ceo-rep-body"></tbody></table></div>
   </div>
 
   <div class="ceo-section">
     <div class="ceo-section-title">&#9200; Lapsed Clinics</div>
     <div class="ceo-bkt-tabs">
-      <div class="ceo-bkt-tab active" data-bkt="b30">30&ndash;44 days (<span id="ceo-b30-n">0</span>)</div>
-      <div class="ceo-bkt-tab" data-bkt="b45">45&ndash;89 days (<span id="ceo-b45-n">0</span>)</div>
-      <div class="ceo-bkt-tab" data-bkt="b90">90&ndash;179 days (<span id="ceo-b90-n">0</span>)</div>
+      <div class="ceo-bkt-tab ceo-bkt-pick active" data-bkt="b30">30&ndash;44 days (<span id="ceo-b30-n">0</span>)</div>
+      <div class="ceo-bkt-tab ceo-bkt-pick" data-bkt="b45">45&ndash;89 days (<span id="ceo-b45-n">0</span>)</div>
+      <div class="ceo-bkt-tab ceo-bkt-pick" data-bkt="b90">90&ndash;179 days (<span id="ceo-b90-n">0</span>)</div>
+      <div class="ceo-bkt-tab" id="ceo-bkt-showall" style="margin-left:auto">Show all</div>
+      <div class="ceo-bkt-tab" id="ceo-bkt-export">&#10515; Export CSV</div>
     </div>
     <table class="ceo-tbl"><thead><tr><th>Clinic</th><th>Rep</th><th>Last Order</th><th class="num">Days</th><th>Cadence</th><th>Status</th><th class="num">Lifetime Rev</th></tr></thead><tbody id="ceo-bkt-body"></tbody></table>
     <div style="font-size:11px;color:#888;margin-top:6px">NEW badge = crossed the threshold within the last 7 days. Cadence = median gap between their orders; "expected" (dimmed) = gap is under 1.5x their normal rhythm. Click a row to open the clinic. Sorted by lifetime revenue.</div>
@@ -7526,13 +7532,15 @@ document.addEventListener('click', function(e) {
 </script>
 <script>
 /* ============================================================
-   CEO TAB — computed entirely from data.js, no external calls
+   CEO TAB v2 — data.js computed; drilldowns + CSV exports
    ============================================================ */
 function ceoFmtK(n){
-  if(n>=1000000)return '$'+(n/1000000).toFixed(2)+'M';
-  if(n>=1000)return '$'+(n/1000).toFixed(1)+'k';
-  return '$'+Math.round(n);
+  var neg=n<0?'-':'';n=Math.abs(n);
+  if(n>=1000000)return neg+'$'+(n/1000000).toFixed(2)+'M';
+  if(n>=1000)return neg+'$'+(n/1000).toFixed(1)+'k';
+  return neg+'$'+Math.round(n);
 }
+function ceoMoney(n){return '$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function ceoPct(cur,prev){
   if(!prev)return '<span class="ceo-delta flat">&mdash;</span>';
   var p=((cur-prev)/prev)*100;
@@ -7541,58 +7549,79 @@ function ceoPct(cur,prev){
   return '<span class="ceo-delta '+cls+'">'+arrow+' '+Math.abs(p).toFixed(1)+'%</span>';
 }
 function ceoEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function ceoCsvCell(s){
+  s=String(s);
+  if(s.indexOf(',')>=0||s.indexOf('"')>=0||s.indexOf('\n')>=0)return '"'+s.replace(/"/g,'""')+'"';
+  return s;
+}
+function ceoDownloadCsv(filename,headerArr,rowsArr){
+  var lines=[headerArr.map(ceoCsvCell).join(',')];
+  for(var i=0;i<rowsArr.length;i++)lines.push(rowsArr[i].map(ceoCsvCell).join(','));
+  var blob=new Blob([lines.join('\r\n')],{type:'text/csv;charset=utf-8;'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=filename;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},2000);
+}
 
 var CEO_CACHE=null;
 var CEO_SHIP_IDX=-1;
+var CEO_BKT_ALL=false;
+var CEO_CUR_BKT='b30';
+var CEO_CUR_REP=null;
+
 function ceoCompute(){
   if(CEO_CACHE)return CEO_CACHE;
   CEO_SHIP_IDX=-1;
   for(var si=0;si<P.length;si++){if(P[si]==='~Shipping & Adjustments'){CEO_SHIP_IDX=si;break;}}
   var HAS_NC=(typeof NC!=='undefined')&&NC&&Object.keys(NC).length>0;
+
   var now=new Date();
   var todayEp=Math.floor((Date.now()-EP0)/86400000);
   var thisYr=now.getUTCFullYear();
   var thisMo=now.getUTCMonth();
+  var domToday=now.getUTCDate();
   var lastMoDate=new Date(Date.UTC(thisYr,thisMo-1,1));
   var lastMoYr=lastMoDate.getUTCFullYear();
   var lastMo=lastMoDate.getUTCMonth();
 
-  function monthKeyOf(ep){var d=new Date(EP0+ep*86400000);return d.getUTCFullYear()*100+d.getUTCMonth();}
   var kThisMo=thisYr*100+thisMo;
   var kLastMo=lastMoYr*100+lastMo;
   var kThisMoLY=(thisYr-1)*100+thisMo;
   var kLastMoLY=(lastMoYr-1)*100+lastMo;
 
-  var wkStart=todayEp-6;                 /* rolling 7 days incl today */
+  var wkStart=todayEp-6;
   var wkPrevStart=todayEp-13,wkPrevEnd=todayEp-7;
-  var wkLYStart=todayEp-364-6,wkLYEnd=todayEp-364; /* 52 weeks back, same weekdays */
+  var wkLYStart=todayEp-364-6,wkLYEnd=todayEp-364;
 
-  var domToday=now.getUTCDate();
+  var doyToday=Math.floor((Date.UTC(thisYr,thisMo,domToday)-Date.UTC(thisYr,0,1))/86400000);
 
   var agg={
     revWk:0,revWkPrev:0,revWkLY:0,
     revThisMo:0,revLastMo:0,revThisMoLY:0,revLastMoLY:0,
     shipThisMo:0,shipLastMo:0,shipWk:0,shipYTD:0,
-    mtdLY:0,
-    ytd:0,ytdLY:0,
+    mtdLY:0,ytd:0,ytdLY:0,
     ordThisMo:{},ordLastMo:{},ordThisMoLY:{},
     maxEp:0
   };
-  var prodThis={},prodLast={};
-  var repThis={},repLast={},repThisLY={},repClinics={};
-  var activeThis={},activeLast={};
-  var i,j,name,rows,r,ep,rev,mk;
+  /* product buckets: tm=this month, lm=last month, ml=same month LY (full), y=YTD, yl=LY same-period YTD */
+  var prod={};
+  function pb(pid){if(!prod[pid])prod[pid]={tmR:0,tmQ:0,lmR:0,lmQ:0,mlR:0,mlQ:0,yR:0,yQ:0,ylR:0,ylQ:0};return prod[pid];}
+  /* rep buckets + per-clinic under rep */
+  var rep={};
+  function rb(rn){if(!rep[rn])rep[rn]={tm:0,lm:0,ml:0,y:0,yl:0,clinics:{}};return rep[rn];}
+  function rc(rn,ci){var R=rb(rn);if(!R.clinics[ci])R.clinics[ci]={tm:0,lm:0,ml:0,y:0,yl:0};return R.clinics[ci];}
 
-  var firstEp={};/* clinic -> first order ep */
-  var lastEp={}; /* clinic -> last order ep  */
-  var lifeRev={};
-  var orderDays={};/* clinic -> {ep:1} for cadence */
+  var activeThis={},activeLast={};
+  var firstEp={},lastEp={},lifeRev={},orderDays={};
+  var i,j,name,rows,r,ep,rev,mk;
 
   for(i=0;i<C.length;i++){
     name=C[i];rows=D[name]||[];
     if(!rows.length)continue;
     var k=KA[i]||[-1];
-    var rep=k[0]>=0?REPS[k[0]]:'(unassigned)';
+    var repName=k[0]>=0?REPS[k[0]]:'(unassigned)';
     for(j=0;j<rows.length;j++){
       r=rows[j];ep=r[3];rev=r[2];
       if(ep>agg.maxEp)agg.maxEp=ep;
@@ -7601,53 +7630,55 @@ function ceoCompute(){
       lifeRev[name]=(lifeRev[name]||0)+rev;
       orderDays[name]=orderDays[name]||{};orderDays[name][ep]=1;
       var isShip=(r[1]===CEO_SHIP_IDX);
+      var qty=r[4]||0;
 
       var d=new Date(EP0+ep*86400000);
       var yr=d.getUTCFullYear();
       mk=yr*100+d.getUTCMonth();
+      var doy=Math.floor((Date.UTC(yr,d.getUTCMonth(),d.getUTCDate())-Date.UTC(yr,0,1))/86400000);
 
       if(ep>=wkStart&&ep<=todayEp){agg.revWk+=rev;if(isShip)agg.shipWk+=rev;}
       if(ep>=wkPrevStart&&ep<=wkPrevEnd)agg.revWkPrev+=rev;
       if(ep>=wkLYStart&&ep<=wkLYEnd)agg.revWkLY+=rev;
 
       if(mk===kThisMo){
-        agg.revThisMo+=rev;
-        if(isShip)agg.shipThisMo+=rev;
-        agg.ordThisMo[i+'_'+ep]=1;
-        activeThis[i]=1;
-        if(!isShip){prodThis[r[1]]=prodThis[r[1]]||{rev:0,qty:0};prodThis[r[1]].rev+=rev;prodThis[r[1]].qty+=(r[4]||0);}
-        repThis[rep]=(repThis[rep]||0)+rev;
-        repClinics[rep]=repClinics[rep]||{};repClinics[rep][i]=1;
+        agg.revThisMo+=rev;if(isShip)agg.shipThisMo+=rev;
+        agg.ordThisMo[i+'_'+ep]=1;activeThis[i]=1;
+        if(!isShip){var b1=pb(r[1]);b1.tmR+=rev;b1.tmQ+=qty;}
+        rb(repName).tm+=rev;rc(repName,i).tm+=rev;
       }
       if(mk===kLastMo){
-        agg.revLastMo+=rev;
-        if(isShip)agg.shipLastMo+=rev;
-        agg.ordLastMo[i+'_'+ep]=1;
-        activeLast[i]=1;
-        if(!isShip){prodLast[r[1]]=prodLast[r[1]]||{rev:0,qty:0};prodLast[r[1]].rev+=rev;prodLast[r[1]].qty+=(r[4]||0);}
-        repLast[rep]=(repLast[rep]||0)+rev;
+        agg.revLastMo+=rev;if(isShip)agg.shipLastMo+=rev;
+        agg.ordLastMo[i+'_'+ep]=1;activeLast[i]=1;
+        if(!isShip){var b2=pb(r[1]);b2.lmR+=rev;b2.lmQ+=qty;}
+        rb(repName).lm+=rev;rc(repName,i).lm+=rev;
       }
       if(mk===kThisMoLY){
         agg.revThisMoLY+=rev;
         agg.ordThisMoLY[i+'_'+ep]=1;
-        if(d.getUTCDate()<=domToday){agg.mtdLY+=rev;repThisLY[rep]=(repThisLY[rep]||0)+rev;}
+        if(!isShip){var b3=pb(r[1]);b3.mlR+=rev;b3.mlQ+=qty;}
+        rb(repName).ml+=rev;rc(repName,i).ml+=rev;
+        if(d.getUTCDate()<=domToday)agg.mtdLY+=rev;
       }
       if(mk===kLastMoLY)agg.revLastMoLY+=rev;
-      if(yr===thisYr){agg.ytd+=rev;if(isShip)agg.shipYTD+=rev;}
-      if(yr===thisYr-1){
-        var doy=Math.floor((Date.UTC(yr,d.getUTCMonth(),d.getUTCDate())-Date.UTC(yr,0,1))/86400000);
-        var doyToday=Math.floor((Date.UTC(thisYr,thisMo,domToday)-Date.UTC(thisYr,0,1))/86400000);
-        if(doy<=doyToday)agg.ytdLY+=rev;
+      if(yr===thisYr){
+        agg.ytd+=rev;if(isShip)agg.shipYTD+=rev;
+        if(!isShip){var b4=pb(r[1]);b4.yR+=rev;b4.yQ+=qty;}
+        rb(repName).y+=rev;rc(repName,i).y+=rev;
+      }
+      if(yr===thisYr-1&&doy<=doyToday){
+        agg.ytdLY+=rev;
+        if(!isShip){var b5=pb(r[1]);b5.ylR+=rev;b5.ylQ+=qty;}
+        rb(repName).yl+=rev;rc(repName,i).yl+=rev;
       }
     }
   }
 
-  /* clinic counts */
   var moStartEp=Math.floor((Date.UTC(thisYr,thisMo,1)-EP0)/86400000);
   var yrStartEp=Math.floor((Date.UTC(thisYr,0,1)-EP0)/86400000);
   var lastMoStartEp=Math.floor((Date.UTC(lastMoYr,lastMo,1)-EP0)/86400000);
   var newWk=0,newMo=0,newYTD=0,newLastMo=0,totalClinics=0;
-  var ncWk=0,ncMo=0,ncYTD=0,ncLastMo=0,ncTotal=0;
+  var ncWk=0,ncMo=0,ncYTD=0,ncLastMo=0;
   var cn;
   for(cn in firstEp){
     totalClinics++;
@@ -7660,7 +7691,6 @@ function ceoCompute(){
   if(HAS_NC){
     for(cn in NC){
       var nf=NC[cn];
-      ncTotal++;
       if(nf>=wkStart)ncWk++;
       if(nf>=moStartEp)ncMo++;
       if(nf>=yrStartEp)ncYTD++;
@@ -7677,8 +7707,6 @@ function ceoCompute(){
     var mid=Math.floor(gaps.length/2);
     return gaps.length%2?gaps[mid]:Math.round((gaps[mid-1]+gaps[mid])/2);
   }
-
-  /* lapsed buckets */
   var buckets={b30:[],b45:[],b90:[]};
   var dormant=0;
   for(i=0;i<C.length;i++){
@@ -7719,12 +7747,13 @@ function ceoCompute(){
     activeThis:Object.keys(activeThis).length,
     activeLast:Object.keys(activeLast).length,
     newWk:newWk,newMo:newMo,newLastMo:newLastMo,newYTD:newYTD,totalClinics:totalClinics,
-    hasNC:HAS_NC,ncWk:ncWk,ncMo:ncMo,ncLastMo:ncLastMo,ncYTD:ncYTD,ncTotal:ncTotal,
-    prodThis:prodThis,prodLast:prodLast,
-    repThis:repThis,repLast:repLast,repThisLY:repThisLY,repClinics:repClinics,
+    hasNC:HAS_NC,ncWk:ncWk,ncMo:ncMo,ncLastMo:ncLastMo,ncYTD:ncYTD,
+    prod:prod,rep:rep,
     buckets:buckets,dormant:dormant,
     monthName:now.toLocaleDateString('en-US',{month:'long',timeZone:'UTC'}),
-    lastMonthName:lastMoDate.toLocaleDateString('en-US',{month:'long',timeZone:'UTC'})
+    lastMonthName:lastMoDate.toLocaleDateString('en-US',{month:'long',timeZone:'UTC'}),
+    thisYr:thisYr,lastYr:thisYr-1,
+    moLabel:now.toLocaleDateString('en-US',{month:'short',timeZone:'UTC'})
   };
   return CEO_CACHE;
 }
@@ -7735,105 +7764,220 @@ function loadCeo(){
 
   document.getElementById('ceo-asof').textContent='Data through '+epDate(a.maxEp)+' \u00b7 syncs nightly from Zoho';
 
-  /* hero strip */
   document.getElementById('ceo-wk-val').textContent=ceoFmtK(a.revWk);
   document.getElementById('ceo-wk-d1').innerHTML=ceoPct(a.revWk,a.revWkPrev)+' vs prior 7d';
   document.getElementById('ceo-wk-d2').innerHTML=ceoPct(a.revWk,a.revWkLY)+' vs same wk last yr';
+  var e;
+  e=document.getElementById('ceo-wk-ship');if(e&&a.shipWk)e.textContent='incl. ship/adj '+ceoFmtK(a.shipWk);
 
   document.getElementById('ceo-mo-val').textContent=ceoFmtK(a.revThisMo);
-  document.getElementById('ceo-mo-d1').innerHTML=ceoPct(a.revThisMo,a.revLastMo)+' vs '+x.lastMonthName;
-  document.getElementById('ceo-mo-d2').innerHTML=ceoPct(a.revThisMo,a.mtdLY)+' vs same days last yr';
-  var shipEl=document.getElementById('ceo-mo-ship');
-  if(shipEl){
-    if(a.shipThisMo||a.shipLastMo)shipEl.textContent='Products '+ceoFmtK(a.revThisMo-a.shipThisMo)+' \u00b7 Ship/adj '+ceoFmtK(a.shipThisMo);
-    else shipEl.textContent='Ship/adj: run full rebuild to backfill';
+  document.getElementById('ceo-mo-d1').innerHTML=ceoPct(a.revThisMo,a.revLastMo)+' vs '+x.lastMonthName+' ('+ceoFmtK(a.revLastMo)+')';
+  document.getElementById('ceo-mo-d2').innerHTML=ceoPct(a.revThisMo,a.mtdLY)+' vs same days LY ('+ceoFmtK(a.mtdLY)+')';
+  e=document.getElementById('ceo-mo-ship');
+  if(e){
+    if(a.shipThisMo||a.shipLastMo)e.textContent='Products '+ceoFmtK(a.revThisMo-a.shipThisMo)+' \u00b7 Ship/adj '+ceoFmtK(a.shipThisMo);
+    else e.textContent='Ship/adj: run backfill to populate';
   }
-  var shipWkEl=document.getElementById('ceo-wk-ship');
-  if(shipWkEl&&a.shipWk)shipWkEl.textContent='incl. ship/adj '+ceoFmtK(a.shipWk);
-  var shipYEl=document.getElementById('ceo-ytd-ship');
-  if(shipYEl&&a.shipYTD)shipYEl.textContent='incl. ship/adj '+ceoFmtK(a.shipYTD);
 
   document.getElementById('ceo-lm-val').textContent=ceoFmtK(a.revLastMo);
   document.getElementById('ceo-lm-lbl').textContent=x.lastMonthName;
-  document.getElementById('ceo-lm-d1').innerHTML=ceoPct(a.revLastMo,a.revLastMoLY)+' vs last yr';
+  document.getElementById('ceo-lm-d1').innerHTML=ceoPct(a.revLastMo,a.revLastMoLY)+' vs LY ('+ceoFmtK(a.revLastMoLY)+')';
 
   document.getElementById('ceo-ytd-val').textContent=ceoFmtK(a.ytd);
-  document.getElementById('ceo-ytd-d1').innerHTML=ceoPct(a.ytd,a.ytdLY)+' vs same point last yr';
+  document.getElementById('ceo-ytd-d1').innerHTML=ceoPct(a.ytd,a.ytdLY)+' vs same point LY ('+ceoFmtK(a.ytdLY)+')';
+  e=document.getElementById('ceo-ytd-ship');if(e&&a.shipYTD)e.textContent='incl. ship/adj '+ceoFmtK(a.shipYTD);
 
-  /* orders + AOV */
   var aov=x.ordersThisMo?a.revThisMo/x.ordersThisMo:0;
   var aovLast=x.ordersLastMo?a.revLastMo/x.ordersLastMo:0;
   document.getElementById('ceo-ord-val').textContent=x.ordersThisMo.toLocaleString();
-  document.getElementById('ceo-ord-d1').innerHTML=ceoPct(x.ordersThisMo,x.ordersLastMo)+' vs '+x.lastMonthName+' \u00b7 '+ceoPct(x.ordersThisMo,x.ordersThisMoLY)+' YoY';
+  document.getElementById('ceo-ord-d1').innerHTML=ceoPct(x.ordersThisMo,x.ordersLastMo)+' vs '+x.lastMonthName+' ('+x.ordersLastMo.toLocaleString()+')';
   document.getElementById('ceo-aov-val').textContent='$'+aov.toFixed(0);
-  document.getElementById('ceo-aov-d1').innerHTML=ceoPct(aov,aovLast)+' vs '+x.lastMonthName;
+  document.getElementById('ceo-aov-d1').innerHTML=ceoPct(aov,aovLast)+' vs '+x.lastMonthName+' ($'+aovLast.toFixed(0)+')';
 
-  /* clinic cards — NEW ref counts primary when available, first-order fallback */
   if(x.hasNC){
     document.getElementById('ceo-newwk').textContent=x.ncWk;
+    document.getElementById('ceo-newwk-s').textContent='by NEW ref';
     document.getElementById('ceo-newmo').textContent=x.ncMo;
-    document.getElementById('ceo-newmo-d').innerHTML=ceoPct(x.ncMo,x.ncLastMo)+' vs '+x.lastMonthName+' \u00b7 first-order: '+x.newMo;
+    document.getElementById('ceo-newmo-d').innerHTML=ceoPct(x.ncMo,x.ncLastMo)+' vs '+x.lastMonthName+' ('+x.ncLastMo+') \u00b7 first-order: '+x.newMo;
     document.getElementById('ceo-newytd').textContent=x.ncYTD;
     document.getElementById('ceo-newytd-s').textContent='by NEW ref \u00b7 first-order: '+x.newYTD;
-    document.getElementById('ceo-newwk-s').textContent='by NEW ref';
   }else{
     document.getElementById('ceo-newwk').textContent=x.newWk;
     document.getElementById('ceo-newmo').textContent=x.newMo;
-    document.getElementById('ceo-newmo-d').innerHTML=ceoPct(x.newMo,x.newLastMo)+' vs '+x.lastMonthName;
+    document.getElementById('ceo-newmo-d').innerHTML=ceoPct(x.newMo,x.newLastMo)+' vs '+x.lastMonthName+' ('+x.newLastMo+')';
     document.getElementById('ceo-newytd').textContent=x.newYTD;
   }
   document.getElementById('ceo-total').textContent=x.totalClinics.toLocaleString();
   document.getElementById('ceo-active').textContent=x.activeThis.toLocaleString();
-  document.getElementById('ceo-active-d').innerHTML=ceoPct(x.activeThis,x.activeLast)+' vs '+x.lastMonthName;
+  document.getElementById('ceo-active-d').innerHTML=ceoPct(x.activeThis,x.activeLast)+' vs '+x.lastMonthName+' ('+x.activeLast.toLocaleString()+')';
+  document.getElementById('ceo-dormant').textContent=x.dormant.toLocaleString();
 
-  /* top products */
-  var pids=Object.keys(x.prodThis);
-  pids.sort(function(a2,b2){return x.prodThis[b2].rev-x.prodThis[a2].rev;});
-  var html='';
-  var lim=Math.min(10,pids.length);
-  for(var i=0;i<lim;i++){
-    var pid=pids[i];
-    var t=x.prodThis[pid];
-    var lastRow=x.prodLast[pid];
-    html+='<tr><td>'+ceoEsc(P[pid]||'')+'</td>'+
-      '<td class="num">'+fmt(t.rev)+'</td>'+
-      '<td class="num">'+Math.round(t.qty).toLocaleString()+'</td>'+
-      '<td class="num">'+(lastRow?fmt(lastRow.rev):'\u2014')+'</td>'+
-      '<td class="num">'+ceoPct(t.rev,lastRow?lastRow.rev:0)+'</td></tr>';
-  }
-  document.getElementById('ceo-prod-body').innerHTML=html||'<tr><td colspan="5">No orders yet this month.</td></tr>';
+  ceoRenderProducts();
+  ceoRenderReps();
 
-  /* rep table */
-  var reps=Object.keys(x.repThis);
-  reps.sort(function(a2,b2){return x.repThis[b2]-x.repThis[a2];});
-  html='';
-  for(i=0;i<reps.length;i++){
-    var rn=reps[i];
-    html+='<tr><td>'+ceoEsc(rn)+'</td>'+
-      '<td class="num">'+fmt(x.repThis[rn])+'</td>'+
-      '<td class="num">'+ceoPct(x.repThis[rn],x.repLast[rn]||0)+'</td>'+
-      '<td class="num">'+ceoPct(x.repThis[rn],x.repThisLY[rn]||0)+'</td>'+
-      '<td class="num">'+Object.keys(x.repClinics[rn]||{}).length+'</td></tr>';
-  }
-  document.getElementById('ceo-rep-body').innerHTML=html||'<tr><td colspan="5">No rep activity this month.</td></tr>';
-
-  /* lapsed buckets */
   document.getElementById('ceo-b30-n').textContent=x.buckets.b30.length;
   document.getElementById('ceo-b45-n').textContent=x.buckets.b45.length;
   document.getElementById('ceo-b90-n').textContent=x.buckets.b90.length;
-  document.getElementById('ceo-dormant').textContent=x.dormant.toLocaleString();
-  ceoRenderBucket('b30');
+  ceoRenderBucket(CEO_CUR_BKT);
 }
+
+/* ---------- products ---------- */
+function ceoProdRows(){
+  var x=ceoCompute();
+  var ids=Object.keys(x.prod);
+  ids.sort(function(a2,b2){return x.prod[b2].tmR-x.prod[a2].tmR;});
+  return ids;
+}
+function ceoRenderProducts(){
+  var x=ceoCompute();
+  var ids=ceoProdRows();
+  var html='';
+  var lim=Math.min(15,ids.length);
+  for(var i=0;i<lim;i++){
+    var pid=ids[i];var t=x.prod[pid];
+    var avg=t.tmQ?t.tmR/t.tmQ:0;
+    var avgLY=t.ylQ?t.ylR/t.ylQ:0;
+    html+='<tr><td>'+ceoEsc(P[pid]||'')+'</td>'+
+      '<td class="num">'+ceoMoney(t.tmR)+'</td>'+
+      '<td class="num">'+Math.round(t.tmQ).toLocaleString()+'</td>'+
+      '<td class="num">$'+avg.toFixed(2)+'</td>'+
+      '<td class="num">'+ceoMoney(t.lmR)+'</td>'+
+      '<td class="num">'+ceoPct(t.tmR,t.lmR)+'</td>'+
+      '<td class="num">'+ceoMoney(t.mlR)+'<div class="ceo-tiny">'+Math.round(t.mlQ).toLocaleString()+' u</div></td>'+
+      '<td class="num">'+ceoMoney(t.yR)+'<div class="ceo-tiny">'+Math.round(t.yQ).toLocaleString()+' u</div></td>'+
+      '<td class="num">'+ceoMoney(t.ylR)+'<div class="ceo-tiny">'+Math.round(t.ylQ).toLocaleString()+' u \u00b7 $'+avgLY.toFixed(2)+'</div></td>'+
+      '<td class="num">'+ceoPct(t.yR,t.ylR)+'</td></tr>';
+  }
+  document.getElementById('ceo-prod-body').innerHTML=html||'<tr><td colspan="10">No orders yet this month.</td></tr>';
+}
+function ceoExportProducts(){
+  var x=ceoCompute();
+  var ids=ceoProdRows();
+  var rows=[];
+  for(var i=0;i<ids.length;i++){
+    var pid=ids[i];var t=x.prod[pid];
+    rows.push([
+      P[pid]||'',
+      t.tmR.toFixed(2),Math.round(t.tmQ),(t.tmQ?(t.tmR/t.tmQ):0).toFixed(2),
+      t.lmR.toFixed(2),Math.round(t.lmQ),
+      t.mlR.toFixed(2),Math.round(t.mlQ),(t.mlQ?(t.mlR/t.mlQ):0).toFixed(2),
+      t.yR.toFixed(2),Math.round(t.yQ),(t.yQ?(t.yR/t.yQ):0).toFixed(2),
+      t.ylR.toFixed(2),Math.round(t.ylQ),(t.ylQ?(t.ylR/t.ylQ):0).toFixed(2)
+    ]);
+  }
+  var m=x.moLabel;
+  ceoDownloadCsv('products_'+x.thisYr+'.csv',
+    ['Product',m+' $',m+' units',m+' avg $','Last mo $','Last mo units',m+' '+x.lastYr+' $',m+' '+x.lastYr+' units',m+' '+x.lastYr+' avg $','YTD $','YTD units','YTD avg $','LY same-period $','LY units','LY avg $'],
+    rows);
+}
+
+/* ---------- reps ---------- */
+function ceoRepList(){
+  var x=ceoCompute();
+  var names=Object.keys(x.rep);
+  names.sort(function(a2,b2){return x.rep[b2].tm-x.rep[a2].tm;});
+  return names;
+}
+function ceoRenderReps(){
+  var x=ceoCompute();
+  var names=ceoRepList();
+  var html='';
+  for(var i=0;i<names.length;i++){
+    var rn=names[i];var R=x.rep[rn];
+    html+='<tr class="ceo-row ceo-rep-row" data-rep="'+ceoEsc(rn)+'">'+
+      '<td>'+ceoEsc(rn)+' <span class="ceo-tiny">\u25be</span></td>'+
+      '<td class="num">'+ceoMoney(R.tm)+'</td>'+
+      '<td class="num">'+ceoMoney(R.lm)+'</td>'+
+      '<td class="num">'+ceoPct(R.tm,R.lm)+'</td>'+
+      '<td class="num">'+ceoMoney(R.ml)+'</td>'+
+      '<td class="num">'+ceoPct(R.tm,R.ml)+'</td>'+
+      '<td class="num">'+ceoMoney(R.y)+'</td>'+
+      '<td class="num">'+ceoMoney(R.yl)+'</td>'+
+      '<td class="num">'+ceoPct(R.y,R.yl)+'</td>'+
+      '<td class="num">'+Object.keys(R.clinics).length+'</td></tr>';
+    if(CEO_CUR_REP===rn){
+      html+='<tr><td colspan="10" style="background:#f8fafc;padding:0">'+ceoRepDrillHtml(rn)+'</td></tr>';
+    }
+  }
+  document.getElementById('ceo-rep-body').innerHTML=html||'<tr><td colspan="10">No rep activity.</td></tr>';
+  var rows=document.querySelectorAll('.ceo-rep-row');
+  for(i=0;i<rows.length;i++){
+    rows[i].addEventListener('click',function(){
+      var rn2=this.getAttribute('data-rep');
+      CEO_CUR_REP=(CEO_CUR_REP===rn2)?null:rn2;
+      ceoRenderReps();
+    });
+  }
+  var db=document.getElementById('ceo-drill-export');
+  if(db)db.addEventListener('click',function(ev){ev.stopPropagation();ceoExportRepDrill();});
+  var dn=document.getElementById('ceo-drill-downonly');
+  if(dn)dn.addEventListener('click',function(ev){ev.stopPropagation();CEO_DRILL_DOWN=!CEO_DRILL_DOWN;ceoRenderReps();});
+}
+var CEO_DRILL_DOWN=true;
+function ceoRepClinics(rn){
+  var x=ceoCompute();
+  var R=x.rep[rn];if(!R)return [];
+  var out=[];
+  for(var ci in R.clinics){
+    var v=R.clinics[ci];
+    out.push({idx:parseInt(ci,10),name:C[ci],tm:v.tm,lm:v.lm,ml:v.ml,y:v.y,yl:v.yl,dMo:v.tm-v.lm,dY:v.y-v.yl});
+  }
+  if(CEO_DRILL_DOWN)out=out.filter(function(o){return o.dMo<0||o.dY<0;});
+  out.sort(function(a2,b2){return (a2.dMo+a2.dY)-(b2.dMo+b2.dY);});
+  return out;
+}
+function ceoRepDrillHtml(rn){
+  var x=ceoCompute();
+  var list=ceoRepClinics(rn);
+  var h='<div style="padding:10px 12px">'+
+    '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">'+
+    '<span style="font-size:12px;font-weight:700">'+ceoEsc(rn)+' \u2014 '+(CEO_DRILL_DOWN?'clinics DOWN (vs last mo or vs LY)':'all clinics')+' \u00b7 '+list.length+'</span>'+
+    '<span class="ceo-bkt-tab" id="ceo-drill-downonly">'+(CEO_DRILL_DOWN?'Show all':'Down only')+'</span>'+
+    '<span class="ceo-bkt-tab" id="ceo-drill-export">\u2913 Export CSV</span>'+
+    '</div>'+
+    '<table class="ceo-tbl"><thead><tr><th>Clinic</th><th class="num">This Mo</th><th class="num">Last Mo</th><th class="num">\u0394 Mo</th><th class="num">'+x.moLabel+' '+x.lastYr+'</th><th class="num">YTD</th><th class="num">LY same period</th><th class="num">\u0394 Yr</th></tr></thead><tbody>';
+  var lim=Math.min(50,list.length);
+  for(var i=0;i<lim;i++){
+    var o=list[i];
+    h+='<tr class="ceo-row ceo-drill-row" data-cidx="'+o.idx+'">'+
+      '<td>'+ceoEsc(o.name)+'</td>'+
+      '<td class="num">'+ceoMoney(o.tm)+'</td>'+
+      '<td class="num">'+ceoMoney(o.lm)+'</td>'+
+      '<td class="num" style="color:'+(o.dMo<0?'#dc2626':'#16a34a')+'">'+ceoMoney(o.dMo)+'</td>'+
+      '<td class="num">'+ceoMoney(o.ml)+'</td>'+
+      '<td class="num">'+ceoMoney(o.y)+'</td>'+
+      '<td class="num">'+ceoMoney(o.yl)+'</td>'+
+      '<td class="num" style="color:'+(o.dY<0?'#dc2626':'#16a34a')+'">'+ceoMoney(o.dY)+'</td></tr>';
+  }
+  if(list.length>lim)h+='<tr><td colspan="8" class="ceo-tiny">Showing worst '+lim+' of '+list.length+' \u2014 export for the full list</td></tr>';
+  h+='</tbody></table></div>';
+  return h;
+}
+function ceoExportRepDrill(){
+  if(!CEO_CUR_REP)return;
+  var x=ceoCompute();
+  var list=ceoRepClinics(CEO_CUR_REP);
+  var rows=[];
+  for(var i=0;i<list.length;i++){
+    var o=list[i];
+    var k=KA[o.idx]||[];
+    rows.push([o.name,o.tm.toFixed(2),o.lm.toFixed(2),o.dMo.toFixed(2),o.ml.toFixed(2),o.y.toFixed(2),o.yl.toFixed(2),o.dY.toFixed(2),k[1]||'',k[2]||'']);
+  }
+  ceoDownloadCsv('rep_'+CEO_CUR_REP.replace(/[^A-Za-z0-9]/g,'_')+(CEO_DRILL_DOWN?'_down':'_all')+'.csv',
+    ['Clinic','This Mo $','Last Mo $','Delta Mo $','Same Mo LY $','YTD $','LY same period $','Delta Yr $','Email','Phone'],rows);
+}
+
+/* ---------- lapsed buckets ---------- */
 function ceoRenderBucket(which){
+  CEO_CUR_BKT=which;
   var x=ceoCompute();
   var list=x.buckets[which]||[];
-  var tabs=document.querySelectorAll('.ceo-bkt-tab');
+  var tabs=document.querySelectorAll('.ceo-bkt-pick');
   for(var i=0;i<tabs.length;i++){
-    if(tabs[i].getAttribute('data-bkt')===which)tabs[i].className='ceo-bkt-tab active';
-    else tabs[i].className='ceo-bkt-tab';
+    tabs[i].className=tabs[i].getAttribute('data-bkt')===which?'ceo-bkt-tab ceo-bkt-pick active':'ceo-bkt-tab ceo-bkt-pick';
   }
   var html='';
-  var lim=Math.min(75,list.length);
+  var lim=CEO_BKT_ALL?list.length:Math.min(75,list.length);
   for(i=0;i<lim;i++){
     var e2=list[i];
     var cadTxt2=e2.cad>0?'every ~'+e2.cad+'d':'\u2014';
@@ -7841,7 +7985,7 @@ function ceoRenderBucket(which){
     if(!e2.cad)overTxt2='<span class="ceo-delta flat">\u2014</span>';
     else if(e2.expected)overTxt2='<span class="ceo-expected">expected</span>';
     else overTxt2='<span class="ceo-delta down">'+e2.over.toFixed(1)+'x overdue</span>';
-    html+='<tr class="ceo-row'+(e2.expected?' ceo-dim':'')+'" data-cidx="'+e2.idx+'">'+
+    html+='<tr class="ceo-row ceo-bkt-row'+(e2.expected?' ceo-dim':'')+'" data-cidx="'+e2.idx+'">'+
       '<td>'+(e2.crossed?'<span class="ceo-crossed">NEW '+e2.crossed+'</span> ':'')+ceoEsc(e2.name)+'</td>'+
       '<td>'+ceoEsc(e2.rep)+'</td>'+
       '<td>'+e2.last+'</td>'+
@@ -7850,20 +7994,41 @@ function ceoRenderBucket(which){
       '<td>'+overTxt2+'</td>'+
       '<td class="num">'+fmt(e2.rev)+'</td></tr>';
   }
-  if(list.length>lim)html+='<tr><td colspan="7" style="color:#888;font-size:11px">Showing top '+lim+' of '+list.length+' \u2014 overdue-vs-cadence first, then lifetime revenue; expected-cadence clinics sink to the bottom</td></tr>';
+  if(!CEO_BKT_ALL&&list.length>lim)html+='<tr><td colspan="7" class="ceo-tiny">Showing top '+lim+' of '+list.length+' \u2014 use Show all or Export</td></tr>';
   document.getElementById('ceo-bkt-body').innerHTML=html||'<tr><td colspan="7">Nothing in this bucket. Good.</td></tr>';
-  var rows=document.querySelectorAll('#ceo-bkt-body .ceo-row');
+  var sa=document.getElementById('ceo-bkt-showall');
+  if(sa)sa.textContent=CEO_BKT_ALL?'Show top 75':'Show all '+list.length;
+  var rows=document.querySelectorAll('.ceo-bkt-row');
   for(i=0;i<rows.length;i++){
     rows[i].addEventListener('click',function(){openPanel(parseInt(this.getAttribute('data-cidx'),10));});
   }
 }
+function ceoExportBucket(){
+  var x=ceoCompute();
+  var list=x.buckets[CEO_CUR_BKT]||[];
+  var rows=[];
+  for(var i=0;i<list.length;i++){
+    var e2=list[i];
+    var k=KA[e2.idx]||[];
+    rows.push([e2.name,e2.rep,e2.last,e2.days,e2.cad?('every ~'+e2.cad+'d'):'',e2.cad?e2.over.toFixed(1)+'x':'',e2.expected?'expected':'overdue',e2.rev.toFixed(2),k[1]||'',k[2]||'']);
+  }
+  ceoDownloadCsv('lapsed_'+CEO_CUR_BKT+'.csv',
+    ['Clinic','Rep','Last order','Days since','Normal cadence','Overdue multiple','Status','Lifetime revenue','Email','Phone'],rows);
+}
+
 document.addEventListener('DOMContentLoaded',function(){
-  var tabs=document.querySelectorAll('.ceo-bkt-tab');
+  var tabs=document.querySelectorAll('.ceo-bkt-pick');
   for(var i=0;i<tabs.length;i++){
-    tabs[i].addEventListener('click',function(){ceoRenderBucket(this.getAttribute('data-bkt'));});
+    tabs[i].addEventListener('click',function(){CEO_BKT_ALL=false;ceoRenderBucket(this.getAttribute('data-bkt'));});
   }
   var rb=document.getElementById('ceo-refresh');
   if(rb)rb.addEventListener('click',function(){CEO_CACHE=null;loadCeo();});
+  var sa=document.getElementById('ceo-bkt-showall');
+  if(sa)sa.addEventListener('click',function(){CEO_BKT_ALL=!CEO_BKT_ALL;ceoRenderBucket(CEO_CUR_BKT);});
+  var eb=document.getElementById('ceo-bkt-export');
+  if(eb)eb.addEventListener('click',ceoExportBucket);
+  var pe=document.getElementById('ceo-prod-export');
+  if(pe)pe.addEventListener('click',ceoExportProducts);
 });
 </script>
 
