@@ -109,6 +109,7 @@ def fetch_new_lines(token, start_date, end_date):
             except (TypeError, ValueError):
                 inv_total = 0.0
             ref = (inv.get('reference_number') or '').strip()
+            salesperson = (inv.get('salesperson_name') or '').strip()
             line_items = inv.get('line_items', [])
             if not line_items:
                 try:
@@ -122,6 +123,8 @@ def fetch_new_lines(token, start_date, end_date):
                             pass
                         if not ref:
                             ref = (det.get('reference_number') or '').strip()
+                        if not salesperson:
+                            salesperson = (det.get('salesperson_name') or '').strip()
                 except Exception as e:
                     print(f'  [warn] detail fetch failed for {inv_id}: {e}')
                     continue
@@ -141,6 +144,7 @@ def fetch_new_lines(token, start_date, end_date):
                     'item':     name,
                     'qty':      qty,
                     'total':    total,
+                    'rep':      salesperson,
                 })
             ship_adj = round(inv_total - line_sum, 2)
             if inv_total > 0 and abs(ship_adj) >= 0.01:
@@ -150,6 +154,7 @@ def fetch_new_lines(token, start_date, end_date):
                     'item':     '~Shipping & Adjustments',
                     'qty':      0,
                     'total':    ship_adj,
+                    'rep':      salesperson,
                 })
         chunk_start = chunk_end + timedelta(days=1)
 
@@ -234,6 +239,17 @@ def merge_new_lines(existing, new_lines, new_refs=None):
             P.append(name)
         return prod_map[name]
 
+    # Rep index map (extends REPS for new salespeople)
+    rep_map = {name: idx for idx, name in enumerate(REPS)}
+    def get_rep(name):
+        name = (name or '').strip()
+        if not name:
+            return -1
+        if name not in rep_map:
+            rep_map[name] = len(REPS)
+            REPS.append(name)
+        return rep_map[name]
+
     # Build set of existing rows per clinic for dedup
     # Key: (yr_code, prod_idx, revenue, epoch_day) — qty can vary, ignore for dedup
     existing_keys = defaultdict(set)
@@ -269,7 +285,7 @@ def merge_new_lines(existing, new_lines, new_refs=None):
         if customer not in D:
             D[customer] = []
             new_clinic_count += 1
-        D[customer].append([yr_code, pidx, rev, ep, qty])
+        D[customer].append([yr_code, pidx, rev, ep, qty, get_rep(li.get('rep', ''))])
         existing_keys[customer].add(key)
         updated_clinics.add(customer)
         new_row_count += 1
@@ -391,7 +407,7 @@ def main():
             yr_code = d.year - 2020
             ep = epoch_day(d)
             pidx = get_prod(li['item'])
-            clinic_rows[li['customer']].append([yr_code, pidx, li['total'], ep, li['qty']])
+            clinic_rows[li['customer']].append([yr_code, pidx, li['total'], ep, li['qty']])  # rep stamped only in merge path
         C = sorted(clinic_rows.keys())
         D = dict(clinic_rows)
         KA = [[-1, '', '', '', '', '', (EP0 + timedelta(days=max(r[3] for r in D[c]))).strftime('%Y-%m-%d')] for c in C]
