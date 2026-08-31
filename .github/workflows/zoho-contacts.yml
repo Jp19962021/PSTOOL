@@ -1,0 +1,34 @@
+name: Zoho Contact Refresh
+on:
+  schedule:
+    - cron: '30 7 * * *'
+  workflow_dispatch:
+jobs:
+  contacts:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install requests
+      - name: Refresh contacts
+        env:
+          ZOHO_CLIENT_ID: ${{ secrets.ZOHO_CLIENT_ID }}
+          ZOHO_CLIENT_SECRET: ${{ secrets.ZOHO_CLIENT_SECRET }}
+          ZOHO_REFRESH_TOKEN: ${{ secrets.ZOHO_REFRESH_TOKEN }}
+          ZOHO_ORG_ID: '691451730'
+        run: python sync_contacts.py
+      - name: Commit updated data.js
+        run: |
+          git config user.name "PSTOOL Sync Bot"
+          git config user.email "sync-bot@pstool"
+          git add data.js
+          git diff --cached --quiet || git commit -m "data: contact refresh $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git pull --rebase
+          git push
