@@ -1327,6 +1327,15 @@ table.ptbl tr:last-child td{border-bottom:none}
     <div class="ceo-card"><div class="cc-t">Active Clinics (This Mo)</div><div class="cc-v" id="ceo-active">0</div><div class="cc-s" id="ceo-active-d"></div></div>
   </div>
 
+  <div class="ceo-section" style="margin-bottom:12px">
+    <div class="ceo-section-title" style="margin-bottom:6px">&#128197; Per Working Day <span class="ceo-tiny" id="ceo-wd-note"></span></div>
+    <div class="ceo-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="ceo-card"><div class="cc-t">Revenue / working day</div><div class="cc-v" id="ceo-rpd-val">$0</div><div class="cc-s" id="ceo-rpd-d"></div></div>
+      <div class="ceo-card"><div class="cc-t">Orders / working day</div><div class="cc-v" id="ceo-opd-val">0</div><div class="cc-s" id="ceo-opd-d"></div></div>
+      <div class="ceo-card"><div class="cc-t">New clinics / working day</div><div class="cc-v" id="ceo-npd-val">0</div><div class="cc-s" id="ceo-npd-d"></div></div>
+    </div>
+  </div>
+
   <div class="ceo-grid" style="grid-template-columns:repeat(4,1fr)">
     <div class="ceo-card"><div class="cc-t">Total Clinics (since 2024)</div><div class="cc-v" id="ceo-total">0</div><div class="cc-s">ever ordered</div></div>
     <div class="ceo-card"><div class="cc-t">Dormant 180d+</div><div class="cc-v" id="ceo-dormant">0</div><div class="cc-s">excluded from buckets</div></div>
@@ -7679,6 +7688,8 @@ function ceoCompute(){
     }
   }
 
+  function isWorkday(ep){var dw=new Date(EP0+ep*86400000).getUTCDay();return dw>=1&&dw<=5;}
+  function workdays(a2,b2){var n=0;for(var w=a2;w<=b2;w++)if(isWorkday(w))n++;return n;}
   var moStartEp=Math.floor((Date.UTC(thisYr,thisMo,1)-EP0)/86400000);
   var yrStartEp=Math.floor((Date.UTC(thisYr,0,1)-EP0)/86400000);
   var lastMoStartEp=Math.floor((Date.UTC(lastMoYr,lastMo,1)-EP0)/86400000);
@@ -7752,12 +7763,17 @@ function ceoCompute(){
     ordersThisMo:Object.keys(agg.ordThisMo).length,
     ordersLastMo:Object.keys(agg.ordLastMo).length,
     ordersThisMoLY:Object.keys(agg.ordThisMoLY).length,
+    revMoLYFull:agg.revThisMoLY,
     activeThis:Object.keys(activeThis).length,
     activeLast:Object.keys(activeLast).length,
     newWk:newWk,newMo:newMo,newLastMo:newLastMo,newYTD:newYTD,totalClinics:totalClinics,
     hasNC:HAS_NC,ncWk:ncWk,ncMo:ncMo,ncLastMo:ncLastMo,ncYTD:ncYTD,
     prod:prod,rep:rep,
     buckets:buckets,dormant:dormant,
+    wdMTD:workdays(moStartEp,Math.min(todayEp,agg.maxEp)),
+    wdLastMo:workdays(lastMoStartEp,moStartEp-1),
+    wdMoLYFull:workdays(Math.floor((Date.UTC(thisYr-1,thisMo,1)-EP0)/86400000),Math.floor((Date.UTC(thisYr-1,thisMo+1,1)-EP0)/86400000)-1),
+    ordersMoLYFull:0,
     monthName:now.toLocaleDateString('en-US',{month:'long',timeZone:'UTC'}),
     lastMonthName:lastMoDate.toLocaleDateString('en-US',{month:'long',timeZone:'UTC'}),
     thisYr:thisYr,lastYr:thisYr-1,
@@ -7819,6 +7835,20 @@ function loadCeo(){
   document.getElementById('ceo-active').textContent=x.activeThis.toLocaleString();
   document.getElementById('ceo-active-d').innerHTML=ceoPct(x.activeThis,x.activeLast)+' vs '+x.lastMonthName+' ('+x.activeLast.toLocaleString()+')';
   document.getElementById('ceo-dormant').textContent=x.dormant.toLocaleString();
+
+  /* working-day averages */
+  var wd=x.wdMTD||1,wdL=x.wdLastMo||1,wdY=x.wdMoLYFull||1;
+  var rd=a.revThisMo/wd,rdL=a.revLastMo/wdL,rdY=x.revMoLYFull/wdY;
+  var od=x.ordersThisMo/wd,odL=x.ordersLastMo/wdL,odY=x.ordersThisMoLY/wdY;
+  var nMo=x.hasNC?x.ncMo:x.newMo,nLMo=x.hasNC?x.ncLastMo:x.newLastMo;
+  var nd=nMo/wd,ndL=nLMo/wdL;
+  document.getElementById('ceo-wd-note').textContent=wd+' working days so far this month · '+x.lastMonthName+' had '+x.wdLastMo;
+  document.getElementById('ceo-rpd-val').textContent=ceoFmtK(rd);
+  document.getElementById('ceo-rpd-d').innerHTML=ceoPct(rd,rdL)+' vs '+x.lastMonthName+' ('+ceoFmtK(rdL)+'/day) · '+ceoPct(rd,rdY)+' vs LY ('+ceoFmtK(rdY)+'/day)';
+  document.getElementById('ceo-opd-val').textContent=od.toFixed(1);
+  document.getElementById('ceo-opd-d').innerHTML=ceoPct(od,odL)+' vs '+x.lastMonthName+' ('+odL.toFixed(1)+'/day) · '+ceoPct(od,odY)+' vs LY ('+odY.toFixed(1)+'/day)';
+  document.getElementById('ceo-npd-val').textContent=nd.toFixed(1);
+  document.getElementById('ceo-npd-d').innerHTML=ceoPct(nd,ndL)+' vs '+x.lastMonthName+' ('+ndL.toFixed(1)+'/day)';
 
   ceoRenderProducts();
   ceoRenderReps();
