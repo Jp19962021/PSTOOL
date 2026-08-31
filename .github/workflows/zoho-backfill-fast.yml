@@ -26,7 +26,7 @@ jobs:
         run: |
           git config user.name "PSTOOL Sync Bot"
           git config user.email "sync-bot@pstool"
-          git pull --rebase
           git add data.js
           git diff --cached --quiet || git commit -m "data: fast shipping/NEW-ref backfill $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git pull --rebase
           git push
