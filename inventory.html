@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Live Drug Inventory &mdash; PetScript</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.39.3/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{--navy:#1a2035;--bg:#f5f6fa;--card:#fff;--border:#e4e7ef;--text:#1f2537;--muted:#6b7280;--green:#16a34a;--red:#dc2626;--amber:#d97706}
   *{box-sizing:border-box;margin:0;padding:0}
@@ -118,7 +118,8 @@ function invParsePack(skuName){
   return {pack_size:qty,unit:unit,raw:m[0]};
 }
 
-var SB=supabase.createClient('https://kijoonuxbkpzejnqxnwl.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtpam9vbnV4YmtwemVqbnF4bndsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMzkyOTAsImV4cCI6MjA5MTkxNTI5MH0.tdTwDNLpY2jq16-NhmFwOj326d_UYpT4BlTyYoYSYVM');
+var SB=null;
+try{SB=window.supabase.createClient('https://kijoonuxbkpzejnqxnwl.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtpam9vbnV4YmtwemVqbnF4bndsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMzkyOTAsImV4cCI6MjA5MTkxNTI5MH0.tdTwDNLpY2jq16-NhmFwOj326d_UYpT4BlTyYoYSYVM');}catch(e){document.getElementById('tbl').innerHTML='<div class="err">Could not load database library: '+e.message+'</div>';}
 var EP0=new Date(Date.UTC(2024,0,1)).getTime();
 var STATE={products:[],overrides:{},packParsed:{},form:'All',q:''};
 var ROLLUP_CACHE={};
@@ -271,6 +272,7 @@ function render(){
   document.getElementById('stat').textContent=shown+' shown \u00b7 '+crit+' critical \u00b7 '+low+' low';
 }
 function load(){
+  if(!SB)return;
   document.getElementById('asof').textContent='Refreshing\u2026';
   Promise.all([
     SB.from('sku_pack_overrides').select('*'),
@@ -286,6 +288,9 @@ function load(){
     for(var k in D){var rw=D[k];for(var i2=0;i2<rw.length;i2++)if(rw[i2][3]>maxEp)maxEp=rw[i2][3];}
     var dd=new Date(EP0+maxEp*86400000);
     document.getElementById('asof').textContent='Sales data through '+dd.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' \u00b7 stock as of '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  }).catch(function(err){
+    document.getElementById('tbl').innerHTML='<div class="err">Load failed: '+esc(err&&err.message?err.message:String(err))+'</div>';
+    document.getElementById('asof').textContent='Error';
   });
 }
 document.getElementById('refresh').addEventListener('click',load);
