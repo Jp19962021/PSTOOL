@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Drug Inventory &mdash; PetScript</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.39.3/supabase.min.js"></script>
+<style>
+  :root{--navy:#1a2035;--bg:#f5f6fa;--card:#fff;--border:#e4e7ef;--text:#1f2537;--muted:#6b7280;--green:#16a34a;--red:#dc2626;--amber:#d97706}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+  .topbar{background:var(--navy);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+  .topbar h1{font-size:17px;font-weight:600}
+  .live{display:flex;align-items:center;gap:6px;font-size:12px;color:#9fe8b5}
+  .live .dot{width:8px;height:8px;border-radius:50%;background:#22c55e;animation:pulse 1.6s infinite}
+  @keyframes pulse{0%{opacity:1}50%{opacity:.35}100%{opacity:1}}
+  .topbar .spacer{flex:1}
+  .topbar .asof{font-size:11px;color:#aab4d4}
+  .rbtn{background:#252c47;color:#fff;border:1px solid #3a4360;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer}
+  .wrap{max-width:1280px;margin:0 auto;padding:18px 20px}
+  .controls{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+  .controls input{padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;min-width:240px}
+  .pill{padding:6px 14px;border-radius:20px;background:#e8eaf1;font-size:12px;font-weight:600;cursor:pointer;color:#374151;user-select:none}
+  .pill.on{background:var(--navy);color:#fff}
+  .stat{font-size:12px;color:var(--muted);margin-left:auto}
+  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;font-size:13px}
+  th{text-align:left;background:#f9fafb;padding:9px 12px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);position:sticky;top:58px}
+  td{padding:9px 12px;border-top:1px solid #f1f2f4}
+  .num{text-align:right;font-variant-numeric:tabular-nums}
+  .ipill{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+  .ipill.crit{background:#fee2e2;color:#991b1b}
+  .ipill.low{background:#fef3c7;color:#92400e}
+  .ipill.ok{background:#dcfce7;color:#166534}
+  .tiny{font-size:11px;color:#9ca3af}
+  .err{color:var(--red);padding:20px;font-size:13px}
+  @media(max-width:800px){.hide-m{display:none}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>&#128230; PetScript Drug Inventory</h1>
+  <span class="live"><span class="dot"></span>LIVE</span>
+  <span class="spacer"></span>
+  <span class="asof" id="asof">Loading&hellip;</span>
+  <button class="rbtn" id="refresh">&#8635; Refresh</button>
+</div>
+<div class="wrap">
+  <div class="controls">
+    <input type="text" id="q" placeholder="&#128269; Search drug&hellip;">
+    <span id="formPills"></span>
+    <span class="stat" id="stat"></span>
+  </div>
+  <div id="tbl"><div style="color:#888;padding:30px;text-align:center">Loading inventory&hellip;</div></div>
+  <div class="tiny" style="margin-top:10px">On Hand includes pending sale deductions not yet committed by admin. Burn = avg units/day over last 30 days. Runway = on hand &divide; burn. View-only.</div>
+</div>
+<script src="data.js"></script>
+<script>
+function detectFormJS(n){for(var i=0;i<FORM_PATTERNS.length;i++)if(FORM_PATTERNS[i].re.test(n))return FORM_PATTERNS[i].form;return'Other';}
+
+function extractStrengthJS(n){
+  var c=n.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|g|iu)\s*\/\s*(\d+(?:\.\d+)?)\s*ml/i);
+  if(c)return c[1]+c[2].toLowerCase()+'/'+c[3]+'ml';
+  var k=n.match(/\((\d+(?:\.\d+)?)\s*(mg|mcg)\s*per\s*click\)/i);
+  if(k)return k[1]+k[2].toLowerCase()+'/click';
+  var p=n.match(/(\d+(?:\.\d+)?)\s*%/);
+  if(p&&!/mg|mcg/i.test(n.slice(0,p.index)))return p[1]+'%';
+  var mg=n.match(/(\d+(?:\.\d+)?)\s*(mg|mcg|g|iu)\b/i);
+  if(mg)return mg[1]+mg[2].toLowerCase();
+  return 'unspec';
+}
+
+function extractIngredientJS(n){
+  var head=n.trim().split(' - ')[0];
+  if(isComboJS(n)&&/\s\/\s/.test(head)){
+    return head.split(/\s*\/\s*/).map(function(p){return p.replace(/\s*\d+(?:\.\d+)?\s*(?:mg|mcg|g|ml|%|ct|iu)\S*.*$/i,'').trim();}).filter(Boolean).join(' / ');
+  }
+  if(/\//.test(head)&&/[A-Z][a-z]+\/[A-Z]/.test(head.replace(/\s/g,''))){
+    var cm=head.match(/^([A-Z][a-zA-Z\/]+(?:\/[A-Z][a-zA-Z]+)+)/);
+    if(cm)return cm[1];
+  }
+  var m=head.match(/^([A-Za-z][A-Za-z\-\s]+?)(?=\s*\d)/);
+  if(m)return m[1].trim();
+  var m2=head.match(/^([A-Za-z][A-Za-z\-\s]{2,}?)(?=\s+(?:Chewable|Tablet|Capsule|Injection|Oral|Transdermal|Ophthalmic|Otic|Ointment|Cream))/i);
+  if(m2)return m2[1].trim();
+  return head.split(/\s{2,}/)[0].trim();
+}
+
+function invParsePack(skuName){
+  if(!skuName)return null;
+  // Look at substring after the final " - " (most reliable signal)
+  var afterDash=skuName;
+  var dashIdx=skuName.lastIndexOf(' - ');
+  if(dashIdx>=0)afterDash=skuName.slice(dashIdx+3);
+  // Regex: NUMBER + optional space + UNIT (ct, count, tab, tabs, cap, caps, ml, g, gm, grams, lb, dose, doses, chew, chews)
+  var re=/(\d+(?:[.,]\d+)?)\s*(ct|count|tabs?|caps?|capsules?|chews?|doses?|ml|millilit(?:re|er)s?|gm|grams?|g|kg|lbs?|bottles?|oz)\b/i;
+  var m=afterDash.match(re);
+  if(!m){
+    // Fall back: search entire name
+    m=skuName.match(re);
+    if(!m)return null;
+  }
+  var qty=parseFloat(String(m[1]).replace(',',''));
+  if(!qty||qty<=0)return null;
+  var unitRaw=m[2].toLowerCase();
+  var unit='units';
+  if(/^(ct|count|tabs?)$/.test(unitRaw))unit='tablets';
+  else if(/^caps?|capsules?$/.test(unitRaw))unit='capsules';
+  else if(/^chews?$/.test(unitRaw))unit='chews';
+  else if(/^doses?$/.test(unitRaw))unit='doses';
+  else if(/^ml$|^millilit/.test(unitRaw))unit='ml';
+  else if(/^gm$|^grams?$|^g$/.test(unitRaw))unit='g';
+  else if(/^kg$/.test(unitRaw))unit='g'; // normalize kg to g in detection
+  else if(/^lbs?$/.test(unitRaw))unit='g';
+  else if(/^bottles?$/.test(unitRaw))unit='bottles';
+  else if(/^oz$/.test(unitRaw))unit='g';
+  // If kg detected, multiply
+  if(unitRaw==='kg')qty=qty*1000;
+  return {pack_size:qty,unit:unit,raw:m[0]};
+}
+
+var SB=supabase.createClient('https://kijoonuxbkpzejnqxnwl.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtpam9vbnV4YmtwemVqbnF4bndsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMzkyOTAsImV4cCI6MjA5MTkxNTI5MH0.tdTwDNLpY2jq16-NhmFwOj326d_UYpT4BlTyYoYSYVM');
+var EP0=new Date(Date.UTC(2024,0,1)).getTime();
+var STATE={products:[],overrides:{},packParsed:{},form:'All',q:''};
+var ROLLUP_CACHE={};
+function rollupFor(pi){
+  if(ROLLUP_CACHE[pi])return ROLLUP_CACHE[pi];
+  var name=P[pi]||'';
+  var ing=extractIngredientJS(name),str=extractStrengthJS(name),form=detectFormJS(name);
+  var res={key:(ing+'|'+str+'|'+form).toLowerCase(),ingredient:ing,strength:str,form:form};
+  ROLLUP_CACHE[pi]=res;
+  return res;
+}
+function invRollupKey(pi){
+  var ro=rollupFor(pi);
+  if(!ro||!ro.ingredient||!ro.form)return null;
+  var strength=ro.strength&&ro.strength!=='unspec'?ro.strength:'';
+  return {ing:ro.ingredient,form:ro.form,strength:strength,key:ro.ingredient+'|'+ro.form+'|'+strength};
+}
+function buildPacks(){
+  STATE.packParsed={};
+  for(var i=0;i<P.length;i++){
+    var ov=STATE.overrides[P[i]];
+    if(ov){STATE.packParsed[i]={pack_size:ov.pack_size,unit:ov.unit};continue;}
+    var parsed=invParsePack(P[i]);
+    if(parsed)STATE.packParsed[i]={pack_size:parsed.pack_size,unit:parsed.unit};
+  }
+}
+function fmtNum(n){
+  n=Math.round(n*10)/10;
+  return n.toLocaleString('en-US');
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* per-product rollup index: prodIdx list per inventory key */
+var KEY_TO_PIS=null;
+function buildKeyIndex(){
+  KEY_TO_PIS={};
+  for(var pi=0;pi<P.length;pi++){
+    if(!STATE.packParsed[pi])continue;
+    var ro=invRollupKey(pi);
+    if(!ro)continue;
+    if(!KEY_TO_PIS[ro.key])KEY_TO_PIS[ro.key]=[];
+    KEY_TO_PIS[ro.key].push(pi);
+  }
+}
+function calc(product){
+  var key=(product.ingredient||'')+'|'+(product.form||'')+'|'+(product.strength||'');
+  var pis=KEY_TO_PIS[key]||[];
+  var tep=Math.floor((Date.now()-EP0)/86400000);
+  var cutoff30=tep-30;
+  var sinceEp=product.last_deducted_epoch==null?-1:product.last_deducted_epoch;
+  var now=new Date();
+  var tY=now.getUTCFullYear(),tM=now.getUTCMonth(),tD=now.getUTCDate();
+  function epOf(y,m,d){return Math.floor((Date.UTC(y,m,d)-EP0)/86400000);}
+  var mtdStart=epOf(tY,tM,1),mtdEnd=epOf(tY,tM,tD)+1;
+  var lmS=epOf(tY,tM-1,1),lmE=mtdStart;
+  var smS=epOf(tY-1,tM,1),smE=epOf(tY-1,tM+1,1),smTD=epOf(tY-1,tM,tD)+1;
+  var pend=0,burn=0,mtd=0,lm=0,sm=0,smtd=0;
+  var pset={};for(var z=0;z<pis.length;z++)pset[pis[z]]=1;
+  for(var ci=0;ci<C.length;ci++){
+    var rows=D[C[ci]]||[];
+    for(var ri=0;ri<rows.length;ri++){
+      var r=rows[ri];
+      if(!pset[r[1]]||r.length<5)continue;
+      var qty=Number(r[4])||0;
+      if(!qty)continue;
+      var u=qty*STATE.packParsed[r[1]].pack_size;
+      var ep=r[3];
+      if(ep>sinceEp)pend+=u;
+      if(ep>=cutoff30)burn+=u;
+      if(ep>=mtdStart&&ep<mtdEnd)mtd+=u;
+      if(ep>=lmS&&ep<lmE)lm+=u;
+      if(ep>=smS&&ep<smE)sm+=u;
+      if(ep>=smS&&ep<smTD)smtd+=u;
+    }
+  }
+  var onHand=(Number(product.on_hand)||0)-pend;
+  var bpd=burn/30;
+  return {onHand:onHand,pend:pend,burn:bpd,runway:bpd>0?Math.max(0,Math.floor(onHand/bpd)):null,
+          mtd:mtd,lm:lm,sm:sm,yoy:smtd>0?((mtd-smtd)/smtd*100):null};
+}
+function render(){
+  var el=document.getElementById('tbl');
+  if(!STATE.products.length){el.innerHTML='<div class="err">No inventory products found.</div>';return;}
+  var rows=[];
+  for(var i=0;i<STATE.products.length;i++){
+    var p=STATE.products[i];
+    var m=calc(p);
+    var status='ok',label='Healthy';
+    if(m.runway!=null&&m.runway<=14){status='crit';label='Critical';}
+    else if(m.runway!=null&&m.runway<=30){status='low';label='Low';}
+    else if(m.burn===0){status='ok';label='Stable';}
+    rows.push({p:p,m:m,status:status,label:label});
+  }
+  rows.sort(function(a,b){
+    if(a.m.runway==null&&b.m.runway==null)return 0;
+    if(a.m.runway==null)return 1;
+    if(b.m.runway==null)return -1;
+    return a.m.runway-b.m.runway;
+  });
+  var q=STATE.q.toLowerCase();
+  var shown=0,crit=0,low=0;
+  var forms={};
+  for(i=0;i<rows.length;i++){
+    var fo=rows[i].p.form||'Other';
+    forms[fo]=(forms[fo]||0)+1;
+    if(rows[i].status==='crit')crit++;else if(rows[i].status==='low')low++;
+  }
+  /* form pills */
+  var fp='<span class="pill'+(STATE.form==='All'?' on':'')+'" data-form="All">All</span>';
+  var fnames=Object.keys(forms).sort();
+  for(i=0;i<fnames.length;i++){
+    fp+='<span class="pill'+(STATE.form===fnames[i]?' on':'')+'" data-form="'+esc(fnames[i])+'">'+esc(fnames[i])+'s ('+forms[fnames[i]]+')</span>';
+  }
+  document.getElementById('formPills').innerHTML=fp;
+  var fpe=document.querySelectorAll('#formPills .pill');
+  for(i=0;i<fpe.length;i++){
+    fpe[i].addEventListener('click',function(){STATE.form=this.getAttribute('data-form');render();});
+  }
+  function rowHtml(o){
+    return '<tr>'+
+      '<td style="font-weight:600;color:#1a2035">'+esc(o.p.ingredient)+'</td>'+
+      '<td class="hide-m">'+esc(o.p.strength||'\u2014')+'</td>'+
+      '<td class="num" style="font-weight:700">'+fmtNum(o.m.onHand)+' <span class="tiny">'+esc(o.p.unit)+'</span>'+(o.m.pend?'<div class="tiny">-'+fmtNum(o.m.pend)+' pending</div>':'')+'</td>'+
+      '<td class="num">'+(o.m.burn>0?fmtNum(o.m.burn):'\u2014')+'</td>'+
+      '<td class="num" style="font-weight:600">'+(o.m.runway==null?'\u2014':o.m.runway+' d')+'</td>'+
+      '<td><span class="ipill '+o.status+'">'+o.label+'</span></td>'+
+    '</tr>';
+  }
+  var head='<table><thead><tr><th>Drug</th><th class="hide-m">Strength</th><th class="num">On Hand</th><th class="num">Burn/day</th><th class="num">Runway</th><th>Status</th></tr></thead><tbody>';
+  var h='';
+  var groups={};
+  var order=[];
+  for(i=0;i<rows.length;i++){
+    var o=rows[i];
+    var fo2=o.p.form||'Other';
+    if(STATE.form!=='All'&&fo2!==STATE.form)continue;
+    if(q&&(o.p.ingredient+' '+(o.p.strength||'')).toLowerCase().indexOf(q)<0)continue;
+    shown++;
+    if(!groups[fo2]){groups[fo2]=[];order.push(fo2);}
+    groups[fo2].push(o);
+  }
+  order.sort();
+  for(i=0;i<order.length;i++){
+    var g=order[i];
+    h+='<div style="font-size:14px;font-weight:700;margin:16px 0 8px;color:#1a2035">'+esc(g)+'s <span class="tiny">('+groups[g].length+')</span></div>'+head;
+    for(var gi=0;gi<groups[g].length;gi++)h+=rowHtml(groups[g][gi]);
+    h+='</tbody></table>';
+  }
+  el.innerHTML=h||'<div style="color:#888;padding:30px;text-align:center">No matches.</div>';
+  document.getElementById('stat').textContent=shown+' shown \u00b7 '+crit+' critical \u00b7 '+low+' low';
+}
+function load(){
+  document.getElementById('asof').textContent='Refreshing\u2026';
+  Promise.all([
+    SB.from('sku_pack_overrides').select('*'),
+    SB.from('inventory_products').select('*').order('ingredient').order('form').order('strength')
+  ]).then(function(res){
+    STATE.overrides={};
+    (res[0].data||[]).forEach(function(o){STATE.overrides[o.sku]={pack_size:Number(o.pack_size),unit:o.unit};});
+    if(res[1].error){document.getElementById('tbl').innerHTML='<div class="err">'+esc(res[1].error.message)+'</div>';return;}
+    STATE.products=res[1].data||[];
+    buildPacks();buildKeyIndex();
+    render();
+    var maxEp=0;
+    for(var k in D){var rw=D[k];for(var i2=0;i2<rw.length;i2++)if(rw[i2][3]>maxEp)maxEp=rw[i2][3];}
+    var dd=new Date(EP0+maxEp*86400000);
+    document.getElementById('asof').textContent='Sales data through '+dd.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' \u00b7 stock as of '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  });
+}
+document.getElementById('refresh').addEventListener('click',load);
+document.getElementById('q').addEventListener('input',function(){STATE.q=this.value;render();});
+load();
+setInterval(load,5*60*1000);
+</script>
+</body>
+</html>
