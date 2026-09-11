@@ -55,6 +55,29 @@
 </div>
 <script src="data.js"></script>
 <script>
+var FORM_PATTERNS=[
+  {re:/transdermal\s*gel/i,form:'Transdermal Gel'},
+  {re:/topi-?click/i,form:'Transdermal Gel'},
+  {re:/ophthalmic\s*(?:solution|ointment|drop)/i,form:'Ophthalmic'},
+  {re:/otic\s*(?:ointment|solution|drop)/i,form:'Otic'},
+  {re:/oral\s*suspension/i,form:'Liquid'},
+  {re:/oral\s*solution/i,form:'Liquid'},
+  {re:/oral\s*paste/i,form:'Paste'},
+  {re:/\bliquid\b/i,form:'Liquid'},
+  {re:/chewable\s*treat/i,form:'Chewable'},
+  {re:/chewable/i,form:'Chewable'},
+  {re:/\b(?:quadrisect|bisect|split)\s*tab/i,form:'Tablet'},
+  {re:/\btablet\b/i,form:'Tablet'},
+  {re:/\bcapsule\b/i,form:'Capsule'},
+  {re:/\binjection\b/i,form:'Injection'},
+  {re:/\bsuppositor/i,form:'Suppository'},
+  {re:/\bointment\b/i,form:'Ointment'},
+  {re:/\bcream\b/i,form:'Cream'},
+  {re:/\bpowder\b/i,form:'Powder'}
+];
+
+function isComboJS(n){return /[A-Z][a-z]+\s*[\/\+]\s*[A-Z][a-z]+/.test(n);}
+
 function detectFormJS(n){for(var i=0;i<FORM_PATTERNS.length;i++)if(FORM_PATTERNS[i].re.test(n))return FORM_PATTERNS[i].form;return'Other';}
 
 function extractStrengthJS(n){
