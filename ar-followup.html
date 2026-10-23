@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AR 45+ Follow-Up</title>
+<style>
+:root {
+  --bg: #0f1115;
+  --panel: #171a21;
+  --panel2: #1e222b;
+  --line: #2a2f3a;
+  --text: #e6e8ee;
+  --muted: #8b93a3;
+  --accent: #4f8cff;
+  --green: #3ecf8e;
+  --red: #ff6b6b;
+  --amber: #f5b942;
+  --purple: #a78bfa;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.4 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 20px 16px 60px; }
+h1 { font-size: 20px; margin: 0 0 4px; }
+.sub { color: var(--muted); margin-bottom: 16px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+.panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+button { background: var(--accent); color: #fff; border: 0; border-radius: 7px; padding: 8px 14px; font: inherit; font-weight: 600; cursor: pointer; }
+button:disabled { opacity: .4; cursor: not-allowed; }
+button.ghost { background: var(--panel2); color: var(--text); border: 1px solid var(--line); }
+button.green { background: var(--green); color: #07130d; }
+input[type=text], input[type=date], select, textarea { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; font: inherit; width: 100%; }
+input[type=file] { color: var(--muted); }
+textarea { resize: vertical; min-height: 70px; }
+.msg { margin-top: 8px; color: var(--muted); }
+.msg.ok { color: var(--green); }
+.msg.err { color: var(--red); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.stat { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+.stat .n { font-size: 22px; font-weight: 700; }
+.stat .l { color: var(--muted); font-size: 12px; }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.tab { background: var(--panel); border: 1px solid var(--line); color: var(--muted); padding: 7px 12px; border-radius: 7px; cursor: pointer; font-weight: 600; }
+.tab.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.tab .c { opacity: .75; margin-left: 4px; font-weight: 500; }
+.filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+.filters > * { flex: 1 1 200px; max-width: 320px; }
+.tablewrap { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: auto; max-height: 70vh; }
+table { width: 100%; border-collapse: collapse; min-width: 960px; }
+th { position: sticky; top: 0; background: var(--panel2); text-align: left; padding: 9px 10px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); border-bottom: 1px solid var(--line); cursor: pointer; white-space: nowrap; user-select: none; }
+td { padding: 9px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: var(--panel2); }
+td.co { white-space: normal; min-width: 200px; font-weight: 600; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.b-nc { background: rgba(255,107,107,.15); color: var(--red); }
+.b-c { background: rgba(79,140,255,.15); color: var(--accent); }
+.b-fu { background: rgba(245,185,66,.15); color: var(--amber); }
+.b-col { background: rgba(62,207,142,.15); color: var(--green); }
+.age-hot { color: var(--red); font-weight: 700; }
+.age-warm { color: var(--amber); font-weight: 700; }
+.empty { padding: 40px; text-align: center; color: var(--muted); white-space: normal; }
+
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.65); display: none; align-items: flex-start; justify-content: center; padding: 30px 12px; overflow: auto; z-index: 50; }
+.overlay.open { display: flex; }
+.modal { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; width: 100%; max-width: 640px; padding: 18px; }
+.modal h3 { margin: 0 0 2px; font-size: 18px; }
+.modal .meta { color: var(--muted); margin-bottom: 12px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 14px; }
+.fact { background: var(--panel2); border-radius: 8px; padding: 8px 10px; }
+.fact .l { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+.fact .v { font-weight: 600; word-break: break-word; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.field { margin-bottom: 12px; }
+.field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .05em; }
+.field label .req { color: var(--red); }
+.field.bad input { border-color: var(--red); }
+.fielderr { color: var(--red); font-size: 12px; margin-top: 4px; display: none; }
+.field.bad .fielderr { display: block; }
+.toggle { display: flex; gap: 6px; }
+.toggle button { flex: 1; background: var(--panel2); color: var(--muted); border: 1px solid var(--line); }
+.toggle button.on-yes { background: var(--green); color: #07130d; border-color: var(--green); }
+.toggle button.on-no { background: var(--red); color: #fff; border-color: var(--red); }
+.quick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.quick button { padding: 4px 10px; font-size: 12px; background: var(--panel2); color: var(--text); border: 1px solid var(--line); }
+.history { background: var(--panel2); border-radius: 8px; padding: 10px; max-height: 150px; overflow: auto; font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+.history div { padding: 3px 0; border-bottom: 1px solid var(--line); }
+.history div:last-child { border-bottom: 0; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-top: 6px; }
+@media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>AR 45+ Follow-Up</h1>
+  <div class="sub">Every clinic with an overdue invoice. Click a row to log a call and set a follow-up.</div>
+
+  <div class="panel">
+    <h2>Upload AR report</h2>
+    <div class="row">
+      <input type="file" id="csvFile" accept=".csv,text/csv">
+      <button id="uploadBtn" disabled>Upload</button>
+    </div>
+    <div class="msg" id="uploadMsg">Upload the Zoho AR 45 CSV. New invoices are added, age and balance are refreshed, paid invoices drop off, and call history is kept.</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="n" id="statCount">0</div><div class="l">Open invoices</div></div>
+    <div class="stat"><div class="n" id="statAmount">$0</div><div class="l">Total balance</div></div>
+    <div class="stat"><div class="n" id="statNC">0</div><div class="l">Not contacted</div></div>
+    <div class="stat"><div class="n" id="statFU">0</div><div class="l">Follow-up due</div></div>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="filters">
+    <select id="repFilter"><option value="">All reps</option></select>
+    <input type="text" id="searchBox" placeholder="Search clinic, invoice, contact">
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr>
+          <th data-sort="company">Company</th>
+          <th data-sort="invoice">Invoice</th>
+          <th data-sort="ageNum">Age</th>
+          <th data-sort="balNum">Balance</th>
+          <th data-sort="contact">Contact</th>
+          <th data-sort="sales">Sales</th>
+          <th data-sort="status">Status</th>
+          <th data-sort="followUpDate">Follow-Up</th>
+          <th data-sort="loggedBy">Last Logged By</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal">
+    <h3 id="mCompany"></h3>
+    <div class="meta" id="mMeta"></div>
+    <div class="facts" id="mFacts"></div>
+
+    <div class="field" id="fLogged">
+      <label>Logged by (your name) <span class="req">*</span></label>
+      <input type="text" id="mLoggedBy" placeholder="Your name" autocomplete="off">
+      <div class="fielderr">Enter your name before saving.</div>
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <label>Talked to</label>
+        <input type="text" id="mTalked" placeholder="Name of person at the clinic">
+      </div>
+      <div class="field">
+        <label>Method</label>
+        <select id="mMethod">
+          <option value="Call">Call</option>
+          <option value="Email">Email</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <label>Called / contacted?</label>
+        <div class="toggle" id="tCalled">
+          <button type="button" data-v="Yes">Yes</button>
+          <button type="button" data-v="No">No</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Collected?</label>
+        <div class="toggle" id="tCollected">
+          <button type="button" data-v="Yes">Yes</button>
+          <button type="button" data-v="No">No</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Follow up on</label>
+      <input type="date" id="mFollow">
+      <div class="quick" id="quick">
+        <button type="button" data-d="3">3 days</button>
+        <button type="button" data-d="5">5 days</button>
+        <button type="button" data-d="7">7 days</button>
+        <button type="button" data-d="14">14 days</button>
+        <button type="button" data-d="30">30 days</button>
+        <button type="button" data-d="0">Clear</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>History</label>
+      <div class="history" id="mHistory"></div>
+    </div>
+
+    <div class="field">
+      <label>New note</label>
+      <textarea id="mNote" placeholder="What happened on this call or email?"></textarea>
+    </div>
+
+    <div class="msg" id="mMsg"></div>
+    <div class="actions">
+      <button type="button" class="ghost" id="mCancel">Cancel</button>
+      <button type="button" id="mSave">Save</button>
+      <button type="button" class="green" id="mSaveHub">Save + Log to HubSpot</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---- CONFIG ----
+// Base URL of the fragrant-cloud-6ef2 worker, no trailing slash.
+var WORKER_BASE = '';
+// Days after a contact with no follow-up date before the invoice counts as due again.
+var FOLLOWUP_DAYS = 5;
+// ----------------
+
+var records = [];
+var currentTab = 'all';
+var sortKey = 'ageNum';
+var sortDir = -1;
+var pendingRows = null;
+var openInvoice = null;
+var modalCalled = '';
+var modalCollected = '';
+
+function $(id) { return document.getElementById(id); }
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+function dateStr(d) {
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+}
+
+function todayStr() { return dateStr(new Date()); }
+
+function addDaysStr(n) {
+  var d = new Date();
+  d.setDate(d.getDate() + n);
+  return dateStr(d);
+}
+
+function daysSince(str) {
+  if (!str) { return null; }
+  var p = str.split('-');
+  if (p.length !== 3) { return null; }
+  var then = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+  var now = new Date();
+  var a = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((a.getTime() - then.getTime()) / 86400000);
+}
+
+function money(n) {
+  var neg = n < 0;
+  n = Math.abs(n);
+  var s = n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return (neg ? '-$' : '$') + s;
+}
+
+function parseMoney(s) {
+  var n = parseFloat(String(s || '').replace(/[^0-9.\-]/g, ''));
+  return isNaN(n) ? 0 : n;
+}
+
+function parseAge(s) {
+  var n = parseInt(String(s || '').replace(/[^0-9]/g, ''), 10);
+  return isNaN(n) ? 0 : n;
+}
+
+// ---- status ----
+function statusOf(r) {
+  if (r.collected === 'Yes') { return 'Collected'; }
+  if (r.called !== 'Yes') { return 'Not Contacted'; }
+  var today = todayStr();
+  if (r.followUpDate) {
+    if (r.followUpDate <= today) { return 'Follow-Up Due'; }
+    return 'Contacted';
+  }
+  if (r.contactDate) {
+    var d = daysSince(r.contactDate);
+    if (d !== null && d >= FOLLOWUP_DAYS) { return 'Follow-Up Due'; }
+  }
+  return 'Contacted';
+}
+
+function badgeClass(st) {
+  if (st === 'Collected') { return 'b-col'; }
+  if (st === 'Not Contacted') { return 'b-nc'; }
+  if (st === 'Follow-Up Due') { return 'b-fu'; }
+  return 'b-c';
+}
+
+function decorate(r) {
+  r.ageNum = parseAge(r.age);
+  r.balNum = parseMoney(r.balance);
+  r.contact = (String(r.firstName || '') + ' ' + String(r.lastName || '')).replace(/^\s+|\s+$/g, '');
+  r.status = statusOf(r);
+  return r;
+}
+
+// ---- CSV ----
+function parseCSV(text) {
+  var rows = [];
+  var row = [];
+  var field = '';
+  var inQ = false;
+  var i = 0;
+  if (text.charCodeAt(0) === 0xFEFF) { text = text.slice(1); }
+  while (i < text.length) {
+    var c = text.charAt(i);
+    if (inQ) {
+      if (c === '"') {
+        if (text.charAt(i + 1) === '"') { field += '"'; i += 2; continue; }
+        inQ = false; i++; continue;
+      }
+      field += c; i++; continue;
+    }
+    if (c === '"') { inQ = true; i++; continue; }
+    if (c === ',') { row.push(field); field = ''; i++; continue; }
+    if (c === '\r') { i++; continue; }
+    if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; i++; continue; }
+    field += c; i++;
+  }
+  if (field !== '' || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+function findCol(headers, names) {
+  var norm = [];
+  var i, j;
+  for (i = 0; i < headers.length; i++) {
+    norm.push(String(headers[i]).toLowerCase().replace(/^\s+|\s+$/g, ''));
+  }
+  for (j = 0; j < names.length; j++) {
+    for (i = 0; i < norm.length; i++) {
+      if (norm[i] === names[j]) { return i; }
+    }
+  }
+  return -1;
+}
+
+function csvToRows(text) {
+  var table = parseCSV(text);
+  var h = -1;
+  var i;
+  // header row = first row that contains an invoice column
+  for (i = 0; i < Math.min(table.length, 10); i++) {
+    if (findCol(table[i], ['inv #', 'invoice #', 'invoice number', 'invoice']) >= 0) { h = i; break; }
+  }
+  if (h < 0) { return { error: 'Could not find an invoice column (INV #). Check the file headers.' }; }
+  var hd = table[h];
+  var col = {
+    invoice: findCol(hd, ['inv #', 'invoice #', 'invoice number', 'invoice']),
+    age: findCol(hd, ['age']),
+    balance: findCol(hd, ['balance due', 'balance', 'amount']),
+    first: findCol(hd, ['first name']),
+    last: findCol(hd, ['last', 'last name']),
+    sales: findCol(hd, ['sales', 'sales rep', 'salesperson']),
+    company: findCol(hd, ['company', 'customer name', 'company name']),
+    orders: findCol(hd, ['current orders']),
+    due: findCol(hd, ['overdue inv due date', 'due date']),
+    called: findCol(hd, ['called?', 'called']),
+    collected: findCol(hd, ['collected?', 'collected']),
+    notes: findCol(hd, ['notes', 'note'])
+  };
+  function get(r, k) { return col[k] >= 0 && r[col[k]] !== undefined ? String(r[col[k]]).replace(/^\s+|\s+$/g, '') : ''; }
+  var out = [];
+  var skipped = 0;
+  var seen = {};
+  for (i = h + 1; i < table.length; i++) {
+    var r = table[i];
+    var inv = get(r, 'invoice');
+    var empty = true;
+    var k;
+    for (k = 0; k < r.length; k++) { if (String(r[k]).replace(/\s+/g, '') !== '') { empty = false; break; } }
+    if (empty) { continue; }
+    if (!inv || !/^[A-Za-z0-9\-_\/]+$/.test(inv)) { skipped++; continue; }
+    if (seen[inv]) { skipped++; continue; }
+    seen[inv] = true;
+    out.push({
+      invoice: inv,
+      age: get(r, 'age'),
+      balance: get(r, 'balance'),
+      firstName: get(r, 'first'),
+      lastName: get(r, 'last'),
+      sales: get(r, 'sales'),
+      company: get(r, 'company'),
+      currentOrders: get(r, 'orders'),
+      dueDate: get(r, 'due'),
+      called: get(r, 'called'),
+      collected: get(r, 'collected'),
+      notes: get(r, 'notes')
+    });
+  }
+  return { rows: out, skipped: skipped, missing: col.balance < 0 ? 'balance' : (col.company < 0 ? 'company' : '') };
+}
+
+// ---- network ----
+function api(path, opts, cb) {
+  if (!WORKER_BASE) { cb(new Error('WORKER_BASE is not set at the top of this file.')); return; }
+  var xhr = new XMLHttpRequest();
+  xhr.open(opts.method, WORKER_BASE + path, true);
+  if (opts.body) { xhr.setRequestHeader('Content-Type', 'application/json'); }
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState !== 4) { return; }
+    var data = null;
+    try { data = JSON.parse(xhr.responseText); } catch (e) { data = null; }
+    if (xhr.status >= 200 && xhr.status < 300) { cb(null, data); }
+    else { cb(new Error((data && data.error) ? data.error : ('Request failed (' + xhr.status + ')'))); }
+  };
+  xhr.onerror = function () { cb(new Error('Could not reach the server.')); };
+  xhr.send(opts.body ? JSON.stringify(opts.body) : null);
+}
+
+function loadRecords() {
+  api('/ar-list', { method: 'GET' }, function (err, data) {
+    if (err) { showTableMessage(err.message); return; }
+    records = (data && data.records ? data.records : []).map(decorate);
+    refreshRepFilter();
+    render();
+  });
+}
+
+function showTableMessage(msg) {
+  $('tbody').innerHTML = '<tr><td colspan="9" class="empty">' + esc(msg) + '</td></tr>';
+}
+
+// ---- upload ----
+$('csvFile').onchange = function () {
+  var f = this.files && this.files[0];
+  pendingRows = null;
+  $('uploadBtn').disabled = true;
+  if (!f) { return; }
+  var reader = new FileReader();
+  reader.onload = function () {
+    var res = csvToRows(String(reader.result));
+    var msg = $('uploadMsg');
+    if (res.error) { msg.className = 'msg err'; msg.textContent = res.error; return; }
+    if (!res.rows.length) { msg.className = 'msg err'; msg.textContent = 'No invoices found in that file.'; return; }
+    pendingRows = res.rows;
+    msg.className = 'msg';
+    var t = 'Found ' + res.rows.length + ' invoices.';
+    if (res.skipped) { t += ' Skipped ' + res.skipped + ' row(s) with a missing, duplicate, or invalid invoice number.'; }
+    if (res.missing) { t += ' Warning: no ' + res.missing + ' column found.'; }
+    t += ' Click Upload to apply.';
+    msg.textContent = t;
+    $('uploadBtn').disabled = false;
+  };
+  reader.readAsText(f);
+};
+
+$('uploadBtn').onclick = function () {
+  if (!pendingRows) { return; }
+  var btn = this;
+  var msg = $('uploadMsg');
+  btn.disabled = true;
+  msg.className = 'msg';
+  msg.textContent = 'Uploading...';
+  api('/ar-upload', { method: 'POST', body: { rows: pendingRows } }, function (err, data) {
+    if (err) { msg.className = 'msg err'; msg.textContent = err.message; btn.disabled = false; return; }
+    msg.className = 'msg ok';
+    msg.textContent = 'Done. Added ' + data.added + ', updated ' + data.updated + ', removed ' + data.removed + ' (paid). Total open: ' + data.total + '.';
+    pendingRows = null;
+    $('csvFile').value = '';
+    loadRecords();
+  });
+};
+
+// ---- render ----
+function refreshRepFilter() {
+  var sel = $('repFilter');
+  var cur = sel.value;
+  var seen = {};
+  var reps = [];
+  var i;
+  for (i = 0; i < records.length; i++) {
+    var s = records[i].sales || '(none)';
+    if (!seen[s]) { seen[s] = true; reps.push(s); }
+  }
+  reps.sort();
+  var html = '<option value="">All reps</option>';
+  for (i = 0; i < reps.length; i++) {
+    html += '<option value="' + esc(reps[i]) + '">' + esc(reps[i]) + '</option>';
+  }
+  sel.innerHTML = html;
+  sel.value = cur;
+}
+
+function baseFiltered() {
+  var rep = $('repFilter').value;
+  var q = $('searchBox').value.toLowerCase();
+  return records.filter(function (r) {
+    if (rep && (r.sales || '(none)') !== rep) { return false; }
+    if (q) {
+      var hay = (r.company + ' ' + r.invoice + ' ' + r.contact + ' ' + r.sales).toLowerCase();
+      if (hay.indexOf(q) < 0) { return false; }
+    }
+    return true;
+  });
+}
+
+var TAB_DEFS = [
+  { key: 'all', label: 'All' },
+  { key: 'nc', label: 'Not Contacted' },
+  { key: 'c', label: 'Contacted' },
+  { key: 'fu', label: 'Follow-Up Due' },
+  { key: 'col', label: 'Collected' }
+];
+
+function inTab(r, key) {
+  if (key === 'all') { return true; }
+  if (key === 'nc') { return r.status === 'Not Contacted'; }
+  if (key === 'c') { return r.status === 'Contacted' || r.status === 'Follow-Up Due'; }
+  if (key === 'fu') { return r.status === 'Follow-Up Due'; }
+  if (key === 'col') { return r.status === 'Collected'; }
+  return true;
+}
+
+function render() {
+  var base = baseFiltered();
+  var i;
+
+  var tabsHtml = '';
+  for (i = 0; i < TAB_DEFS.length; i++) {
+    var t = TAB_DEFS[i];
+    var cnt = 0;
+    var j;
+    for (j = 0; j < base.length; j++) { if (inTab(base[j], t.key)) { cnt++; } }
+    tabsHtml += '<div class="tab' + (currentTab === t.key ? ' on' : '') + '" data-tab="' + t.key + '">' + t.label + '<span class="c">' + cnt + '</span></div>';
+  }
+  $('tabs').innerHTML = tabsHtml;
+
+  var list = base.filter(function (r) { return inTab(r, currentTab); });
+  list.sort(function (a, b) {
+    var x = a[sortKey];
+    var y = b[sortKey];
+    if (typeof x === 'string') { x = x.toLowerCase(); }
+    if (typeof y === 'string') { y = y.toLowerCase(); }
+    if (x == null) { x = ''; }
+    if (y == null) { y = ''; }
+    if (x < y) { return -1 * sortDir; }
+    if (x > y) { return 1 * sortDir; }
+    return 0;
+  });
+
+  var total = 0;
+  var nc = 0;
+  var fu = 0;
+  for (i = 0; i < base.length; i++) {
+    if (base[i].status !== 'Collected') { total += base[i].balNum; }
+    if (base[i].status === 'Not Contacted') { nc++; }
+    if (base[i].status === 'Follow-Up Due') { fu++; }
+  }
+  var open = 0;
+  for (i = 0; i < base.length; i++) { if (base[i].status !== 'Collected') { open++; } }
+  $('statCount').textContent = open;
+  $('statAmount').textContent = money(total);
+  $('statNC').textContent = nc;
+  $('statFU').textContent = fu;
+
+  if (!list.length) {
+    showTableMessage(records.length ? 'No invoices match this view.' : 'No data yet. Upload the AR report above.');
+    return;
+  }
+
+  var html = '';
+  for (i = 0; i < list.length; i++) {
+    var r = list[i];
+    var ageCls = r.ageNum >= 90 ? 'age-hot' : (r.ageNum >= 60 ? 'age-warm' : '');
+    var fuCls = (r.followUpDate && r.followUpDate <= todayStr() && r.status !== 'Collected') ? ' style="color:var(--amber);font-weight:700"' : '';
+    html += '<tr data-inv="' + esc(r.invoice) + '">' +
+      '<td class="co">' + esc(r.company) + '</td>' +
+      '<td>' + esc(r.invoice) + '</td>' +
+      '<td class="num ' + ageCls + '">' + (r.ageNum || esc(r.age)) + '</td>' +
+      '<td class="num">' + money(r.balNum) + '</td>' +
+      '<td>' + esc(r.contact) + '</td>' +
+      '<td>' + esc(r.sales) + '</td>' +
+      '<td><span class="badge ' + badgeClass(r.status) + '">' + r.status + '</span></td>' +
+      '<td' + fuCls + '>' + esc(r.followUpDate) + '</td>' +
+      '<td>' + esc(r.loggedBy) + '</td>' +
+      '</tr>';
+  }
+  $('tbody').innerHTML = html;
+}
+
+$('tabs').onclick = function (e) {
+  var el = e.target;
+  while (el && el !== this && !el.getAttribute('data-tab')) { el = el.parentNode; }
+  if (el && el.getAttribute && el.getAttribute('data-tab')) {
+    currentTab = el.getAttribute('data-tab');
+    render();
+  }
+};
+$('repFilter').onchange = render;
+$('searchBox').oninput = render;
+
+var ths = document.querySelectorAll('th[data-sort]');
+var ti;
+for (ti = 0; ti < ths.length; ti++) {
+  ths[ti].onclick = function () {
+    var k = this.getAttribute('data-sort');
+    if (sortKey === k) { sortDir = -sortDir; } else { sortKey = k; sortDir = (k === 'ageNum' || k === 'balNum') ? -1 : 1; }
+    render();
+  };
+}
+
+$('tbody').onclick = function (e) {
+  var el = e.target;
+  while (el && el !== this && el.tagName !== 'TR') { el = el.parentNode; }
+  if (el && el.getAttribute && el.getAttribute('data-inv')) { openModal(el.getAttribute('data-inv')); }
+};
+
+// ---- modal ----
+function findRec(inv) {
+  var i;
+  for (i = 0; i < records.length; i++) { if (records[i].invoice === inv) { return records[i]; } }
+  return null;
+}
+
+function setToggle(id, val, which) {
+  var btns = $(id).getElementsByTagName('button');
+  var i;
+  for (i = 0; i < btns.length; i++) {
+    var v = btns[i].getAttribute('data-v');
+    btns[i].className = (val === v) ? (v === 'Yes' ? 'on-yes' : 'on-no') : '';
+  }
+  if (which === 'called') { modalCalled = val; } else { modalCollected = val; }
+}
+
+function getSavedName() {
+  try { return window.localStorage.getItem('ar_rep_name') || ''; } catch (e) { return ''; }
+}
+function saveName(n) {
+  try { window.localStorage.setItem('ar_rep_name', n); } catch (e) { }
+}
+
+function openModal(inv) {
+  var r = findRec(inv);
+  if (!r) { return; }
+  openInvoice = inv;
+  $('mCompany').textContent = r.company;
+  $('mMeta').textContent = 'Invoice ' + r.invoice + (r.contact ? '  |  ' + r.contact : '') + (r.sales ? '  |  Sales: ' + r.sales : '');
+
+  var facts = [
+    ['Balance', money(r.balNum)],
+    ['Age', r.ageNum ? r.ageNum + ' days' : r.age],
+    ['Due date', r.dueDate],
+    ['Current orders', r.currentOrders],
+    ['Status', r.status]
+  ];
+  var fh = '';
+  var i;
+  for (i = 0; i < facts.length; i++) {
+    fh += '<div class="fact"><div class="l">' + facts[i][0] + '</div><div class="v">' + esc(facts[i][1] || '-') + '</div></div>';
+  }
+  $('mFacts').innerHTML = fh;
+
+  $('mLoggedBy').value = getSavedName();
+  $('fLogged').className = 'field';
+  $('mTalked').value = r.talkedTo || '';
+  $('mMethod').value = r.method === 'Email' ? 'Email' : 'Call';
+  setToggle('tCalled', r.called === 'Yes' ? 'Yes' : (r.called === 'No' ? 'No' : ''), 'called');
+  setToggle('tCollected', r.collected === 'Yes' ? 'Yes' : (r.collected === 'No' ? 'No' : ''), 'collected');
+  $('mFollow').value = r.followUpDate || '';
+  $('mNote').value = '';
+  $('mMsg').className = 'msg';
+  $('mMsg').textContent = '';
+
+  var hist = '';
+  if (r.notes) {
+    var parts = String(r.notes).split(' | ');
+    for (i = parts.length - 1; i >= 0; i--) { hist += '<div>' + esc(parts[i]) + '</div>'; }
+  }
+  if (r.loggedBy && r.contactDate) {
+    hist = '<div><strong>Last logged ' + esc(r.contactDate) + ' by ' + esc(r.loggedBy) + '</strong></div>' + hist;
+  }
+  $('mHistory').innerHTML = hist || '<div>No history yet.</div>';
+
+  setSaveDisabled(false);
+  $('overlay').className = 'overlay open';
+}
+
+function closeModal() {
+  $('overlay').className = 'overlay';
+  openInvoice = null;
+}
+
+function setSaveDisabled(v) {
+  $('mSave').disabled = v;
+  $('mSaveHub').disabled = v;
+}
+
+$('tCalled').onclick = function (e) {
+  var v = e.target.getAttribute && e.target.getAttribute('data-v');
+  if (v) { setToggle('tCalled', v, 'called'); }
+};
+$('tCollected').onclick = function (e) {
+  var v = e.target.getAttribute && e.target.getAttribute('data-v');
+  if (v) {
+    setToggle('tCollected', v, 'collected');
+    if (v === 'Yes') { setToggle('tCalled', 'Yes', 'called'); }
+  }
+};
+$('quick').onclick = function (e) {
+  var d = e.target.getAttribute && e.target.getAttribute('data-d');
+  if (d === null || d === undefined || d === '') { return; }
+  var n = parseInt(d, 10);
+  $('mFollow').value = n === 0 ? '' : addDaysStr(n);
+};
+$('mCancel').onclick = closeModal;
+$('overlay').onclick = function (e) { if (e.target === this) { closeModal(); } };
+document.onkeydown = function (e) { if ((e.key === 'Escape' || e.keyCode === 27) && openInvoice) { closeModal(); } };
+$('mLoggedBy').oninput = function () { $('fLogged').className = 'field'; };
+
+function save(logHubspot) {
+  var r = findRec(openInvoice);
+  if (!r) { return; }
+  var who = $('mLoggedBy').value.replace(/^\s+|\s+$/g, '');
+  if (!who) {
+    $('fLogged').className = 'field bad';
+    $('mLoggedBy').focus();
+    return;
+  }
+  var note = $('mNote').value.replace(/^\s+|\s+$/g, '');
+  var called = modalCalled;
+  // Saving a note, a contact name, or a collected mark counts as contact.
+  if (!called && (note || $('mTalked').value.replace(/\s+/g, '') || modalCollected === 'Yes')) { called = 'Yes'; }
+
+  var payload = {
+    invoice: r.invoice,
+    loggedBy: who,
+    talkedTo: $('mTalked').value.replace(/^\s+|\s+$/g, ''),
+    method: $('mMethod').value,
+    called: called,
+    collected: modalCollected,
+    contactDate: todayStr(),
+    followUpDate: modalCollected === 'Yes' ? '' : $('mFollow').value,
+    note: note,
+    company: r.company,
+    balance: money(r.balNum),
+    age: r.ageNum ? String(r.ageNum) : r.age,
+    logHubspot: !!logHubspot
+  };
+
+  var msg = $('mMsg');
+  msg.className = 'msg';
+  msg.textContent = 'Saving...';
+  setSaveDisabled(true);
+  api('/ar-log', { method: 'POST', body: payload }, function (err, data) {
+    if (err) { msg.className = 'msg err'; msg.textContent = err.message; setSaveDisabled(false); return; }
+    saveName(who);
+    var updated = data && data.record ? data.record : null;
+    if (updated) {
+      var idx;
+      for (idx = 0; idx < records.length; idx++) {
+        if (records[idx].invoice === updated.invoice) { records[idx] = decorate(updated); break; }
+      }
+    }
+    var extra = '';
+    if (logHubspot) {
+      if (data.hubspot === 'logged') { extra = ' Logged to HubSpot.'; }
+      else if (data.hubspot === 'no_token') { extra = ' Saved here, but HubSpot is not set up yet (no token).'; }
+      else { extra = ' Saved here, but the HubSpot note failed.'; }
+    }
+    render();
+    if (logHubspot && data.hubspot !== 'logged') {
+      msg.className = 'msg err';
+      msg.textContent = 'Saved.' + extra;
+      setSaveDisabled(false);
+    } else {
+      closeModal();
+    }
+  });
+}
+
+$('mSave').onclick = function () { save(false); };
+$('mSaveHub').onclick = function () { save(true); };
+
+// ---- start ----
+if (!WORKER_BASE) {
+  showTableMessage('Set WORKER_BASE at the top of this file to your worker URL.');
+} else {
+  loadRecords();
+}
+</script>
+</body>
+</html>
