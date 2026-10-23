@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AR 45+ Follow-Up</title>
+<script>
+(function () {
+  var t = '';
+  try { t = window.localStorage.getItem('ar_theme') || ''; } catch (e) { t = ''; }
+  if (t !== 'light' && t !== 'dark') {
+    t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+  }
+  document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
 <style>
 :root {
   --bg: #0f1115;
@@ -16,20 +26,35 @@
   --green: #3ecf8e;
   --red: #ff6b6b;
   --amber: #f5b942;
-  --purple: #a78bfa;
+  --onGreen: #07130d;
+}
+:root[data-theme="light"] {
+  --bg: #f3f4f8;
+  --panel: #ffffff;
+  --panel2: #eceef4;
+  --line: #d5d9e3;
+  --text: #1a1e29;
+  --muted: #5f687c;
+  --accent: #2563eb;
+  --green: #0f9d63;
+  --red: #d63b3b;
+  --amber: #a86a00;
+  --onGreen: #ffffff;
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.4 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 .wrap { max-width: 1280px; margin: 0 auto; padding: 20px 16px 60px; }
+.head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
 h1 { font-size: 20px; margin: 0 0 4px; }
-.sub { color: var(--muted); margin-bottom: 16px; }
+.sub { color: var(--muted); }
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin-bottom: 14px; }
 .panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; }
 .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-button { background: var(--accent); color: #fff; border: 0; border-radius: 7px; padding: 8px 14px; font: inherit; font-weight: 600; cursor: pointer; }
+button, a.btn { background: var(--accent); color: #fff; border: 0; border-radius: 7px; padding: 8px 14px; font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; }
 button:disabled { opacity: .4; cursor: not-allowed; }
-button.ghost { background: var(--panel2); color: var(--text); border: 1px solid var(--line); }
-button.green { background: var(--green); color: #07130d; }
+button.ghost, a.btn.ghost { background: var(--panel2); color: var(--text); border: 1px solid var(--line); }
+button.green { background: var(--green); color: var(--onGreen); }
+a.btn.off { opacity: .4; pointer-events: none; }
 input[type=text], input[type=date], select, textarea { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; font: inherit; width: 100%; }
 input[type=file] { color: var(--muted); }
 textarea { resize: vertical; min-height: 70px; }
@@ -47,7 +72,7 @@ textarea { resize: vertical; min-height: 70px; }
 .filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
 .filters > * { flex: 1 1 200px; max-width: 320px; }
 .tablewrap { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: auto; max-height: 70vh; }
-table { width: 100%; border-collapse: collapse; min-width: 960px; }
+table { width: 100%; border-collapse: collapse; min-width: 980px; }
 th { position: sticky; top: 0; background: var(--panel2); text-align: left; padding: 9px 10px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); border-bottom: 1px solid var(--line); cursor: pointer; white-space: nowrap; user-select: none; }
 td { padding: 9px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 tbody tr { cursor: pointer; }
@@ -55,23 +80,31 @@ tbody tr:hover { background: var(--panel2); }
 td.co { white-space: normal; min-width: 200px; font-weight: 600; }
 td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; }
-.b-nc { background: rgba(255,107,107,.15); color: var(--red); }
-.b-c { background: rgba(79,140,255,.15); color: var(--accent); }
-.b-fu { background: rgba(245,185,66,.15); color: var(--amber); }
-.b-col { background: rgba(62,207,142,.15); color: var(--green); }
+.b-nc { background: rgba(255,107,107,.16); color: var(--red); }
+.b-c { background: rgba(79,140,255,.16); color: var(--accent); }
+.b-fu { background: rgba(245,185,66,.18); color: var(--amber); }
+.b-col { background: rgba(62,207,142,.16); color: var(--green); }
+.tag { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 6px; font-size: 11px; font-weight: 700; background: var(--panel2); color: var(--green); border: 1px solid var(--line); }
+.tag.warn { color: var(--amber); }
 .age-hot { color: var(--red); font-weight: 700; }
 .age-warm { color: var(--amber); font-weight: 700; }
 .empty { padding: 40px; text-align: center; color: var(--muted); white-space: normal; }
 
-.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.65); display: none; align-items: flex-start; justify-content: center; padding: 30px 12px; overflow: auto; z-index: 50; }
+.overlay { position: fixed; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0,0,0,.6); display: none; align-items: flex-start; justify-content: center; padding: 30px 12px; overflow: auto; z-index: 50; }
 .overlay.open { display: flex; }
-.modal { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; width: 100%; max-width: 640px; padding: 18px; }
+.modal { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; width: 100%; max-width: 680px; padding: 18px; }
 .modal h3 { margin: 0 0 2px; font-size: 18px; }
-.modal .meta { color: var(--muted); margin-bottom: 12px; }
-.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 14px; }
+.modal .meta { color: var(--muted); margin-bottom: 10px; }
+.links { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.linknote { color: var(--muted); font-size: 12px; margin-bottom: 12px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 12px; }
 .fact { background: var(--panel2); border-radius: 8px; padding: 8px 10px; }
 .fact .l { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
 .fact .v { font-weight: 600; word-break: break-word; }
+.summary { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; background: var(--panel2); }
+.summary div { padding: 2px 0; }
+.summary .hot { color: var(--amber); font-weight: 700; }
+.summary .bad { color: var(--red); font-weight: 700; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .field { margin-bottom: 12px; }
 .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .05em; }
@@ -81,21 +114,34 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .field.bad .fielderr { display: block; }
 .toggle { display: flex; gap: 6px; }
 .toggle button { flex: 1; background: var(--panel2); color: var(--muted); border: 1px solid var(--line); }
-.toggle button.on-yes { background: var(--green); color: #07130d; border-color: var(--green); }
+.toggle button.on-yes { background: var(--green); color: var(--onGreen); border-color: var(--green); }
 .toggle button.on-no { background: var(--red); color: #fff; border-color: var(--red); }
 .quick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .quick button { padding: 4px 10px; font-size: 12px; background: var(--panel2); color: var(--text); border: 1px solid var(--line); }
-.history { background: var(--panel2); border-radius: 8px; padding: 10px; max-height: 150px; overflow: auto; font-size: 13px; color: var(--muted); margin-bottom: 12px; }
-.history div { padding: 3px 0; border-bottom: 1px solid var(--line); }
-.history div:last-child { border-bottom: 0; }
+.history { background: var(--panel2); border-radius: 8px; padding: 6px 10px; max-height: 220px; overflow: auto; font-size: 13px; }
+.history .h { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.history .h:last-child { border-bottom: 0; }
+.history .top { color: var(--muted); font-size: 12px; margin-bottom: 2px; }
+.history .top b { color: var(--text); }
+.history .old { color: var(--muted); }
+.history .sec { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; padding: 8px 0 2px; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-top: 6px; }
 @media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>AR 45+ Follow-Up</h1>
-  <div class="sub">Every clinic with an overdue invoice. Click a row to log a call and set a follow-up.</div>
+  <div class="head">
+    <div>
+      <h1>AR 45+ Follow-Up</h1>
+      <div class="sub">Every clinic with an overdue invoice. Click a row to log a call and set a follow-up.</div>
+    </div>
+    <div class="row">
+      <button type="button" class="ghost" id="zohoBtn">Check Zoho</button>
+      <button type="button" class="ghost" id="themeBtn">Light mode</button>
+    </div>
+  </div>
+  <div class="msg" id="zohoMsg" style="margin:-6px 0 12px"></div>
 
   <div class="panel">
     <h2>Upload AR report</h2>
@@ -144,7 +190,21 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
   <div class="modal" id="modal">
     <h3 id="mCompany"></h3>
     <div class="meta" id="mMeta"></div>
+
+    <div class="links">
+      <a class="btn ghost" id="mZohoCust" target="_blank" rel="noopener">Zoho customer</a>
+      <a class="btn ghost" id="mZohoInv" target="_blank" rel="noopener">Zoho invoice</a>
+      <button type="button" class="ghost" id="mEmail">Email</button>
+    </div>
+    <div class="linknote" id="mLinkNote"></div>
+
     <div class="facts" id="mFacts"></div>
+    <div class="summary" id="mSummary"></div>
+
+    <div class="field">
+      <label>Contact history</label>
+      <div class="history" id="mHistory"></div>
+    </div>
 
     <div class="field" id="fLogged">
       <label>Logged by (your name) <span class="req">*</span></label>
@@ -194,11 +254,6 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
         <button type="button" data-d="30">30 days</button>
         <button type="button" data-d="0">Clear</button>
       </div>
-    </div>
-
-    <div class="field">
-      <label>History</label>
-      <div class="history" id="mHistory"></div>
     </div>
 
     <div class="field">
@@ -252,6 +307,7 @@ function addDaysStr(n) {
   return dateStr(d);
 }
 
+// Whole days from the given YYYY-MM-DD to today. Positive means the date is in the past.
 function daysSince(str) {
   if (!str) { return null; }
   var p = str.split('-');
@@ -279,9 +335,27 @@ function parseAge(s) {
   return isNaN(n) ? 0 : n;
 }
 
+// ---- theme ----
+function applyThemeLabel() {
+  var t = document.documentElement.getAttribute('data-theme');
+  $('themeBtn').textContent = t === 'light' ? 'Dark mode' : 'Light mode';
+}
+$('themeBtn').onclick = function () {
+  var cur = document.documentElement.getAttribute('data-theme');
+  var next = cur === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  try { window.localStorage.setItem('ar_theme', next); } catch (e) { }
+  applyThemeLabel();
+};
+applyThemeLabel();
+
 // ---- status ----
+function zohoOpen(s) {
+  return s === 'overdue' || s === 'sent' || s === 'unpaid' || s === 'partially_paid' || s === 'viewed' || s === 'open';
+}
+
 function statusOf(r) {
-  if (r.collected === 'Yes') { return 'Collected'; }
+  if (r.collected === 'Yes' || r.zohoStatus === 'paid') { return 'Collected'; }
   if (r.called !== 'Yes') { return 'Not Contacted'; }
   var today = todayStr();
   if (r.followUpDate) {
@@ -303,10 +377,13 @@ function badgeClass(st) {
 }
 
 function decorate(r) {
+  if (!r.log) { r.log = []; }
   r.ageNum = parseAge(r.age);
   r.balNum = parseMoney(r.balance);
   r.contact = (String(r.firstName || '') + ' ' + String(r.lastName || '')).replace(/^\s+|\s+$/g, '');
   r.status = statusOf(r);
+  r.zohoPaid = r.zohoStatus === 'paid';
+  r.mismatch = r.collected === 'Yes' && zohoOpen(r.zohoStatus);
   return r;
 }
 
@@ -355,7 +432,6 @@ function csvToRows(text) {
   var table = parseCSV(text);
   var h = -1;
   var i;
-  // header row = first row that contains an invoice column
   for (i = 0; i < Math.min(table.length, 10); i++) {
     if (findCol(table[i], ['inv #', 'invoice #', 'invoice number', 'invoice']) >= 0) { h = i; break; }
   }
@@ -424,18 +500,83 @@ function api(path, opts, cb) {
   xhr.send(opts.body ? JSON.stringify(opts.body) : null);
 }
 
-function loadRecords() {
+function loadRecords(done) {
   api('/ar-list', { method: 'GET' }, function (err, data) {
-    if (err) { showTableMessage(err.message); return; }
+    if (err) { showTableMessage(err.message); if (done) { done(); } return; }
     records = (data && data.records ? data.records : []).map(decorate);
     refreshRepFilter();
     render();
+    showZohoStamp();
+    if (done) { done(); }
   });
 }
 
 function showTableMessage(msg) {
   $('tbody').innerHTML = '<tr><td colspan="9" class="empty">' + esc(msg) + '</td></tr>';
 }
+
+// ---- Zoho check ----
+function showZohoStamp() {
+  var latest = '';
+  var i;
+  for (i = 0; i < records.length; i++) {
+    if (records[i].zohoCheckedAt && records[i].zohoCheckedAt > latest) { latest = records[i].zohoCheckedAt; }
+  }
+  var el = $('zohoMsg');
+  if (el.getAttribute('data-busy') === '1') { return; }
+  if (!latest) { el.className = 'msg'; el.textContent = 'Zoho has not been checked yet.'; return; }
+  var d = new Date(latest);
+  el.className = 'msg';
+  el.textContent = 'Zoho last checked ' + (d.getMonth() + 1) + '/' + d.getDate() + ' ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '.';
+}
+
+function runZohoCheck() {
+  var btn = $('zohoBtn');
+  var el = $('zohoMsg');
+  var rounds = 0;
+  var totals = { paid: 0, voided: 0, notFound: 0, mismatches: 0, open: 0 };
+  btn.disabled = true;
+  el.setAttribute('data-busy', '1');
+  el.className = 'msg';
+  el.textContent = 'Checking Zoho...';
+
+  function step() {
+    rounds++;
+    api('/ar-zoho-check', { method: 'POST', body: {} }, function (err, data) {
+      if (err) {
+        el.removeAttribute('data-busy');
+        el.className = 'msg err';
+        el.textContent = 'Zoho check stopped: ' + err.message;
+        btn.disabled = false;
+        loadRecords();
+        return;
+      }
+      totals.paid += data.paid || 0;
+      totals.voided += data.voided || 0;
+      totals.notFound += data.notFound || 0;
+      totals.mismatches = data.mismatches || 0;
+      totals.open = data.open || 0;
+      var stuck = data.checked > 0 && data.failed === data.checked;
+      if (data.remaining > 0 && rounds < 20 && !stuck) {
+        el.textContent = 'Checking Zoho... ' + data.remaining + ' invoices left to look up.';
+        step();
+        return;
+      }
+      el.removeAttribute('data-busy');
+      var t = 'Zoho check done. ' + totals.paid + ' paid in Zoho';
+      if (totals.voided) { t += ', ' + totals.voided + ' void'; }
+      if (totals.notFound) { t += ', ' + totals.notFound + ' not found'; }
+      t += '. ' + totals.mismatches + ' marked collected but still open in Zoho.';
+      if (data.remaining > 0) { t += ' ' + data.remaining + ' could not be looked up; run it again.'; }
+      el.className = (data.remaining > 0) ? 'msg err' : 'msg ok';
+      el.textContent = t;
+      btn.disabled = false;
+      loadRecords();
+    });
+  }
+  step();
+}
+$('zohoBtn').onclick = runZohoCheck;
 
 // ---- upload ----
 $('csvFile').onchange = function () {
@@ -558,13 +699,12 @@ function render() {
   var total = 0;
   var nc = 0;
   var fu = 0;
+  var open = 0;
   for (i = 0; i < base.length; i++) {
-    if (base[i].status !== 'Collected') { total += base[i].balNum; }
+    if (base[i].status !== 'Collected') { total += base[i].balNum; open++; }
     if (base[i].status === 'Not Contacted') { nc++; }
     if (base[i].status === 'Follow-Up Due') { fu++; }
   }
-  var open = 0;
-  for (i = 0; i < base.length; i++) { if (base[i].status !== 'Collected') { open++; } }
   $('statCount').textContent = open;
   $('statAmount').textContent = money(total);
   $('statNC').textContent = nc;
@@ -580,6 +720,9 @@ function render() {
     var r = list[i];
     var ageCls = r.ageNum >= 90 ? 'age-hot' : (r.ageNum >= 60 ? 'age-warm' : '');
     var fuCls = (r.followUpDate && r.followUpDate <= todayStr() && r.status !== 'Collected') ? ' style="color:var(--amber);font-weight:700"' : '';
+    var tags = '';
+    if (r.zohoPaid) { tags += '<span class="tag">Paid in Zoho</span>'; }
+    if (r.mismatch) { tags += '<span class="tag warn">Zoho still open</span>'; }
     html += '<tr data-inv="' + esc(r.invoice) + '">' +
       '<td class="co">' + esc(r.company) + '</td>' +
       '<td>' + esc(r.invoice) + '</td>' +
@@ -587,7 +730,7 @@ function render() {
       '<td class="num">' + money(r.balNum) + '</td>' +
       '<td>' + esc(r.contact) + '</td>' +
       '<td>' + esc(r.sales) + '</td>' +
-      '<td><span class="badge ' + badgeClass(r.status) + '">' + r.status + '</span></td>' +
+      '<td><span class="badge ' + badgeClass(r.status) + '">' + r.status + '</span>' + tags + '</td>' +
       '<td' + fuCls + '>' + esc(r.followUpDate) + '</td>' +
       '<td>' + esc(r.loggedBy) + '</td>' +
       '</tr>';
@@ -646,13 +789,104 @@ function saveName(n) {
   try { window.localStorage.setItem('ar_rep_name', n); } catch (e) { }
 }
 
+function setLink(id, url) {
+  var a = $(id);
+  if (url) { a.href = url; a.className = 'btn ghost'; }
+  else { a.removeAttribute('href'); a.className = 'btn ghost off'; }
+}
+
+function daysText(n) {
+  if (n === 0) { return 'today'; }
+  var a = Math.abs(n);
+  return a + (a === 1 ? ' day' : ' days');
+}
+
+function buildSummary(r) {
+  var out = [];
+  var n = r.log.length;
+  var legacy = r.notes ? String(r.notes).split(' | ').length : 0;
+  if (r.status === 'Not Contacted') {
+    out.push('<div class="bad">Not contacted yet.</div>');
+  } else {
+    var line = 'Contacted ' + n + (n === 1 ? ' time' : ' times') + ' in this tool';
+    if (legacy) { line += ', plus ' + legacy + (legacy === 1 ? ' earlier note' : ' earlier notes') + ' from the sheet'; }
+    out.push('<div>' + line + '.</div>');
+    if (r.contactDate) {
+      var ds = daysSince(r.contactDate);
+      var lc = 'Last contact: ' + esc(r.contactDate);
+      if (ds !== null) { lc += ' (' + (ds === 0 ? 'today' : daysText(ds) + ' ago') + ')'; }
+      if (r.loggedBy) { lc += ' by ' + esc(r.loggedBy); }
+      out.push('<div>' + lc + '</div>');
+    }
+  }
+  if (r.followUpDate) {
+    var fd = daysSince(r.followUpDate);
+    if (fd !== null && fd >= 0) {
+      out.push('<div class="hot">Follow-up was due ' + esc(r.followUpDate) + (fd > 0 ? ' (' + daysText(fd) + ' ago)' : ' (today)') + '. Contact again.</div>');
+    } else if (fd !== null) {
+      out.push('<div>Next follow-up: ' + esc(r.followUpDate) + ' (in ' + daysText(fd) + ')</div>');
+    }
+  } else if (r.status === 'Follow-Up Due') {
+    out.push('<div class="hot">No follow-up date set and ' + FOLLOWUP_DAYS + '+ days since last contact. Contact again.</div>');
+  }
+  if (r.zohoPaid) { out.push('<div style="color:var(--green);font-weight:700">Zoho shows this invoice as paid.</div>'); }
+  if (r.mismatch) { out.push('<div class="hot">Marked collected here, but Zoho still shows it open.</div>'); }
+  return out.join('');
+}
+
+function buildHistory(r) {
+  var html = '';
+  var i;
+  for (i = r.log.length - 1; i >= 0; i--) {
+    var e = r.log[i];
+    var top = '<b>' + esc(e.date || (e.ts ? e.ts.slice(0, 10) : '')) + '</b>';
+    if (e.by) { top += ' | ' + esc(e.by); }
+    if (e.method) { top += ' | ' + esc(e.method); }
+    if (e.talkedTo) { top += ' | talked to ' + esc(e.talkedTo); }
+    if (e.collected === 'Yes') { top += ' | collected'; }
+    if (e.followUp) { top += ' | follow-up ' + esc(e.followUp); }
+    html += '<div class="h"><div class="top">' + top + '</div><div>' + (e.note ? esc(e.note) : '<span class="old">No note</span>') + '</div></div>';
+  }
+  if (r.notes) {
+    var parts = String(r.notes).split(' | ');
+    html += '<div class="sec">Earlier notes from the sheet</div>';
+    for (i = parts.length - 1; i >= 0; i--) {
+      html += '<div class="h"><div class="old">' + esc(parts[i]) + '</div></div>';
+    }
+  }
+  return html || '<div class="h"><div class="old">No history yet.</div></div>';
+}
+
+function buildMailto(r) {
+  var who = $('mLoggedBy').value.replace(/^\s+|\s+$/g, '');
+  var first = String(r.firstName || '').replace(/^\s+|\s+$/g, '');
+  var body = 'Hi ' + (first || 'there') + ',\n\n' +
+    'Invoice ' + r.invoice + ' for ' + money(r.balNum) + ' is still open on our end. ' +
+    'Can you let me know when payment will go out?\n\n' +
+    'Thanks,\n' + (who || '');
+  var subject = 'Invoice ' + r.invoice + ' - ' + r.company;
+  return 'mailto:' + encodeURIComponent(r.email || '').replace(/%40/g, '@') +
+    '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+}
+
 function openModal(inv) {
   var r = findRec(inv);
   if (!r) { return; }
   openInvoice = inv;
   $('mCompany').textContent = r.company;
-  $('mMeta').textContent = 'Invoice ' + r.invoice + (r.contact ? '  |  ' + r.contact : '') + (r.sales ? '  |  Sales: ' + r.sales : '');
+  $('mMeta').textContent = 'Invoice ' + r.invoice + (r.contact ? '  |  ' + r.contact : '') + (r.sales ? '  |  Sales: ' + r.sales : '') + (r.email ? '  |  ' + r.email : '');
 
+  setLink('mZohoCust', r.zohoCustomerUrl);
+  setLink('mZohoInv', r.zohoInvoiceUrl);
+  var note = '';
+  if (!r.zohoCustomerUrl) { note = 'Zoho links turn on after you click Check Zoho at the top.'; }
+  else if (!r.email) { note = 'No email on file in Zoho for this invoice. The Email button opens a blank To line.'; }
+  $('mLinkNote').textContent = note;
+
+  var zs = '';
+  if (r.zohoStatus) {
+    zs = r.zohoStatus === 'not_found' ? 'Not found' : r.zohoStatus.replace(/_/g, ' ');
+  }
   var facts = [
     ['Balance', money(r.balNum)],
     ['Age', r.ageNum ? r.ageNum + ' days' : r.age],
@@ -660,33 +894,29 @@ function openModal(inv) {
     ['Current orders', r.currentOrders],
     ['Status', r.status]
   ];
+  if (zs) {
+    facts.push(['Zoho status', zs]);
+    if (r.zohoStatus !== 'not_found') { facts.push(['Zoho balance', money(r.zohoBalance || 0)]); }
+  }
   var fh = '';
   var i;
   for (i = 0; i < facts.length; i++) {
     fh += '<div class="fact"><div class="l">' + facts[i][0] + '</div><div class="v">' + esc(facts[i][1] || '-') + '</div></div>';
   }
   $('mFacts').innerHTML = fh;
+  $('mSummary').innerHTML = buildSummary(r);
+  $('mHistory').innerHTML = buildHistory(r);
 
   $('mLoggedBy').value = getSavedName();
   $('fLogged').className = 'field';
-  $('mTalked').value = r.talkedTo || '';
-  $('mMethod').value = r.method === 'Email' ? 'Email' : 'Call';
+  $('mTalked').value = '';
+  $('mMethod').value = 'Call';
   setToggle('tCalled', r.called === 'Yes' ? 'Yes' : (r.called === 'No' ? 'No' : ''), 'called');
   setToggle('tCollected', r.collected === 'Yes' ? 'Yes' : (r.collected === 'No' ? 'No' : ''), 'collected');
   $('mFollow').value = r.followUpDate || '';
   $('mNote').value = '';
   $('mMsg').className = 'msg';
   $('mMsg').textContent = '';
-
-  var hist = '';
-  if (r.notes) {
-    var parts = String(r.notes).split(' | ');
-    for (i = parts.length - 1; i >= 0; i--) { hist += '<div>' + esc(parts[i]) + '</div>'; }
-  }
-  if (r.loggedBy && r.contactDate) {
-    hist = '<div><strong>Last logged ' + esc(r.contactDate) + ' by ' + esc(r.loggedBy) + '</strong></div>' + hist;
-  }
-  $('mHistory').innerHTML = hist || '<div>No history yet.</div>';
 
   setSaveDisabled(false);
   $('overlay').className = 'overlay open';
@@ -701,6 +931,13 @@ function setSaveDisabled(v) {
   $('mSave').disabled = v;
   $('mSaveHub').disabled = v;
 }
+
+$('mEmail').onclick = function () {
+  var r = findRec(openInvoice);
+  if (!r) { return; }
+  $('mMethod').value = 'Email';
+  window.location.href = buildMailto(r);
+};
 
 $('tCalled').onclick = function (e) {
   var v = e.target.getAttribute && e.target.getAttribute('data-v');
@@ -735,7 +972,6 @@ function save(logHubspot) {
   }
   var note = $('mNote').value.replace(/^\s+|\s+$/g, '');
   var called = modalCalled;
-  // Saving a note, a contact name, or a collected mark counts as contact.
   if (!called && (note || $('mTalked').value.replace(/\s+/g, '') || modalCollected === 'Yes')) { called = 'Yes'; }
 
   var payload = {
@@ -768,16 +1004,15 @@ function save(logHubspot) {
         if (records[idx].invoice === updated.invoice) { records[idx] = decorate(updated); break; }
       }
     }
-    var extra = '';
-    if (logHubspot) {
-      if (data.hubspot === 'logged') { extra = ' Logged to HubSpot.'; }
-      else if (data.hubspot === 'no_token') { extra = ' Saved here, but HubSpot is not set up yet (no token).'; }
-      else { extra = ' Saved here, but the HubSpot note failed.'; }
-    }
     render();
     if (logHubspot && data.hubspot !== 'logged') {
+      var extra = data.hubspot === 'no_token' ? ' Saved here, but HubSpot is not set up yet (no token).' : ' Saved here, but the HubSpot note failed.';
       msg.className = 'msg err';
       msg.textContent = 'Saved.' + extra;
+      if (updated) {
+        $('mSummary').innerHTML = buildSummary(records[idx] || r);
+        $('mHistory').innerHTML = buildHistory(records[idx] || r);
+      }
       setSaveDisabled(false);
     } else {
       closeModal();
